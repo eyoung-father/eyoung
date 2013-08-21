@@ -3,7 +3,7 @@
 
 #define	MEM_ROUNDING (sizeof(unsigned long))
 #define REAL_SIZE(_size)   ((_size + MEM_ROUNDING - 1) & ~(MEM_ROUNDING - 1))
-#define MEM_MAGIC 0xdeaddeaddeaddeadUL
+#define MEM_MAGIC (unsigned long)0xdeaddeaddeaddeadUL
 
 typedef void* (*malloc_fn)(size_t size);
 typedef void* (*realloc_fn)(void *old, size_t new_size);
