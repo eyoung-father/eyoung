@@ -1,0 +1,27 @@
+set nu
+set ai
+set ts=4
+set softtabstop=4
+set shiftwidth=4
+set nobackup
+set showmatch
+set incsearch
+set smarttab
+set noexpandtab
+set hlsearch
+set ruler
+set nocindent
+set formatoptions=tcqro
+syntax on
+map <F1> :Tlist<cr>
+
+if has("cscope")  
+	set csprg=/usr/local/bin/cscope  
+	set csto=1  
+	set cst  
+	set nocsverb  
+	if filereadable("cscope.out")      
+		cs add cscope.out  
+	endif  
+	set csverb
+endif

@@ -1,0 +1,21 @@
+892a893,896
+> /*callback while after doing reduction*/
+> #ifndef YY_REDUCTION_CALLBACK
+> #define YY_REDUCTION_CALLBACK(name,val)
+> #endif
+1458c1462
+<   yyps = (yypstate *) malloc (sizeof *yyps);
+---
+>   yyps = (yypstate *) YYMALLOC (sizeof *yyps);
+1477c1481
+<   free (yyps);]b4_pure_if([], [[
+---
+>   YYFREE (yyps);]b4_pure_if([], [[
+1807a1812,1818
+>   
+>   /*do ips signature check*/
+>   if(yyr1[yyn] > 0 && yytname[yyr1[yyn]][0] != '$')
+>   {
+> 	YY_REDUCTION_CALLBACK(yytname[yyr1[yyn]], &yyval);
+>   }
+> 	
