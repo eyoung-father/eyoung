@@ -24,3 +24,11 @@ make
 make install
 cd ..
 rm -rf flex-2.5.37
+
+tar xf libelf-0.8.9.tar.gz
+cd libelf-0.8.9.tar
+./configure 
+make
+make install
+cd ..
+rm -rf libelf-0.8.9
