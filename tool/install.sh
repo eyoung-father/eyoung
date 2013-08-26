@@ -32,3 +32,11 @@ make
 make install
 cd ..
 rm -rf libelf-0.8.9
+
+tar xf tcc-0.9.26.tar.bz2
+cd tcc-0.9.26
+./configure --disable-static
+make
+make install
+cd ..
+rm -rf tcc-0.9.26
