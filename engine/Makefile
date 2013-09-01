@@ -18,8 +18,8 @@ endif
 include $(TOP_DIR)/script/compile.mk
 
 prepare_local:
-	$(BISON) parse-gram.y
-	$(FLEX) scan-gram.l
+	$(BISON) gram.y
+	$(FLEX) gram.l
 
 clean_local:
 	$(RM) scan-gram.c scan-gram.h parse-gram.c parse-gram.h 
