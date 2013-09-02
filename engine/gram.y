@@ -18,6 +18,16 @@
 %token TOKEN_RHS_ACTION		"{...}"
 %token TOKEN_EPILOGUE		"epilogue"
 
+%debug
+%verbose
+%locations
+%defines "gram_parser.h"
+%output "gram_parser.c"
+%define api.prefix gram_
+%define api.pure full
+%define api.push-pull push
+%parse-param {void *eng}
+
 %start eyoung_file
 %%
 empty:

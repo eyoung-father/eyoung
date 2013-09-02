@@ -20,6 +20,12 @@ include $(TOP_DIR)/script/compile.mk
 prepare_local:
 	$(BISON) gram.y
 	$(FLEX) gram.l
+	$(FREPLACE) YYSTYPE ey_stype gram_lexer.c
+	$(FREPLACE) YYSTYPE ey_stype gram_lexer.h
+	$(FREPLACE) YYLTYPE ey_ltype gram_lexer.c
+	$(FREPLACE) YYLTYPE ey_ltype gram_lexer.h
+	$(FREPLACE) gram__ gram_ gram_lexer.c
+	$(FREPLACE) gram__ gram_ gram_lexer.h
 
 clean_local:
-	$(RM) scan-gram.c scan-gram.h parse-gram.c parse-gram.h 
+	$(RM) gram_lexer.c gram_lexer.h gram_parser.c gram_parser.h gram_parser.output
