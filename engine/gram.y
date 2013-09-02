@@ -11,12 +11,16 @@
 
 %token TOKEN_SEMICOLON		";"
 %token TOKEN_COLON			":"
+%token TOKEN_PIPE			"|"
 %token TOKEN_DPERCENT		"%%"
 %token TOKEN_SLASH			"/"
 %token TOKEN_PROLOGUE_CODE	"%{...%}"
 %token TOKEN_RHS_CONDITION	"(...)"
 %token TOKEN_RHS_ACTION		"{...}"
-%token TOKEN_EPILOGUE		"epilogue"
+%token TOKEN_EPILOGUE_CODE	"epilogue"
+
+%token TOKEN_OUTPUT			"%output"
+%token TOKEN_IMPORT			"%import"
 
 %debug
 %verbose
@@ -62,11 +66,16 @@ signatures:
 	;
 
 signature:
-	signature_lhs TOKEN_COLON signature_rhs_list TOKEN_SEMICOLON
+	signature_lhs TOKEN_COLON signature_pipe_list TOKEN_SEMICOLON
 	;
 
 signature_lhs:
 	TOKEN_INT
+	;
+
+signature_pipe_list:
+	signature_rhs_list
+	| signature_pipe_list TOKEN_PIPE signature_rhs_list
 	;
 
 signature_rhs_list:
@@ -115,6 +124,6 @@ epilogue_opt:
 	;
 
 epilogue:
-	TOKEN_EPILOGUE
+	TOKEN_EPILOGUE_CODE
 	;
 %%

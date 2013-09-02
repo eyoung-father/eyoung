@@ -20,10 +20,10 @@ include $(TOP_DIR)/script/compile.mk
 prepare_local:
 	$(BISON) gram.y
 	$(FLEX) gram.l
-	$(FREPLACE) YYSTYPE ey_stype gram_lexer.c
-	$(FREPLACE) YYSTYPE ey_stype gram_lexer.h
-	$(FREPLACE) YYLTYPE ey_ltype gram_lexer.c
-	$(FREPLACE) YYLTYPE ey_ltype gram_lexer.h
+	$(FREPLACE) YYSTYPE GRAM_STYPE gram_lexer.c
+	$(FREPLACE) YYSTYPE GRAM_STYPE gram_lexer.h
+	$(FREPLACE) YYLTYPE GRAM_LTYPE gram_lexer.c
+	$(FREPLACE) YYLTYPE GRAM_LTYPE gram_lexer.h
 	$(FREPLACE) gram__ gram_ gram_lexer.c
 	$(FREPLACE) gram__ gram_ gram_lexer.h
 
