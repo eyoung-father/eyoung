@@ -4,8 +4,8 @@
 #include <stdlib.h>
 
 #include "ey_memory.h"
-#include "engine_loc.h"
-#include "engine_info.h"
+#include "ey_loc.h"
+#include "ey_info.h"
 
 int gram_error(GRAM_LTYPE *loc, void *eng, const char *format, ...);
 %}

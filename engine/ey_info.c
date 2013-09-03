@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
-#include "engine_info.h"
+#include "ey_info.h"
 
 int debug_engine_init = 1;
 int debug_engine_parser = 1;
