@@ -58,6 +58,8 @@ prologue_list:
 
 prologue:
 	TOKEN_PROLOGUE_CODE
+	| TOKEN_OUTPUT TOKEN_STRING
+	| TOKEN_IMPORT TOKEN_STRING
 	;
 
 signature_opt:

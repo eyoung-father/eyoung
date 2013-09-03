@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
 {
 	engine_t engine = NULL;
 
-	eng_rule_debug = 1;
+	gram_debug = 1;
 	debug_engine_parser = 1;
 	debug_engine_lexier = 1;
 	debug_engine_init = 1;

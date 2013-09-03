@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "engine_mem.h"
 #include "ey_info.h"
 #include "gram_parser.h"
 
@@ -17,15 +18,18 @@
 #define RETURN(sym)											\
 	do														\
 	{														\
+		engine_lexer_debug("%d-%d:\n", yylineno, yycolumn);	\
 		engine_lexer_debug("line %d return %s, value: %s\n",\
 			__LINE__, #sym, yytext);						\
+		return sym;											\
 	}while(0)
 
 #define GOTO(s)												\
 	do														\
 	{														\
-		engine_lexer_debug("line %d got state %s\n",		\
-			__LINE__, #s);									\
+		engine_lexer_debug("%d-%d:\n", yylineno, yycolumn);	\
+		engine_lexer_debug("line %d goto state %s(%d)\n",	\
+			__LINE__, #s, s);								\
 		BEGIN s;											\
 	}while(0)
 
@@ -105,7 +109,10 @@ number	[1-9]{digit}*
 				}
 	"%%"		{
 					if(after_prologue) 
+					{
 						GOTO(EYOUNG_EPILOGUE);
+						in_code = 1;
+					}
 					after_prologue++;
 					RETURN(TOKEN_DPERCENT);
 				}
@@ -117,12 +124,15 @@ number	[1-9]{digit}*
 				}
 	"%{"		{
 					GOTO(EYOUNG_PROLOGUE);
+					in_code = 1;
 				}
 	"{"			{
 					GOTO(EYOUNG_ACTION);
+					in_code = 1;
 				}
 	"("			{
 					GOTO(EYOUNG_CONDITION);
+					in_code = 1;
 				}
 	{space}		{
 					/*eat space*/
@@ -204,6 +214,8 @@ number	[1-9]{digit}*
 				}
 	"%}"		{
 					GOTO(INITIAL);
+					saved_state = INITIAL;
+					in_code = 0;
 					RETURN(TOKEN_PROLOGUE_CODE);
 				}
 	{newline}	{
@@ -237,6 +249,8 @@ number	[1-9]{digit}*
 				}
 	<<EOF>>		{
 					GOTO(INITIAL);
+					saved_state = INITIAL;
+					in_code = 0;
 					RETURN(TOKEN_EPILOGUE_CODE);
 				}
 }
@@ -264,6 +278,8 @@ number	[1-9]{digit}*
 					if(brace_level<=0)
 					{
 						GOTO(INITIAL);
+						saved_state = INITIAL;
+						in_code = 0;
 						RETURN(TOKEN_RHS_ACTION);
 					}
 				}
@@ -298,6 +314,8 @@ number	[1-9]{digit}*
 					if(paren_level<=0)
 					{
 						GOTO(INITIAL);
+						saved_state = INITIAL;
+						in_code = 0;
 						RETURN(TOKEN_RHS_CONDITION);
 					}
 				}
@@ -309,3 +327,18 @@ number	[1-9]{digit}*
 				}
 }
 %%
+
+void *gram_alloc(yy_size_t sz, yyscan_t yyscanner)
+{
+	return lexer_malloc(sz);
+}
+
+void *gram_realloc(void *ptr, yy_size_t sz, yyscan_t yyscanner)
+{
+	return lexer_realloc(ptr,sz);
+}
+
+void gram_free(void *ptr, yyscan_t yyscanner)
+{
+	lexer_free(ptr);
+}

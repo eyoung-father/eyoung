@@ -19,15 +19,15 @@
 #define engine_fzinit(n,s,m) ey_fzinit((n),(s),(m))
 
 
-/*lexier*/
-#define lexier_malloc(sz) ey_malloc(sz)
-#define lexier_realloc(ptr, sz) ey_realloc(ptr,sz)
-#define lexier_free(ptr) ey_free(ptr)
-#define lexier_zalloc(s) ey_zalloc(s)
-#define lexier_zfree(s,p) ey_zfree(s,p)
-#define lexier_zclear(s) ey_zclear(s)
-#define lexier_zfinit(s) ey_zfinit(s)
-#define lexier_zinit(n,s) ey_zinit((n),(s),NULL)
+/*lexer*/
+#define lexer_malloc(sz) ey_malloc(sz)
+#define lexer_realloc(ptr, sz) ey_realloc(ptr,sz)
+#define lexer_free(ptr) ey_free(ptr)
+#define lexer_zalloc(s) ey_zalloc(s)
+#define lexer_zfree(s,p) ey_zfree(s,p)
+#define lexer_zclear(s) ey_zclear(s)
+#define lexer_zfinit(s) ey_zfinit(s)
+#define lexer_zinit(n,s) ey_zinit((n),(s),NULL)
 
 /*parser*/
 #define parser_malloc(sz) ey_malloc(sz)

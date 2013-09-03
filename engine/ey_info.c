@@ -9,7 +9,7 @@ int debug_engine_lexier = 1;
 
 int engine_parser_error(const char *format, ...)
 {
-	if(!debug_engine_parser)
+	if(!debug_engine_parser )
 		return 0;
 	
 	va_list ap;
