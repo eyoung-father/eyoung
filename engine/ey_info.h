@@ -1,5 +1,5 @@
-#ifndef ENGINE_INFO_H
-#define ENGINE_INFO_H 1
+#ifndef EY_INFO_H
+#define EY_INFO_H 1
 
 extern int debug_engine_parser;
 extern int debug_engine_lexer;
