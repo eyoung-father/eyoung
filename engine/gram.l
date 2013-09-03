@@ -2,16 +2,32 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "engine_info.h"
 #include "gram_parser.h"
 
-#define YY_USER_ACTION							\
-	{											\
-		yylloc->first_line = yylineno;			\
-		yylloc->first_column = yycolumn;		\
-		yylloc->last_line = yylineno;			\
-		yylloc->last_column = yycolumn+yyleng;	\
-		yycolumn += yyleng;						\
+#define YY_USER_ACTION										\
+	{														\
+		yylloc->first_line = yylineno;						\
+		yylloc->first_column = yycolumn;					\
+		yylloc->last_line = yylineno;						\
+		yylloc->last_column = yycolumn+yyleng;				\
+		yycolumn += yyleng;									\
 	}
+
+#define RETURN(sym)											\
+	do														\
+	{														\
+		engine_lexer_debug("line %d return %s, value: %s\n",\
+			__LINE__, #sym, yytext);						\
+	}while(0)
+
+#define GOTO(s)												\
+	do														\
+	{														\
+		engine_lexer_debug("line %d got state %s\n",		\
+			__LINE__, #s);									\
+		BEGIN s;											\
+	}while(0)
 
 static int brace_level;
 static int paren_level;
@@ -61,52 +77,52 @@ number	[1-9]{digit}*
 {
 	/*init state*/
 	"/*" 		{
-					BEGIN C_COMMENT;
+					GOTO(C_COMMENT);
 				}
 	"%output"	{
-					return TOKEN_OUTPUT;
+					RETURN(TOKEN_OUTPUT);
 				}
 	"%import"	{
-					return TOKEN_IMPORT;
+					RETURN(TOKEN_IMPORT);
 				}
 	{ident}		{
-					return TOKEN_ID;
+					RETURN(TOKEN_ID);
 				}
 	{number}	{
-					return TOKEN_INT;
+					RETURN(TOKEN_INT);
 				}
 	";"			{
-					return TOKEN_SEMICOLON;
+					RETURN(TOKEN_SEMICOLON);
 				}
 	":"			{
-					return TOKEN_COLON;
+					RETURN(TOKEN_COLON);
 				}
 	"|"			{
-					return TOKEN_PIPE;
+					RETURN(TOKEN_PIPE);
 				}
 	"/"			{
-					return TOKEN_SLASH;
+					RETURN(TOKEN_SLASH);
 				}
 	"%%"		{
 					if(after_prologue) 
-						BEGIN EYOUNG_EPILOGUE; 
+						GOTO(EYOUNG_EPILOGUE);
 					after_prologue++;
-					return TOKEN_DPERCENT;
+					RETURN(TOKEN_DPERCENT);
 				}
 	"\""		{
-					BEGIN C_STRING;
+					GOTO(C_STRING);
 				}
 	"'"			{
-					BEGIN C_CHARACTER;
+					GOTO(C_CHARACTER);
 				}
 	"%{"		{
-					BEGIN EYOUNG_PROLOGUE;
+					GOTO(EYOUNG_PROLOGUE);
 				}
 	"{"			{
-					BEGIN EYOUNG_ACTION;
+					GOTO(EYOUNG_ACTION);
 				}
 	"("			{
-					BEGIN EYOUNG_CONDITION;
+					GOTO(EYOUNG_CONDITION);
 				}
 	{space}		{
 					/*eat space*/
@@ -126,9 +142,9 @@ number	[1-9]{digit}*
 					/*eat it*/
 				}
 	"\""		{
-					BEGIN saved_state; 
+					GOTO(saved_state);
 					if(!in_code) 
-						return TOKEN_STRING;
+						RETURN(TOKEN_STRING);
 				}
 	{newline}	{
 					yycolumn=1;
@@ -145,9 +161,9 @@ number	[1-9]{digit}*
 					/*eat it*/
 				}
 	"'"			{
-					BEGIN saved_state; 
+					GOTO(saved_state);
 					if(!in_code) 
-						return TOKEN_STRING;
+						RETURN(TOKEN_STRING);
 				}
 	{newline}	{
 					yycolumn=1;
@@ -161,7 +177,7 @@ number	[1-9]{digit}*
 {
 	/*comment*/
 	"*/"		{
-					BEGIN saved_state;
+					GOTO(saved_state);
 				}
 	{newline}	{
 					yycolumn=1;
@@ -176,19 +192,19 @@ number	[1-9]{digit}*
 	/*prologue state*/
 	"'"			{
 					saved_state = EYOUNG_PROLOGUE;
-					BEGIN C_CHARACTER;
+					GOTO(C_CHARACTER);
 				}
 	"\""		{
 					saved_state = EYOUNG_PROLOGUE;
-					BEGIN C_STRING;
+					GOTO(C_STRING);
 				}
 	"/*"		{
 					saved_state = EYOUNG_PROLOGUE;
-					BEGIN C_COMMENT;
+					GOTO(C_COMMENT);
 				}
 	"%}"		{
-					BEGIN INITIAL;
-					return TOKEN_PROLOGUE_CODE;
+					GOTO(INITIAL);
+					RETURN(TOKEN_PROLOGUE_CODE);
 				}
 	{newline}	{
 					yycolumn=1;
@@ -203,15 +219,15 @@ number	[1-9]{digit}*
 	/*epilogue state*/
 	"'"			{
 					saved_state = EYOUNG_EPILOGUE;
-					BEGIN C_CHARACTER;
+					GOTO(C_CHARACTER);
 				}
 	"\""		{
 					saved_state = EYOUNG_EPILOGUE;
-					BEGIN C_STRING;
+					GOTO(C_STRING);
 				}
 	"/*"		{
 					saved_state = EYOUNG_EPILOGUE;
-					BEGIN C_COMMENT;
+					GOTO(C_COMMENT);
 				}
 	{newline}	{
 					yycolumn=1;
@@ -220,8 +236,8 @@ number	[1-9]{digit}*
 					/*eat it*/
 				}
 	<<EOF>>		{
-					BEGIN INITIAL;
-					return TOKEN_EPILOGUE_CODE;
+					GOTO(INITIAL);
+					RETURN(TOKEN_EPILOGUE_CODE);
 				}
 }
 
@@ -230,15 +246,15 @@ number	[1-9]{digit}*
 	/*action state*/
 	"'"			{
 					saved_state = EYOUNG_ACTION;
-					BEGIN C_CHARACTER;
+					GOTO(C_CHARACTER);
 				}
 	"\""		{
 					saved_state = EYOUNG_ACTION;
-					BEGIN C_STRING;
+					GOTO(C_STRING);
 				}
 	"/*"		{
 					saved_state = EYOUNG_ACTION;
-					BEGIN C_COMMENT;
+					GOTO(C_COMMENT);
 				}
 	"{"			{
 					brace_level++;
@@ -247,8 +263,8 @@ number	[1-9]{digit}*
 					brace_level--;
 					if(brace_level<=0)
 					{
-						BEGIN INITIAL;
-						return TOKEN_RHS_ACTION;
+						GOTO(INITIAL);
+						RETURN(TOKEN_RHS_ACTION);
 					}
 				}
 	{newline}	{
@@ -264,15 +280,15 @@ number	[1-9]{digit}*
 	/*condition state*/
 	"'"			{
 					saved_state = EYOUNG_CONDITION;
-					BEGIN C_CHARACTER;
+					GOTO(C_CHARACTER);
 				}
 	"\""		{
 					saved_state = EYOUNG_CONDITION;
-					BEGIN C_STRING;
+					GOTO(C_STRING);
 				}
 	"/*"		{
 					saved_state = EYOUNG_CONDITION;
-					BEGIN C_COMMENT;
+					GOTO(C_COMMENT);
 				}
 	"("			{
 					paren_level++;
@@ -281,8 +297,8 @@ number	[1-9]{digit}*
 					paren_level--;
 					if(paren_level<=0)
 					{
-						BEGIN INITIAL;
-						return TOKEN_RHS_CONDITION;
+						GOTO(INITIAL);
+						RETURN(TOKEN_RHS_CONDITION);
 					}
 				}
 	{newline}	{

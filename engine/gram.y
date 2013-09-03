@@ -1,8 +1,13 @@
 %{
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "ey_memory.h"
+#include "engine_loc.h"
+#include "engine_info.h"
+
+int gram_error(GRAM_LTYPE *loc, void *eng, const char *format, ...);
 %}
 
 %token TOKEN_STRING			"string"
@@ -127,3 +132,16 @@ epilogue:
 	TOKEN_EPILOGUE_CODE
 	;
 %%
+
+int gram_error(GRAM_LTYPE *loc, void *eng, const char *format, ...)
+{
+	char error_buf[4096];
+	va_list ap;
+
+	va_start(ap, format);
+	vsnprintf(error_buf, sizeof(error_buf)-1, format, ap);
+	error_buf[sizeof(error_buf)-1] = '\0';
+	va_end(ap);
+
+	return engine_parser_error("error(line %d): %s\n", loc->first_line, error_buf);
+}
