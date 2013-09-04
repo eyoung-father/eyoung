@@ -1,3 +1,4 @@
+#include <assert.h>
 #include "ey_engine.h"
 #include "gram_parser.h"
 #include "gram_lexer.h"
@@ -54,6 +55,7 @@ void ey_parser_finit(ey_engine_t *eng)
 		ey_hash_init(ey_filename_hash(eng));
 	if(ey_filename_fslab(eng))
 		engine_fzclear(ey_filename_fslab(eng));
+	assert(eng->parser==NULL);
 }
 
 int ey_parse_file(ey_engine_t *eng, const char *filename)
@@ -115,6 +117,16 @@ int ey_parse_file(ey_engine_t *eng, const char *filename)
 		goto failed;
 	}
 	strcpy(parser->filename, filename);
+
+	parser->buffer = (char*)engine_malloc(DEFAULT_BUFFER_SIZE);
+	if(!parser->buffer)
+	{
+		engine_init_error("init parser buffer failed\n");
+		goto failed;
+	}
+	parser->buffer_size = DEFAULT_BUFFER_SIZE;
+	parser->buffer_len = 0;
+	eng->parser = parser;
 	
 	if(ey_hash_insert(ey_filename_hash(eng), parser->filename, parser->filename))
 	{
@@ -136,8 +148,13 @@ int ey_parse_file(ey_engine_t *eng, const char *filename)
 		engine_init_debug("parse %s successfully\n", parser->filename);
 	
 failed:
-	if(parser && parser->filename)
-		engine_fzfree(ey_filename_fslab(eng), parser->filename);
+	if(parser)
+	{
+		if(parser->filename)
+			engine_fzfree(ey_filename_fslab(eng), parser->filename);
+		if(parser->buffer)
+			engine_free(parser->buffer);
+	}
 	if(pstate)
 		gram_pstate_delete(pstate);
 	if(lexer)
@@ -146,5 +163,6 @@ failed:
 		engine_free(parser);
 	if(fp)
 		fclose(fp);
+	eng->parser = NULL;
 	return 0;
 }

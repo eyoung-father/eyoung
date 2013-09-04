@@ -12,6 +12,7 @@ typedef struct ey_engine
 
 	ey_fslab_t filename_fslab;
 	ey_hash_t filename_hash;
+	ey_parser_t *parser;
 }ey_engine_t;
 
 #define ey_filename_fslab(eng) (((ey_engine_t*)(eng))->filename_fslab)

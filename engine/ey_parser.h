@@ -6,6 +6,12 @@ typedef struct ey_parser
 	void *lexer;
 	void *parser;
 	char *filename;
+
+	/*read buffer for lexer*/
+	#define DEFAULT_BUFFER_SIZE 4096
+	char *buffer;
+	int buffer_size;
+	int buffer_len;
 }ey_parser_t;
 
 struct ey_engine;
