@@ -8,7 +8,7 @@
 #include "ey_info.h"
 
 
-ey_rhs_item_condition_t *alloc_rhs_item_condition(ey_location_t *location, 
+ey_rhs_item_condition_t *ey_alloc_rhs_item_condition(ey_location_t *location, 
 	char *code, void *symbol)
 {
 	assert(location != NULL);
@@ -23,7 +23,7 @@ ey_rhs_item_condition_t *alloc_rhs_item_condition(ey_location_t *location,
 	return ret;
 }
 
-void free_rhs_item_condition(ey_rhs_item_condition_t *condition)
+void ey_free_rhs_item_condition(ey_rhs_item_condition_t *condition)
 {
 	if(!condition)
 		return;
@@ -32,7 +32,7 @@ void free_rhs_item_condition(ey_rhs_item_condition_t *condition)
 	parser_free(condition);
 }
 
-ey_rhs_item_action_t *alloc_rhs_item_action(ey_location_t *location, 
+ey_rhs_item_action_t *ey_alloc_rhs_item_action(ey_location_t *location, 
 	char *code, void *symbol)
 {
 	assert(location != NULL);
@@ -47,7 +47,7 @@ ey_rhs_item_action_t *alloc_rhs_item_action(ey_location_t *location,
 	return ret;
 }
 
-void free_rhs_item_action(ey_rhs_item_action_t *action)
+void ey_free_rhs_item_action(ey_rhs_item_action_t *action)
 {
 	if(!action)
 		return;
@@ -56,7 +56,7 @@ void free_rhs_item_action(ey_rhs_item_action_t *action)
 	parser_free(action);
 }
 
-ey_rhs_item_t *alloc_rhs_item(ey_location_t *location, 
+ey_rhs_item_t *ey_alloc_rhs_item(ey_location_t *location, 
 	ey_rhs_item_condition_t *condition, 
 	ey_rhs_item_action_t *action)
 {
@@ -71,18 +71,18 @@ ey_rhs_item_t *alloc_rhs_item(ey_location_t *location,
 	return ret;
 }
 
-void free_rhs_item(ey_rhs_item_t *item)
+void ey_free_rhs_item(ey_rhs_item_t *item)
 {
 	if(!item)
 		return;
 	if(item->condition)
-		free_rhs_item_condition(item->condition);
+		ey_free_rhs_item_condition(item->condition);
 	if(item->action)
-		free_rhs_item_action(item->action);
+		ey_free_rhs_item_action(item->action);
 	parser_free(item);
 }
 
-ey_rhs_signature_t *alloc_rhs_signature(ey_location_t *location, 
+ey_rhs_signature_t *ey_alloc_rhs_signature(ey_location_t *location, 
 	ey_rhs_item_list_t *rhs_list)
 {
 	assert(location != NULL);
@@ -97,18 +97,18 @@ ey_rhs_signature_t *alloc_rhs_signature(ey_location_t *location,
 	return ret;
 }
 
-void free_rhs_signature(ey_rhs_signature_t *rhs_signature)
+void ey_free_rhs_signature(ey_rhs_signature_t *rhs_signature)
 {
 	if(!rhs_signature)
 		return;
 	ey_rhs_item_t *item=NULL, *tmp=NULL;
 	TAILQ_FOREACH_SAFE(item, &rhs_signature->rhs_item_list, link, tmp)
 	{
-		free_rhs_item(item);
+		ey_free_rhs_item(item);
 	}
 }
 
-ey_signature_t *alloc_signature(unsigned long id,
+ey_signature_t *ey_alloc_signature(unsigned long id,
 	ey_location_t *location, ey_rhs_signature_list_t *signature_list)
 {
 	assert(location != NULL);
@@ -123,13 +123,83 @@ ey_signature_t *alloc_signature(unsigned long id,
 	return ret;
 }
 
-void free_signature(ey_signature_t *signature)
+void ey_free_signature(ey_signature_t *signature)
 {
 	if(!signature)
 		return;
 	ey_rhs_signature_t *item = NULL, *tmp = NULL;
 	TAILQ_FOREACH_SAFE(item, &signature->rhs_signature_list, link, tmp)
 	{
-		free_rhs_signature(item);
+		ey_free_rhs_signature(item);
 	}
+}
+
+ey_code_t *ey_alloc_code(ey_location_t *location, char *code)
+{
+	assert(location != NULL);
+	ey_code_t *ret = (ey_code_t*)parser_malloc(sizeof(*ret));
+	if(!ret)
+		return NULL;
+	memset(ret, 0, sizeof(*ret));
+	ret->location = *location;
+	ret->raw_code = code;
+	return ret;
+}
+
+void ey_free_code(ey_code_t *code)
+{
+	if(!code)
+		return;
+	if(code->raw_code)
+		parser_free(code->raw_code);
+	parser_free(code);
+}
+
+ey_signature_file_t *ey_alloc_signature_file(char *output_file,
+	ey_code_list_t *prologue_list, 
+	ey_signature_list_t *signature_list,
+	ey_code_list_t *epilogue_list)
+{
+	ey_signature_file_t *ret = (ey_signature_file_t*)parser_malloc(sizeof(*ret));
+	if(!ret)
+		return NULL;
+	memset(ret, 0, sizeof(*ret));
+	ret->output_file = output_file;
+	TAILQ_INIT(&ret->prologue_list);
+	if(prologue_list)
+		TAILQ_CONCAT(&ret->prologue_list, prologue_list, link);
+	TAILQ_INIT(&ret->signature_list);
+	if(signature_list)
+		TAILQ_CONCAT(&ret->signature_list, signature_list, link);
+	TAILQ_INIT(&ret->epilogue_list);
+	if(epilogue_list)
+		TAILQ_CONCAT(&ret->epilogue_list, epilogue_list, link);
+	return ret;
+}
+
+void ey_free_signature_file(ey_signature_file_t *file)
+{
+	if(!file)
+		return;
+	
+	if(file->output_file)
+		parser_free(file->output_file);
+	
+	ey_code_t *code=NULL, *tmp=NULL;
+	TAILQ_FOREACH_SAFE(code, &file->prologue_list, link, tmp)
+	{
+		ey_free_code(code);
+	}
+
+	TAILQ_FOREACH_SAFE(code, &file->epilogue_list, link, tmp)
+	{
+		ey_free_code(code);
+	}
+	
+	ey_signature_t *sig=NULL, *sig2=NULL;
+	TAILQ_FOREACH_SAFE(sig, &file->signature_list, link, sig2)
+	{
+		ey_free_signature(sig);
+	}
+	parser_free(file);
 }

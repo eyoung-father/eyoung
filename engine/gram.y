@@ -6,6 +6,7 @@
 #include "ey_memory.h"
 #include "ey_loc.h"
 #include "ey_info.h"
+#include "ey_signature.h"
 
 int gram_error(GRAM_LTYPE *loc, void *eng, const char *format, ...);
 
@@ -15,7 +16,8 @@ int gram_error(GRAM_LTYPE *loc, void *eng, const char *format, ...);
 
 %union
 {
-	char *str;
+	char *code;
+	char *event;
 }
 
 %token TOKEN_STRING			"string"
