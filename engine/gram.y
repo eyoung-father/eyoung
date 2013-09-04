@@ -13,6 +13,11 @@ int gram_error(GRAM_LTYPE *loc, void *eng, const char *format, ...);
 #define yydebug debug_engine_parser
 %}
 
+%union
+{
+	char *str;
+}
+
 %token TOKEN_STRING			"string"
 %token TOKEN_INT			"integer"
 %token TOKEN_ID				"event"
