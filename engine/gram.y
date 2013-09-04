@@ -8,6 +8,9 @@
 #include "ey_info.h"
 
 int gram_error(GRAM_LTYPE *loc, void *eng, const char *format, ...);
+
+#undef yydebug
+#define yydebug debug_engine_parser
 %}
 
 %token TOKEN_STRING			"string"
