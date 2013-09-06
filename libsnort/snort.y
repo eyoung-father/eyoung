@@ -58,6 +58,13 @@ int snort_error(SNORT_LTYPE *loc, const char *format, ...);
 %token TOKEN_FROMBEGIN		"from_beginning"
 %token TOKEN_POSTOFFSET		"post_offset"
 %token TOKEN_ALERT			"alert"
+%token TOKEN_PASS			"pass"
+%token TOKEN_DROP			"drop"
+%token TOKEN_REJECT			"reject"
+%token TOKEN_LOG			"log"
+%token TOKEN_DYNAMIC		"dynamic"
+%token TOKEN_ACTIVATE		"activate"
+%token TOKEN_SDROP			"sdrop"
 %token TOKEN_TCP			"tcp"
 %token TOKEN_UDP			"udp"
 %token TOKEN_ICMP			"icmp"
@@ -122,6 +129,13 @@ protocol:
 
 action:
 	TOKEN_ALERT
+	| TOKEN_LOG
+	| TOKEN_PASS
+	| TOKEN_REJECT
+	| TOKEN_DROP
+	| TOKEN_DYNAMIC
+	| TOKEN_ACTIVATE
+	| TOKEN_SDROP
 	;
 
 src_ip:

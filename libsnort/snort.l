@@ -77,6 +77,13 @@ hex_number 0x{hex}+
 {
 	/*keywords*/
 	"alert"				{RETURN(TOKEN_ALERT);}
+	"log"				{RETURN(TOKEN_LOG);}
+	"drop"				{RETURN(TOKEN_DROP);}
+	"reject"			{RETURN(TOKEN_REJECT);}
+	"sdrop"				{RETURN(TOKEN_SDROP);}
+	"pass"				{RETURN(TOKEN_PASS);}
+	"activate"			{RETURN(TOKEN_ACTIVATE);}
+	"dynamic"			{RETURN(TOKEN_DYNAMIC);}
 	"tcp"				{RETURN(TOKEN_TCP);}
 	"udp"				{RETURN(TOKEN_UDP);}
 	"icmp"				{RETURN(TOKEN_ICMP);}
