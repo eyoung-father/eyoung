@@ -4,7 +4,7 @@
 #include "snort_info.h"
 
 int debug_snort_init = 1;
-int debug_snort_lexier = 1;
+int debug_snort_lexer = 1;
 
 int snort_parser_error(const char *format, ...)
 {
@@ -34,7 +34,7 @@ int snort_parser_debug(const char *format, ...)
 
 int snort_lexer_error(const char *format, ...)
 {
-	if(!debug_snort_lexier)
+	if(!debug_snort_lexer)
 		return 0;
 	
 	va_list ap;
@@ -47,7 +47,7 @@ int snort_lexer_error(const char *format, ...)
 
 int snort_lexer_debug(const char *format, ...)
 {
-	if(!debug_snort_lexier)
+	if(!debug_snort_lexer)
 		return 0;
 	
 	va_list ap;

@@ -16,6 +16,7 @@ int snort_error(SNORT_LTYPE *loc, const char *format, ...);
 %token TOKEN_MSG			"msg"
 %token TOKEN_COLON			":"
 %token TOKEN_STRING			"[string]"
+%token TOKEN_BYTE_STRING	"string"
 %token TOKEN_SEMI			";"
 %token TOKEN_COMMA			","
 %token TOKEN_CONTENT		"content"
@@ -34,6 +35,7 @@ int snort_error(SNORT_LTYPE *loc, const char *format, ...);
 %token TOKEN_LT				"<"
 %token TOKEN_GT				">"
 %token TOKEN_IPPROTO		"ip_proto"
+%token TOKEN_IGMP			"igmp"
 %token TOKEN_TTL			"ttl"
 %token TOKEN_LTEQ			"<="
 %token TOKEN_GTEQ			">="
@@ -56,6 +58,10 @@ int snort_error(SNORT_LTYPE *loc, const char *format, ...);
 %token TOKEN_FROMBEGIN		"from_beginning"
 %token TOKEN_POSTOFFSET		"post_offset"
 %token TOKEN_ALERT			"alert"
+%token TOKEN_TCP			"tcp"
+%token TOKEN_UDP			"udp"
+%token TOKEN_ICMP			"icmp"
+%token TOKEN_IP				"ip"
 %token TOKEN_ANY			"any"
 %token TOKEN_SARROW			"->"
 %token TOKEN_DARROW			"<>"
@@ -103,7 +109,15 @@ signature_list:
 	;
 
 signature:
-	action src_ip src_port direction dst_ip dst_port TOKEN_LPAREN body TOKEN_RPAREN
+	action protocol src_ip src_port direction dst_ip dst_port TOKEN_LPAREN body TOKEN_RPAREN
+	;
+
+protocol:
+	TOKEN_TCP
+	| TOKEN_UDP
+	| TOKEN_IP
+	| TOKEN_ICMP
+	| TOKEN_IGMP
 	;
 
 action:
@@ -119,16 +133,19 @@ dst_ip:
 	;
 
 src_port:
-	TOKEN_NUMBER max_port_opt
+	negative_opt TOKEN_NUMBER max_port_opt
+	| TOKEN_ANY
 	;
 
 dst_port:
-	TOKEN_NUMBER max_port_opt
+	negative_opt TOKEN_NUMBER max_port_opt
+	| TOKEN_ANY
 	;
 
 max_port_opt:
 	empty
 	| TOKEN_COLON TOKEN_NUMBER
+	| TOKEN_COLON
 	;
 
 direction:
@@ -235,7 +252,7 @@ dsize_operator_opt:
 	;
 
 ipproto_item:
-	TOKEN_IPPROTO TOKEN_COLON TOKEN_STRING TOKEN_SEMI
+	TOKEN_IPPROTO TOKEN_COLON protocol TOKEN_SEMI
 	;
 
 ttl_item:
@@ -282,6 +299,7 @@ bytetest_item:
 	TOKEN_COMMA TOKEN_NUMBER	/*value*/
 	TOKEN_COMMA TOKEN_NUMBER	/*offset*/
 	bytetest_option_list
+	TOKEN_SEMI
 	;
 
 bytetest_option_list:
@@ -291,8 +309,8 @@ bytetest_option_list:
 
 bytetest_option:
 	bytetest_option_relative
-	bytetest_option_endian
-	bytetest_option_string
+	| bytetest_option_endian
+	| bytetest_option_string
 	;
 
 bytetest_operator:
@@ -313,9 +331,9 @@ bytetest_option_endian:
 	;
 
 bytetest_option_string:
-	TOKEN_STRING TOKEN_DEC
-	| TOKEN_STRING TOKEN_HEX
-	| TOKEN_STRING TOKEN_OCT
+	TOKEN_BYTE_STRING TOKEN_COMMA TOKEN_DEC
+	| TOKEN_BYTE_STRING TOKEN_COMMA TOKEN_HEX
+	| TOKEN_BYTE_STRING TOKEN_COMMA TOKEN_OCT
 	;
 
 bytejump_item:
@@ -323,6 +341,7 @@ bytejump_item:
 	TOKEN_NUMBER
 	TOKEN_COMMA TOKEN_NUMBER
 	bytejump_option_list
+	TOKEN_SEMI
 	;
 
 bytejump_option_list:
