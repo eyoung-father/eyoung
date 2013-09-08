@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "snort_info.h"
+#include "snort_signature.h"
 #include "snort_parser.h"
 
 #define YY_USER_ACTION										\

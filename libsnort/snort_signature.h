@@ -154,10 +154,10 @@ typedef struct snort_option_dsize
 	int dsize;
 }snort_option_dsize_t;
 
-typedef struct snort_option_ipprot
+typedef struct snort_option_ipproto
 {
-	snort_protocol_t ipprot;
-}snort_option_ipprot_t;
+	snort_protocol_t ipproto;
+}snort_option_ipproto_t;
 
 typedef struct snort_option_ttl
 {
@@ -247,7 +247,7 @@ typedef struct snort_option
 		snort_option_sid_t sid;
 		snort_option_priority_t priority;
 		snort_option_dsize_t dsize;
-		snort_option_ipprot_t ipprot;
+		snort_option_ipproto_t ipproto;
 		snort_option_ttl_t ttl;
 		snort_option_itype_t itype;
 		snort_option_icode_t icode;

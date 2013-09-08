@@ -94,7 +94,7 @@ int snort_error(SNORT_LTYPE *loc, const char *format, ...);
 	snort_ip_t ip;
 	snort_port_t port;
 	unsigned short us;
-	snort_direction_t direction
+	snort_direction_t direction;
 	snort_option_t option;
 	snort_option_list_t option_list;
 	snort_signature_t signature;
@@ -198,7 +198,7 @@ signature:
 		$$.protocol = $2;
 		$$.src_ip = $3;
 		$$.src_port = $4;
-		$$.direction = $5
+		$$.direction = $5;
 		$$.dst_ip = $6;
 		$$.dst_port = $7;
 		TAILQ_INIT(&$$.option_list);
@@ -572,7 +572,7 @@ uricontent_item:
 	{
 		$$.type = SNORT_OPTION_TYPE_URICONTENT;
 		$$.uricontent.negative = $3;
-		$$.uricontent.content = $4;
+		$$.uricontent.uricontent = $4;
 	}
 	;
 
@@ -732,7 +732,7 @@ bytetest_option_list:
 	}
 	| bytetest_option_list TOKEN_COMMA bytetest_option
 	{
-		$$.mask |= $3.mask
+		$$.mask |= $3.mask;
 		if($3.mask==DO_RELATIVE)
 			$$.relative = $3.relative;
 		if($3.mask==DO_ENDIAN)

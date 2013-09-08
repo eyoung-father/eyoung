@@ -1,6 +1,7 @@
 #ifdef SNORT_DEBUG
 
 #include "snort_info.h"
+#include "snort_signature.h"
 #include "snort_parser.h"
 #include "snort_lexer.h"
 
