@@ -23,6 +23,7 @@
 		yylloc->first_column = start_location.first_column;	\
 		yylloc->last_line = yylineno;						\
 		yylloc->last_column = yycolumn+yyleng;				\
+		yylloc->filename = get_filename(yyscanner);			\
 		yycolumn += yyleng;									\
 	}
 
@@ -54,12 +55,13 @@ static int paren_level;
 static int saved_state;
 static int in_code;
 static int after_prologue;
-static GRAM_LTYPE start_location = {1,1,1,1};
+static GRAM_LTYPE start_location = {1,1,1,1,""};
 
 static int add_string(yyscan_t yyscanner, char *str, int str_len);
 static void reset_string(yyscan_t yyscanner);
 static char *print_string(yyscan_t yyscanner);
 static char *copy_string(yyscan_t yyscanner);
+static char *get_filename(yyscan_t yyscanner);
 %}
 
 %option debug
@@ -532,4 +534,10 @@ static char *copy_string(yyscan_t yyscanner)
 	memcpy(ret, eng->parser->buffer, eng->parser->buffer_len);
 	ret[eng->parser->buffer_len] = '\0';
 	return ret;
+}
+
+static char *get_filename(yyscan_t yyscanner)
+{
+	ey_engine_t *eng = (ey_engine_t *)gram_get_extra(yyscanner);
+	return eng->parser->filename;
 }

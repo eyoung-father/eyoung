@@ -66,7 +66,7 @@ int ey_parse_file(ey_engine_t *eng, const char *filename)
 	gram_pstate *pstate = NULL;
 	ey_parser_t *parser = NULL;
 	GRAM_STYPE sval;
-	GRAM_LTYPE lval = {1,1,1,1};
+	GRAM_LTYPE lval = {1,1,1,1,filename};
 	int token = 0, pstate_ret = 0;
 
 	if(!eng || !filename)
