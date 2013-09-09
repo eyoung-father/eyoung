@@ -106,9 +106,15 @@ number	[1-9]{digit}*
 					RETURN(TOKEN_EVENT);
 				}
 	{ident}		{
-					yylval->string = copy_string(yyscanner);
-					if(!yylval->string)
+					char *ident = (char*)lexer_malloc(yyleng+1);
+					if(!ident)
+					{
+						engine_lexer_error("alloc ident name failed\n");
 						return -1;
+					}
+					memcpy(ident, yytext, yyleng);
+					ident[yyleng] = '\0';
+					yylval->string = ident;
 					RETURN(TOKEN_ID);
 				}
 	{number}	{
