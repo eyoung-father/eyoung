@@ -10,10 +10,17 @@
 #include "gram_parser.h"
 #include "ey_engine.h"
 
+#define SAVE_LOCATION										\
+	do														\
+	{														\
+		start_location.first_line = yylineno;				\
+		start_location.first_column = yycolumn;				\
+	}while(0)
+
 #define YY_USER_ACTION										\
 	{														\
-		yylloc->first_line = yylineno;						\
-		yylloc->first_column = yycolumn;					\
+		yylloc->first_line = start_location.first_line;		\
+		yylloc->first_column = start_location.first_column;	\
 		yylloc->last_line = yylineno;						\
 		yylloc->last_column = yycolumn+yyleng;				\
 		yycolumn += yyleng;									\
@@ -29,6 +36,7 @@
 		engine_lexer_debug("line %d return %s, value: %s\n",\
 			__LINE__, #sym, ret_str);						\
 		reset_string(yyscanner);							\
+		SAVE_LOCATION;										\
 		return sym;											\
 	}while(0)
 
@@ -46,6 +54,7 @@ static int paren_level;
 static int saved_state;
 static int in_code;
 static int after_prologue;
+static GRAM_LTYPE start_location = {1,1,1,1};
 
 static int add_string(yyscan_t yyscanner, char *str, int str_len);
 static void reset_string(yyscan_t yyscanner);
