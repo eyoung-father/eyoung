@@ -28,11 +28,15 @@ typedef struct ey_rhs_item
 {
 	TAILQ_ENTRY(ey_rhs_item) link;
 	ey_location_t location;
+	char *event_name;
+	char *cluster_condition;
 	ey_rhs_item_condition_t *condition;
 	ey_rhs_item_action_t *action;
 }ey_rhs_item_t;
 typedef TAILQ_HEAD(ey_rhs_item_list, ey_rhs_item) ey_rhs_item_list_t;
 extern ey_rhs_item_t *ey_alloc_rhs_item(ey_location_t *location, 
+	char *event_name,
+	char *cluster_condition,
 	ey_rhs_item_condition_t *condition, 
 	ey_rhs_item_action_t *action);
 extern void ey_free_rhs_item(ey_rhs_item_t *item);
@@ -75,11 +79,11 @@ typedef struct ey_signature_file
 	char *output_file;
 	ey_code_list_t prologue_list;
 	ey_signature_list_t signature_list;
-	ey_code_list_t epilogue_list;
+	ey_code_t *epilogue;
 }ey_signature_file_t;
 extern ey_signature_file_t *ey_alloc_signature_file(char *output_file,
 	ey_code_list_t *prologue_list, 
 	ey_signature_list_t *signature_list,
-	ey_code_list_t *epilogue_list);
+	ey_code_t *epilogue);
 extern void ey_free_signature_file(ey_signature_file_t *file);
 #endif

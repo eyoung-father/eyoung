@@ -5,7 +5,7 @@ MODULE_TOP_DIR = .
 BUILD_NAME = libengine
 SUB_MOD =
 SUB_DIR = 
-CFLAGS_LOCAL = -DENGINE_DEBUG=1 -Wno-sign-compare
+CFLAGS_LOCAL = -DGRAM_LTYPE_IS_DECLARED -DENGINE_DEBUG=1 -Wno-sign-compare
 ifeq ($(DEMO),1)
 BUILD_TYPE = bin
 BUILD_NAME = engine

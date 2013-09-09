@@ -5,6 +5,8 @@
 
 #include "engine_mem.h"
 #include "ey_info.h"
+#include "ey_loc.h"
+#include "ey_signature.h"
 #include "gram_parser.h"
 #include "ey_engine.h"
 
@@ -48,6 +50,7 @@ static int after_prologue;
 static int add_string(yyscan_t yyscanner, char *str, int str_len);
 static void reset_string(yyscan_t yyscanner);
 static char *print_string(yyscan_t yyscanner);
+static char *copy_string(yyscan_t yyscanner);
 %}
 
 %option debug
@@ -99,7 +102,13 @@ number	[1-9]{digit}*
 	"%import"	{
 					RETURN(TOKEN_IMPORT);
 				}
+	"%event"	{
+					RETURN(TOKEN_EVENT);
+				}
 	{ident}		{
+					yylval->string = copy_string(yyscanner);
+					if(!yylval->string)
+						return -1;
 					RETURN(TOKEN_ID);
 				}
 	{number}	{
@@ -177,7 +186,12 @@ number	[1-9]{digit}*
 						add_string(yyscanner, yytext, yyleng);
 					GOTO(saved_state);
 					if(!in_code) 
+					{
+						yylval->string = copy_string(yyscanner);
+						if(!yylval->string)
+							return -1;
 						RETURN(TOKEN_STRING);
+					}
 				}
 	{newline}	{
 					yycolumn=1;
@@ -201,7 +215,12 @@ number	[1-9]{digit}*
 						add_string(yyscanner, yytext, yyleng);
 					GOTO(saved_state);
 					if(!in_code) 
+					{
+						yylval->string = copy_string(yyscanner);
+						if(!yylval->string)
+							return -1;
 						RETURN(TOKEN_STRING);
+					}
 				}
 	{newline}	{
 					yycolumn=1;
@@ -253,6 +272,9 @@ number	[1-9]{digit}*
 					GOTO(INITIAL);
 					saved_state = INITIAL;
 					in_code = 0;
+					yylval->string = copy_string(yyscanner);
+					if(!yylval->string)
+						return -1;
 					RETURN(TOKEN_PROLOGUE_CODE);
 				}
 	{newline}	{
@@ -295,6 +317,9 @@ number	[1-9]{digit}*
 					GOTO(INITIAL);
 					saved_state = INITIAL;
 					in_code = 0;
+					yylval->string = copy_string(yyscanner);
+					if(!yylval->string)
+						return -1;
 					RETURN(TOKEN_EPILOGUE_CODE);
 				}
 }
@@ -331,6 +356,9 @@ number	[1-9]{digit}*
 						GOTO(INITIAL);
 						saved_state = INITIAL;
 						in_code = 0;
+						yylval->string = copy_string(yyscanner);
+						if(!yylval->string)
+							return -1;
 						RETURN(TOKEN_RHS_ACTION);
 					}
 				}
@@ -376,6 +404,9 @@ number	[1-9]{digit}*
 						GOTO(INITIAL);
 						saved_state = INITIAL;
 						in_code = 0;
+						yylval->string = copy_string(yyscanner);
+						if(!yylval->string)
+							return -1;
 						RETURN(TOKEN_RHS_CONDITION);
 					}
 				}
@@ -424,7 +455,7 @@ static int add_string(yyscan_t yyscanner, char *str, int str_len)
 	ey_parser_t *parser = eng->parser;
 	if(parser->buffer_len + str_len >= parser->buffer_size)
 	{
-		char *new_buffer = (char*)engine_malloc(parser->buffer_size + str_len + DEFAULT_BUFFER_SIZE);
+		char *new_buffer = (char*)lexer_malloc(parser->buffer_size + str_len + DEFAULT_BUFFER_SIZE);
 		if(!new_buffer)
 		{
 			engine_lexer_error("alloc new buffer failed\n");
@@ -466,4 +497,24 @@ static char *print_string(yyscan_t yyscanner)
 	}
 
 	return eng->parser->buffer;
+}
+
+static char *copy_string(yyscan_t yyscanner)
+{
+	ey_engine_t *eng = (ey_engine_t *)gram_get_extra(yyscanner);
+	if(!eng || !eng->parser || !eng->parser->buffer)
+	{
+		engine_lexer_error("bad extra parameter\n");
+		return NULL;
+	}
+	
+	char *ret = (char*)lexer_malloc(eng->parser->buffer_len + 1);
+	if(!ret)
+	{
+		engine_lexer_error("malloc string failed\n");
+		return NULL;
+	}
+	memcpy(ret, eng->parser->buffer, eng->parser->buffer_len);
+	ret[eng->parser->buffer_len] = '\0';
+	return ret;
 }

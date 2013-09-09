@@ -1,13 +1,12 @@
-#ifndef ENGINE_LOCATION_H
-#define ENGINE_LOCATION_H 1
+#ifndef EY_LOC_H
+#define EY_LOC_H 1
 
-#include "gram_parser.h"
-typedef struct ey_location
+typedef struct GRAM_LTYPE
 {
-	char *filename;
-	int first_line;
-	int first_column;
-	int last_line;
-	int last_column;
-}ey_location_t;
+  int first_line;
+  int first_column;
+  int last_line;
+  int last_column;
+} GRAM_LTYPE;
+typedef GRAM_LTYPE ey_location_t;
 #endif
