@@ -6,9 +6,11 @@
 #include "ey_signature.h"
 #include "engine_mem.h"
 #include "ey_info.h"
+#include "ey_event.h"
+#include "ey_engine.h"
 
 
-ey_rhs_item_condition_t *ey_alloc_rhs_item_condition(ey_location_t *location, 
+ey_rhs_item_condition_t *ey_alloc_rhs_item_condition(ey_engine_t *eng, ey_location_t *location, 
 	char *code, void *symbol)
 {
 	assert(location != NULL);
@@ -23,7 +25,7 @@ ey_rhs_item_condition_t *ey_alloc_rhs_item_condition(ey_location_t *location,
 	return ret;
 }
 
-void ey_free_rhs_item_condition(ey_rhs_item_condition_t *condition)
+void ey_free_rhs_item_condition(ey_engine_t *eng, ey_rhs_item_condition_t *condition)
 {
 	if(!condition)
 		return;
@@ -32,7 +34,7 @@ void ey_free_rhs_item_condition(ey_rhs_item_condition_t *condition)
 	parser_free(condition);
 }
 
-ey_rhs_item_action_t *ey_alloc_rhs_item_action(ey_location_t *location, 
+ey_rhs_item_action_t *ey_alloc_rhs_item_action(ey_engine_t *eng, ey_location_t *location, 
 	char *code, void *symbol)
 {
 	assert(location != NULL);
@@ -47,7 +49,7 @@ ey_rhs_item_action_t *ey_alloc_rhs_item_action(ey_location_t *location,
 	return ret;
 }
 
-void ey_free_rhs_item_action(ey_rhs_item_action_t *action)
+void ey_free_rhs_item_action(ey_engine_t *eng, ey_rhs_item_action_t *action)
 {
 	if(!action)
 		return;
@@ -56,7 +58,7 @@ void ey_free_rhs_item_action(ey_rhs_item_action_t *action)
 	parser_free(action);
 }
 
-ey_rhs_item_t *ey_alloc_rhs_item(ey_location_t *location, 
+ey_rhs_item_t *ey_alloc_rhs_item(ey_engine_t *eng, ey_location_t *location, 
 	char *event_name,
 	char *cluster_condition,
 	ey_rhs_item_condition_t *condition, 
@@ -76,7 +78,7 @@ ey_rhs_item_t *ey_alloc_rhs_item(ey_location_t *location,
 	return ret;
 }
 
-void ey_free_rhs_item(ey_rhs_item_t *item)
+void ey_free_rhs_item(ey_engine_t *eng, ey_rhs_item_t *item)
 {
 	if(!item)
 		return;
@@ -85,13 +87,13 @@ void ey_free_rhs_item(ey_rhs_item_t *item)
 	if(item->cluster_condition)
 		lexer_free(item->cluster_condition);
 	if(item->condition)
-		ey_free_rhs_item_condition(item->condition);
+		ey_free_rhs_item_condition(eng, item->condition);
 	if(item->action)
-		ey_free_rhs_item_action(item->action);
+		ey_free_rhs_item_action(eng, item->action);
 	parser_free(item);
 }
 
-ey_rhs_signature_t *ey_alloc_rhs_signature(ey_location_t *location, 
+ey_rhs_signature_t *ey_alloc_rhs_signature(ey_engine_t *eng, ey_location_t *location, 
 	ey_rhs_item_list_t *rhs_list)
 {
 	assert(location != NULL);
@@ -106,18 +108,18 @@ ey_rhs_signature_t *ey_alloc_rhs_signature(ey_location_t *location,
 	return ret;
 }
 
-void ey_free_rhs_signature(ey_rhs_signature_t *rhs_signature)
+void ey_free_rhs_signature(ey_engine_t *eng, ey_rhs_signature_t *rhs_signature)
 {
 	if(!rhs_signature)
 		return;
 	ey_rhs_item_t *item=NULL, *tmp=NULL;
 	TAILQ_FOREACH_SAFE(item, &rhs_signature->rhs_item_list, link, tmp)
 	{
-		ey_free_rhs_item(item);
+		ey_free_rhs_item(eng, item);
 	}
 }
 
-ey_signature_t *ey_alloc_signature(unsigned long id,
+ey_signature_t *ey_alloc_signature(ey_engine_t *eng, unsigned long id,
 	ey_location_t *location, ey_rhs_signature_list_t *signature_list)
 {
 	assert(location != NULL);
@@ -132,18 +134,18 @@ ey_signature_t *ey_alloc_signature(unsigned long id,
 	return ret;
 }
 
-void ey_free_signature(ey_signature_t *signature)
+void ey_free_signature(ey_engine_t *eng, ey_signature_t *signature)
 {
 	if(!signature)
 		return;
 	ey_rhs_signature_t *item = NULL, *tmp = NULL;
 	TAILQ_FOREACH_SAFE(item, &signature->rhs_signature_list, link, tmp)
 	{
-		ey_free_rhs_signature(item);
+		ey_free_rhs_signature(eng, item);
 	}
 }
 
-ey_code_t *ey_alloc_code(ey_location_t *location, char *code)
+ey_code_t *ey_alloc_code(ey_engine_t *eng, ey_location_t *location, void *code, int type)
 {
 	assert(location != NULL);
 	ey_code_t *ret = (ey_code_t*)parser_malloc(sizeof(*ret));
@@ -151,20 +153,44 @@ ey_code_t *ey_alloc_code(ey_location_t *location, char *code)
 		return NULL;
 	memset(ret, 0, sizeof(*ret));
 	ret->location = *location;
-	ret->raw_code = code;
+	ret->type = type;
+	switch(type)
+	{
+		case EY_CODE_NORMAL:
+			ret->raw_code = (char*)code;
+			break;
+		case EY_CODE_IMPORT:
+			ret->filename = (char*)code;
+			break;
+		case EY_CODE_EVENT:
+		default:
+			ret->event = (ey_event_t*)code;
+			break;
+	}
 	return ret;
 }
 
-void ey_free_code(ey_code_t *code)
+void ey_free_code(ey_engine_t *eng, ey_code_t *code)
 {
 	if(!code)
 		return;
-	if(code->raw_code)
-		lexer_free(code->raw_code);
+	switch(code->type)
+	{
+		case EY_CODE_NORMAL:
+			if(code->raw_code) lexer_free(code->raw_code);
+			break;
+		case EY_CODE_IMPORT:
+			if(code->filename) lexer_free(code->filename);
+			break;
+		case EY_CODE_EVENT:
+		default:
+			if(code->event) ey_free_event(eng, code->event);
+			break;
+	}
 	parser_free(code);
 }
 
-ey_signature_file_t *ey_alloc_signature_file(char *output_file,
+ey_signature_file_t *ey_alloc_signature_file(ey_engine_t *eng, char *output_file,
 	ey_code_list_t *prologue_list, 
 	ey_signature_list_t *signature_list,
 	ey_code_t *epilogue)
@@ -184,7 +210,7 @@ ey_signature_file_t *ey_alloc_signature_file(char *output_file,
 	return ret;
 }
 
-void ey_free_signature_file(ey_signature_file_t *file)
+void ey_free_signature_file(ey_engine_t *eng, ey_signature_file_t *file)
 {
 	if(!file)
 		return;
@@ -195,14 +221,14 @@ void ey_free_signature_file(ey_signature_file_t *file)
 	ey_code_t *code=NULL, *tmp=NULL;
 	TAILQ_FOREACH_SAFE(code, &file->prologue_list, link, tmp)
 	{
-		ey_free_code(code);
+		ey_free_code(eng, code);
 	}
-	ey_free_code(file->epilogue);
+	ey_free_code(eng, file->epilogue);
 	
 	ey_signature_t *sig=NULL, *sig2=NULL;
 	TAILQ_FOREACH_SAFE(sig, &file->signature_list, link, sig2)
 	{
-		ey_free_signature(sig);
+		ey_free_signature(eng, sig);
 	}
 	parser_free(file);
 }

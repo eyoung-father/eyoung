@@ -26,6 +26,10 @@ engine_t ey_engine_create(const char *name)
 	if(ey_parser_init(ret))
 		goto failed;
 	
+	/*init event*/
+	if(ey_event_init(ret))
+		goto failed;
+
 	return (engine_t)ret;
 
 failed:
@@ -40,6 +44,7 @@ void ey_engine_destroy(engine_t engine)
 		return;
 	
 	ey_parser_finit(eng);
+	ey_event_finit(eng);
 	ey_free(eng);
 }
 

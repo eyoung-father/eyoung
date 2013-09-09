@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "ey_engine.h"
 #include "engine_mem.h"
 #include "ey_memory.h"
 #include "ey_loc.h"
@@ -13,6 +14,8 @@ int gram_error(GRAM_LTYPE *loc, void *eng, const char *format, ...);
 
 #undef yydebug
 #define yydebug debug_engine_parser
+
+#define ENG ((ey_engine_t *)eng)
 %}
 
 %token TOKEN_STRING			"string"
@@ -68,25 +71,25 @@ int gram_error(GRAM_LTYPE *loc, void *eng, const char *format, ...);
 %type	<action>			rhs_action_opt
 %destructor
 {
-	ey_free_rhs_item_action($$);
+	ey_free_rhs_item_action(ENG, $$);
 }rhs_action_opt
 
 %type	<condition>			rhs_condition_opt
 %destructor
 {
-	ey_free_rhs_item_condition($$);
+	ey_free_rhs_item_condition(ENG, $$);
 }rhs_condition_opt
 
 %type	<rhs_item>			signature_rhs
 %destructor
 {
-	ey_free_rhs_item($$);
+	ey_free_rhs_item(ENG, $$);
 }signature_rhs
 
 %type	<rhs_signature>		signature_rhs_list
 %destructor
 {
-	ey_free_rhs_signature($$);
+	ey_free_rhs_signature(ENG, $$);
 }signature_rhs_list
 
 %type	<rhs_list>			signature_pipe_list
@@ -94,7 +97,7 @@ int gram_error(GRAM_LTYPE *loc, void *eng, const char *format, ...);
 {
 	ey_rhs_signature_t *rhs=NULL, *tmp=NULL;
 	TAILQ_FOREACH_SAFE(rhs, &$$, link, tmp)
-		ey_free_rhs_signature(rhs);
+		ey_free_rhs_signature(ENG, rhs);
 }signature_pipe_list
 
 %type	<integer>			signature_lhs
@@ -102,7 +105,7 @@ int gram_error(GRAM_LTYPE *loc, void *eng, const char *format, ...);
 %type	<signature>			signature
 %destructor
 {
-	ey_free_signature($$);
+	ey_free_signature(ENG, $$);
 }signature
 
 %type	<signature_list>	signatures
@@ -111,14 +114,14 @@ int gram_error(GRAM_LTYPE *loc, void *eng, const char *format, ...);
 {
 	ey_signature_t *sig=NULL, *tmp=NULL;
 	TAILQ_FOREACH_SAFE(sig, &$$, link, tmp)
-		ey_free_signature(sig);
+		ey_free_signature(ENG, sig);
 }signatures signature_opt
 
 %type	<code>				prologue
 %type	<code>				epilogue_opt
 %destructor
 {
-	ey_free_code($$);
+	ey_free_code(ENG, $$);
 }prologue
 
 %type	<code_list>			prologue_list
@@ -127,13 +130,13 @@ int gram_error(GRAM_LTYPE *loc, void *eng, const char *format, ...);
 {
 	ey_code_t *code=NULL, *tmp=NULL;
 	TAILQ_FOREACH_SAFE(code, &$$, link, tmp)
-		ey_free_code(code);
+		ey_free_code(ENG, code);
 }prologue_list prologue_opt
 
 %type	<file>				eyoung_file
 %destructor
 {
-	ey_free_signature_file($$);
+	ey_free_signature_file(ENG, $$);
 }eyoung_file
 
 %debug
@@ -154,7 +157,7 @@ empty:
 eyoung_file:
 	prologue_opt TOKEN_DPERCENT signature_opt TOKEN_DPERCENT epilogue_opt
 	{
-		ey_signature_file_t *ret = ey_alloc_signature_file(NULL, &$1, &$3, $5);
+		ey_signature_file_t *ret = ey_alloc_signature_file(ENG, NULL, &$1, &$3, $5);
 		if(!ret)
 		{
 			engine_parser_error("alloc file failed\n");
@@ -194,7 +197,7 @@ prologue_list:
 prologue:
 	TOKEN_PROLOGUE_CODE
 	{
-		ey_code_t *ret = ey_alloc_code(&@1, $1);
+		ey_code_t *ret = ey_alloc_code(ENG, &@1, (void*)$1, EY_CODE_NORMAL);
 		if(!ret)
 		{
 			engine_parser_error("alloc prologue code failed\n");
@@ -209,13 +212,37 @@ prologue:
 	}
 	| TOKEN_IMPORT TOKEN_STRING
 	{
-		/*TODO: do import*/
-		$$ = NULL;
+		ey_code_t *ret = ey_alloc_code(ENG, &@2, (void*)$2, EY_CODE_IMPORT);
+		if(!ret)
+		{
+			engine_parser_error("alloc import code failed\n");
+			YYABORT;
+		}
+		$$ = ret;
 	}
 	| TOKEN_EVENT TOKEN_STRING TOKEN_STRING
 	{
-		/*TODO: event declaration*/
-		$$ = NULL;
+		ey_event_t *ev = ey_alloc_event(ENG, &@2, $2, $3);
+		if(!ev)
+		{
+			engine_parser_error("alloc event failed\n");
+			YYABORT;
+		}
+
+		ev = ey_define_event(ENG, ev);
+		if(!ev)
+		{
+			engine_parser_error("define event failed\n");
+			YYABORT;
+		}
+
+		ey_code_t *ret = ey_alloc_code(ENG, &@2, (void*)ev, EY_CODE_EVENT);
+		if(!ret)
+		{
+			engine_parser_error("alloc event code failed\n");
+			YYABORT;
+		}
+		$$ = ret;
 	}
 	;
 
@@ -247,7 +274,7 @@ signatures:
 signature:
 	signature_lhs TOKEN_COLON signature_pipe_list TOKEN_SEMICOLON
 	{
-		ey_signature_t *ret = ey_alloc_signature($1, &@1, &$3);
+		ey_signature_t *ret = ey_alloc_signature(ENG, $1, &@1, &$3);
 		if(!ret)
 		{
 			engine_parser_error("alloc signature failed\n");
@@ -281,7 +308,7 @@ signature_pipe_list:
 signature_rhs_list:
 	signature_rhs
 	{
-		ey_rhs_signature_t *ret = ey_alloc_rhs_signature(&@1, NULL);
+		ey_rhs_signature_t *ret = ey_alloc_rhs_signature(ENG, &@1, NULL);
 		if(!ret)
 		{
 			engine_parser_error("alloc rhs signature failed");
@@ -300,7 +327,7 @@ signature_rhs_list:
 signature_rhs:
 	rhs_name rhs_condition_opt rhs_cluster_opt rhs_action_opt
 	{
-		ey_rhs_item_t *ret = ey_alloc_rhs_item(&@1, $1, $3, $2, $4);
+		ey_rhs_item_t *ret = ey_alloc_rhs_item(ENG, &@1, $1, $3, $2, $4);
 		if(!ret)
 		{
 			engine_parser_error("alloc rhs item failed\n");
@@ -325,7 +352,7 @@ rhs_condition_opt:
 	}
 	| TOKEN_RHS_CONDITION
 	{
-		ey_rhs_item_condition_t *ret = ey_alloc_rhs_item_condition(&@1, $1, NULL);
+		ey_rhs_item_condition_t *ret = ey_alloc_rhs_item_condition(ENG, &@1, $1, NULL);
 		if(!ret)
 		{
 			engine_parser_error("alloc condition failed\n");
@@ -353,7 +380,7 @@ rhs_action_opt:
 	}
 	| TOKEN_RHS_ACTION
 	{
-		ey_rhs_item_action_t *ret = ey_alloc_rhs_item_action(&@1, $1, NULL);
+		ey_rhs_item_action_t *ret = ey_alloc_rhs_item_action(ENG, &@1, $1, NULL);
 		if(!ret)
 		{
 			engine_parser_error("alloc action failed\n");
@@ -370,7 +397,7 @@ epilogue_opt:
 	}
 	| TOKEN_EPILOGUE_CODE
 	{
-		ey_code_t *ret = ey_alloc_code(&@1, $1);
+		ey_code_t *ret = ey_alloc_code(ENG, &@1, (void*)$1, EY_CODE_NORMAL);
 		if(!ret)
 		{
 			engine_parser_error("alloc epilogue code failed\n");
