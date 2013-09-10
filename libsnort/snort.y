@@ -287,7 +287,10 @@ src_port:
 	{
 		$$.negative = $1;
 		$$.low_port = $2;
-		$$.high_port = $3;
+		if($3)
+			$$.high_port = $3;
+		else
+			$$.high_port = $2;
 	}
 	| TOKEN_ANY
 	{
@@ -302,7 +305,10 @@ dst_port:
 	{
 		$$.negative = $1;
 		$$.low_port = $2;
-		$$.high_port = $3;
+		if($3)
+			$$.high_port = $3;
+		else
+			$$.high_port = $2;
 	}
 	| TOKEN_ANY
 	{
@@ -315,7 +321,7 @@ dst_port:
 max_port_opt:
 	empty
 	{
-		$$ = (unsigned short)-1;
+		$$ = (unsigned short)0;
 	}
 	| TOKEN_COLON TOKEN_NUMBER
 	{
