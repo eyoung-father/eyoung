@@ -97,4 +97,7 @@ extern ey_signature_file_t *ey_alloc_signature_file(struct ey_engine *eng, char 
 	ey_signature_list_t *signature_list,
 	ey_code_t *epilogue);
 extern void ey_free_signature_file(struct ey_engine *eng, ey_signature_file_t *file);
+
+extern int ey_signature_init(struct ey_engine *eng);
+extern void ey_signature_finit(struct ey_engine *eng);
 #endif

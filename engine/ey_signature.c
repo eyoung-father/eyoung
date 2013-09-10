@@ -232,3 +232,47 @@ void ey_free_signature_file(ey_engine_t *eng, ey_signature_file_t *file)
 	}
 	engine_fzfree(ey_parser_fslab(eng), file);
 }
+
+static unsigned int hash_signature(void *signature)
+{
+	return (unsigned int)signature;
+}
+
+static int compare_signature(void *k, void *v)
+{
+	if(!k || !v)
+		return 1;
+	
+	return (unsigned int)k != (unsigned int)v;
+}
+
+
+int ey_signature_init(struct ey_engine *eng)
+{
+	char name[128];
+	if(!ey_signature_hash(eng))
+	{
+		snprintf(name, sizeof(name), "%s signature hash\n", eng->name);
+		name[63] = '\0';
+		ey_signature_hash(eng) = ey_hash_create(name, 10, 8192, hash_signature, compare_signature, NULL, NULL);
+		if(!ey_signature_hash(eng))
+		{
+			engine_init_error("create signature hash failed\n");
+			return -1;
+		}
+	}
+
+	return 0;
+}
+
+void ey_signature_finit(struct ey_engine *eng)
+{
+	if(!eng)
+		return;
+
+	if(ey_signature_hash(eng))
+	{
+		ey_hash_destroy(ey_signature_hash(eng));
+		ey_signature_hash(eng) = NULL;
+	}
+}
