@@ -138,6 +138,8 @@ void ey_fzfinit(struct ey_fslab *z)
 		return;
 	
 	ey_fzclear(z);
+	if(z->slab)
+		ey_zfinit(z->slab);
 	ey_spinlock_lock(&fslab_list_lock);
 	TAILQ_REMOVE(&fslab_list, z, link);
 	ey_spinlock_unlock(&fslab_list_lock);
