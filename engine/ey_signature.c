@@ -15,7 +15,7 @@ ey_rhs_item_condition_t *ey_alloc_rhs_item_condition(ey_engine_t *eng, ey_locati
 {
 	assert(location != NULL);
 
-	ey_rhs_item_condition_t *ret = (ey_rhs_item_condition_t*)parser_malloc(sizeof(*ret));
+	ey_rhs_item_condition_t *ret = (ey_rhs_item_condition_t*)engine_fzalloc(sizeof(*ret), ey_parser_fslab(eng));
 	if(!ret)
 		return NULL;
 	memset(ret, 0, sizeof(*ret));
@@ -30,8 +30,8 @@ void ey_free_rhs_item_condition(ey_engine_t *eng, ey_rhs_item_condition_t *condi
 	if(!condition)
 		return;
 	if(condition->raw_code)
-		lexer_free(condition->raw_code);
-	parser_free(condition);
+		engine_fzfree(ey_parser_fslab(eng), condition->raw_code);
+	engine_fzfree(ey_parser_fslab(eng), condition);
 }
 
 ey_rhs_item_action_t *ey_alloc_rhs_item_action(ey_engine_t *eng, ey_location_t *location, 
@@ -39,7 +39,7 @@ ey_rhs_item_action_t *ey_alloc_rhs_item_action(ey_engine_t *eng, ey_location_t *
 {
 	assert(location != NULL);
 
-	ey_rhs_item_action_t *ret = (ey_rhs_item_action_t*)parser_malloc(sizeof(*ret));
+	ey_rhs_item_action_t *ret = (ey_rhs_item_action_t*)engine_fzalloc(sizeof(*ret), ey_parser_fslab(eng));
 	if(!ret)
 		return NULL;
 	memset(ret, 0, sizeof(*ret));
@@ -54,8 +54,8 @@ void ey_free_rhs_item_action(ey_engine_t *eng, ey_rhs_item_action_t *action)
 	if(!action)
 		return;
 	if(action->raw_code)
-		lexer_free(action->raw_code);
-	parser_free(action);
+		engine_fzfree(ey_parser_fslab(eng), action->raw_code);
+	engine_fzfree(ey_parser_fslab(eng), action);
 }
 
 ey_rhs_item_t *ey_alloc_rhs_item(ey_engine_t *eng, ey_location_t *location, 
@@ -66,7 +66,7 @@ ey_rhs_item_t *ey_alloc_rhs_item(ey_engine_t *eng, ey_location_t *location,
 {
 	assert(location != NULL);
 	assert(event_name != NULL && event_name[0] != 0);
-	ey_rhs_item_t *ret = (ey_rhs_item_t*)parser_malloc(sizeof(*ret));
+	ey_rhs_item_t *ret = (ey_rhs_item_t*)engine_fzalloc(sizeof(*ret), ey_parser_fslab(eng));
 	if(!ret)
 		return NULL;
 	memset(ret, 0, sizeof(*ret));
@@ -83,21 +83,21 @@ void ey_free_rhs_item(ey_engine_t *eng, ey_rhs_item_t *item)
 	if(!item)
 		return;
 	if(item->event_name)
-		lexer_free(item->event_name);
+		engine_fzfree(ey_parser_fslab(eng), item->event_name);
 	if(item->cluster_condition)
-		lexer_free(item->cluster_condition);
+		engine_fzfree(ey_parser_fslab(eng), item->cluster_condition);
 	if(item->condition)
 		ey_free_rhs_item_condition(eng, item->condition);
 	if(item->action)
 		ey_free_rhs_item_action(eng, item->action);
-	parser_free(item);
+	engine_fzfree(ey_parser_fslab(eng), item);
 }
 
 ey_rhs_signature_t *ey_alloc_rhs_signature(ey_engine_t *eng, ey_location_t *location, 
 	ey_rhs_item_list_t *rhs_list)
 {
 	assert(location != NULL);
-	ey_rhs_signature_t *ret = (ey_rhs_signature_t*)parser_malloc(sizeof(*ret));
+	ey_rhs_signature_t *ret = (ey_rhs_signature_t*)engine_fzalloc(sizeof(*ret), ey_parser_fslab(eng));
 	if(!ret)
 		return NULL;
 	memset(ret, 0, sizeof(*ret));
@@ -124,7 +124,7 @@ ey_signature_t *ey_alloc_signature(ey_engine_t *eng, unsigned long id,
 {
 	assert(location != NULL);
 	assert(signature_list != NULL);
-	ey_signature_t *ret = (ey_signature_t*)parser_malloc(sizeof(*ret));
+	ey_signature_t *ret = (ey_signature_t*)engine_fzalloc(sizeof(*ret), ey_parser_fslab(eng));
 	if(!ret)
 		return NULL;
 	memset(ret, 0, sizeof(*ret));
@@ -148,7 +148,7 @@ void ey_free_signature(ey_engine_t *eng, ey_signature_t *signature)
 ey_code_t *ey_alloc_code(ey_engine_t *eng, ey_location_t *location, void *code, int type)
 {
 	assert(location != NULL);
-	ey_code_t *ret = (ey_code_t*)parser_malloc(sizeof(*ret));
+	ey_code_t *ret = (ey_code_t*)engine_fzalloc(sizeof(*ret), ey_parser_fslab(eng));
 	if(!ret)
 		return NULL;
 	memset(ret, 0, sizeof(*ret));
@@ -177,17 +177,17 @@ void ey_free_code(ey_engine_t *eng, ey_code_t *code)
 	switch(code->type)
 	{
 		case EY_CODE_NORMAL:
-			if(code->raw_code) lexer_free(code->raw_code);
+			if(code->raw_code) engine_fzfree(ey_parser_fslab(eng), code->raw_code);
 			break;
 		case EY_CODE_IMPORT:
-			if(code->filename) lexer_free(code->filename);
+			if(code->filename) engine_fzfree(ey_parser_fslab(eng), code->filename);
 			break;
 		case EY_CODE_EVENT:
 		default:
 			if(code->event) ey_free_event(eng, code->event);
 			break;
 	}
-	parser_free(code);
+	engine_fzfree(ey_parser_fslab(eng), code);
 }
 
 ey_signature_file_t *ey_alloc_signature_file(ey_engine_t *eng, char *output_file,
@@ -195,7 +195,7 @@ ey_signature_file_t *ey_alloc_signature_file(ey_engine_t *eng, char *output_file
 	ey_signature_list_t *signature_list,
 	ey_code_t *epilogue)
 {
-	ey_signature_file_t *ret = (ey_signature_file_t*)parser_malloc(sizeof(*ret));
+	ey_signature_file_t *ret = (ey_signature_file_t*)engine_fzalloc(sizeof(*ret), ey_parser_fslab(eng));
 	if(!ret)
 		return NULL;
 	memset(ret, 0, sizeof(*ret));
@@ -216,7 +216,7 @@ void ey_free_signature_file(ey_engine_t *eng, ey_signature_file_t *file)
 		return;
 	
 	if(file->output_file)
-		parser_free(file->output_file);
+		engine_fzfree(ey_parser_fslab(eng), file->output_file);
 	
 	ey_code_t *code=NULL, *tmp=NULL;
 	TAILQ_FOREACH_SAFE(code, &file->prologue_list, link, tmp)
@@ -230,5 +230,5 @@ void ey_free_signature_file(ey_engine_t *eng, ey_signature_file_t *file)
 	{
 		ey_free_signature(eng, sig);
 	}
-	parser_free(file);
+	engine_fzfree(ey_parser_fslab(eng), file);
 }

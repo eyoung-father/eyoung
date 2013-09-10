@@ -117,7 +117,8 @@ number	[1-9]{digit}*
 					RETURN(TOKEN_EVENT);
 				}
 	{ident}		{
-					char *ident = (char*)lexer_malloc(yyleng+1);
+					ey_engine_t *eng = (ey_engine_t *)gram_get_extra(yyscanner);
+					char *ident = (char*)engine_fzalloc(yyleng+1, ey_parser_fslab(eng));
 					if(!ident)
 					{
 						engine_lexer_error("alloc ident name failed\n");
@@ -472,7 +473,7 @@ static int add_string(yyscan_t yyscanner, char *str, int str_len)
 	ey_parser_t *parser = eng->parser;
 	if(parser->buffer_len + str_len >= parser->buffer_size)
 	{
-		char *new_buffer = (char*)lexer_malloc(parser->buffer_size + str_len + DEFAULT_BUFFER_SIZE);
+		char *new_buffer = (char*)engine_fzalloc(parser->buffer_size + str_len + DEFAULT_BUFFER_SIZE, ey_parser_fslab(eng));
 		if(!new_buffer)
 		{
 			engine_lexer_error("alloc new buffer failed\n");
@@ -480,7 +481,7 @@ static int add_string(yyscan_t yyscanner, char *str, int str_len)
 		}
 
 		memcpy(new_buffer, parser->buffer, parser->buffer_len);
-		engine_free(parser->buffer);
+		engine_fzfree(ey_parser_fslab(eng), parser->buffer);
 		parser->buffer = new_buffer;
 		parser->buffer_size = parser->buffer_size + DEFAULT_BUFFER_SIZE + str_len;
 	}
@@ -525,7 +526,7 @@ static char *copy_string(yyscan_t yyscanner)
 		return NULL;
 	}
 	
-	char *ret = (char*)lexer_malloc(eng->parser->buffer_len + 1);
+	char *ret = (char*)engine_fzalloc(eng->parser->buffer_len + 1, ey_parser_fslab(eng));
 	if(!ret)
 	{
 		engine_lexer_error("malloc string failed\n");

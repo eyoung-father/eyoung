@@ -65,7 +65,7 @@ int gram_error(GRAM_LTYPE *loc, void *eng, const char *format, ...);
 %destructor
 {
 	if($$)
-		lexer_free($$);
+		engine_fzfree(ey_parser_fslab(ENG), $$);
 }rhs_name rhs_cluster_opt
 
 %type	<action>			rhs_action_opt

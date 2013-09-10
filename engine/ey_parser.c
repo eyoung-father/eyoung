@@ -20,6 +20,18 @@ static int compare_filename(void *k, void *v)
 int ey_parser_init(ey_engine_t *eng)
 {
 	char name[64];
+	if(!ey_parser_fslab(eng))
+	{
+		snprintf(name, sizeof(name), "%s parser fslab\n", eng->name);
+		name[63] = '\0';
+		ey_parser_fslab(eng) = engine_fzinit(name, 64, NULL);
+		if(!ey_parser_fslab(eng))
+		{
+			engine_init_error("create parser fslab failed\n");
+			return -1;
+		}
+	}
+
 	if(!ey_filename_fslab(eng))
 	{
 		snprintf(name, sizeof(name), "%s filename fslab\n", eng->name);
@@ -53,9 +65,11 @@ void ey_parser_finit(ey_engine_t *eng)
 		return;
 
 	if(ey_filename_hash(eng))
-		ey_hash_init(ey_filename_hash(eng));
+		ey_hash_destroy(ey_filename_hash(eng));
 	if(ey_filename_fslab(eng))
-		engine_fzclear(ey_filename_fslab(eng));
+		engine_fzfinit(ey_filename_fslab(eng));
+	if(ey_parser_fslab(eng))
+		engine_fzfinit(ey_parser_fslab(eng));
 	assert(eng->parser==NULL);
 }
 
@@ -119,7 +133,7 @@ int ey_parse_file(ey_engine_t *eng, const char *filename)
 	}
 	strcpy(parser->filename, filename);
 
-	parser->buffer = (char*)engine_malloc(DEFAULT_BUFFER_SIZE);
+	parser->buffer = (char*)engine_fzalloc(DEFAULT_BUFFER_SIZE, ey_parser_fslab(eng));
 	if(!parser->buffer)
 	{
 		engine_init_error("init parser buffer failed\n");
@@ -154,7 +168,7 @@ failed:
 		if(parser->filename)
 			engine_fzfree(ey_filename_fslab(eng), parser->filename);
 		if(parser->buffer)
-			engine_free(parser->buffer);
+			engine_fzfree(ey_parser_fslab(eng), parser->buffer);
 	}
 	if(pstate)
 		gram_pstate_delete(pstate);

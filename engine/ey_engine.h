@@ -17,6 +17,7 @@ typedef struct ey_engine
 {
 	char name[64];
 
+	ey_fslab_t parser_fslab;
 	ey_fslab_t filename_fslab;
 	ey_hash_t filename_hash;
 	ey_parser_t *parser;
@@ -24,6 +25,7 @@ typedef struct ey_engine
 	ey_hash_t event_hash;
 }ey_engine_t;
 
+#define ey_parser_fslab(eng) (((ey_engine_t*)(eng))->parser_fslab)
 #define ey_filename_fslab(eng) (((ey_engine_t*)(eng))->filename_fslab)
 #define ey_filename_hash(eng) (((ey_engine_t*)(eng))->filename_hash)
 #define ey_event_hash(eng) (((ey_engine_t*)(eng))->event_hash)

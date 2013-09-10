@@ -22,19 +22,6 @@ static int compare_event(void *k, void *v)
 	return strcmp((char*)k, (char*)v);
 }
 
-static void free_event(void *e)
-{
-	if(!e)
-		return;
-	
-	ey_event_t *event = (ey_event_t*)e;
-	if(event->name)
-		lexer_free(event->name);
-	if(event->define)
-		lexer_free(event->define);
-	parser_free(event);
-}
-
 int ey_event_init(ey_engine_t *eng)
 {
 	char name[128];
@@ -42,7 +29,7 @@ int ey_event_init(ey_engine_t *eng)
 	{
 		snprintf(name, sizeof(name), "%s event hash\n", eng->name);
 		name[63] = '\0';
-		ey_event_hash(eng) = ey_hash_create(name, 10, 8192, hash_event, compare_event, free_event, NULL);
+		ey_event_hash(eng) = ey_hash_create(name, 10, 8192, hash_event, compare_event, NULL, NULL);
 		if(!ey_event_hash(eng))
 		{
 			engine_init_error("create event hash failed\n");
@@ -106,7 +93,7 @@ ey_event_t *ey_find_event(ey_engine_t *eng, char *name)
 
 ey_event_t *ey_alloc_event(ey_engine_t *eng, ey_location_t *location, char *name, char *define)
 {
-	ey_event_t *ret = (ey_event_t*)parser_malloc(sizeof(ey_event_t));
+	ey_event_t *ret = (ey_event_t*)engine_fzalloc(sizeof(ey_event_t), ey_parser_fslab(eng));
 	if(!ret)
 		return NULL;
 	memset(ret, 0, sizeof(*ret));
@@ -118,6 +105,14 @@ ey_event_t *ey_alloc_event(ey_engine_t *eng, ey_location_t *location, char *name
 
 void ey_free_event(ey_engine_t *eng, ey_event_t *event)
 {
-	if(event)
-		free_event(event);
+	if(!eng || !event)
+		return;
+	
+	if(event->name)
+		engine_fzfree(ey_parser_fslab(eng), event->name);
+	
+	if(event->define)
+		engine_fzfree(ey_parser_fslab(eng), event->define);
+	
+	engine_fzfree(ey_parser_fslab(eng), event);
 }
