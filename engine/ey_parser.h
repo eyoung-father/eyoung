@@ -1,6 +1,7 @@
 #ifndef EY_PARSER_H
 #define EY_PARSER_H 1
 
+struct ey_signature_file;
 typedef struct ey_parser
 {
 	void *lexer;
@@ -12,6 +13,9 @@ typedef struct ey_parser
 	char *buffer;
 	int buffer_size;
 	int buffer_len;
+
+	/*parser result*/
+	struct ey_signature_file *signature_file;
 }ey_parser_t;
 
 struct ey_engine;

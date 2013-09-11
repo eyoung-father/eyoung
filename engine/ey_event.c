@@ -11,7 +11,7 @@
 
 static unsigned int hash_event(void *event)
 {
-	return ((unsigned int)event)>>3;
+	return (unsigned int)event;
 }
 
 static int compare_event(void *k, void *v)

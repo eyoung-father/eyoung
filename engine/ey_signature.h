@@ -5,24 +5,28 @@
 #include "ey_loc.h"
 
 struct ey_engine;
+#define MAX_CONDITION_FUNC_NAME_LEN	128
 typedef struct ey_rhs_item_condition
 {
 	ey_location_t location;
 	char *raw_code;
-	void *symbol;
+	char *func_name;
+	void *addr;
 }ey_rhs_item_condition_t;
 extern ey_rhs_item_condition_t *ey_alloc_rhs_item_condition(struct ey_engine *eng, ey_location_t *location, 
-	char *code, void *symbol);
+	char *code, char *func_name, void *addr);
 extern void ey_free_rhs_item_condition(struct ey_engine *eng, ey_rhs_item_condition_t *condition);
 
+#define MAX_ACTION_FUNC_NAME_LEN	128
 typedef struct ey_rhs_item_action
 {
 	ey_location_t location;
 	char *raw_code;
-	void *symbol;
+	char *func_name;
+	void *addr;
 }ey_rhs_item_action_t;
 extern ey_rhs_item_action_t *ey_alloc_rhs_item_action(struct ey_engine *eng, ey_location_t *location, 
-	char *code, void *symbol);
+	char *code, char *func_name, void *addr);
 extern void ey_free_rhs_item_action(struct ey_engine *eng, ey_rhs_item_action_t *action);
 
 typedef struct ey_rhs_item
@@ -100,4 +104,6 @@ extern void ey_free_signature_file(struct ey_engine *eng, ey_signature_file_t *f
 
 extern int ey_signature_init(struct ey_engine *eng);
 extern void ey_signature_finit(struct ey_engine *eng);
+extern ey_signature_t *ey_find_signature(struct ey_engine *eng, unsigned long id);
+extern int ey_insert_signature(struct ey_engine *eng, ey_signature_t *signature);
 #endif

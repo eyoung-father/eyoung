@@ -73,6 +73,189 @@ void ey_parser_finit(ey_engine_t *eng)
 	assert(eng->parser==NULL);
 }
 
+static int ey_output_code_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *code)
+{
+	fprintf(fp, "#line %d \"%s\"\n", code->location.first_line, code->location.filename);
+	fprintf(fp, "%s\n", code->raw_code);
+	return 0;
+}
+
+static int ey_output_import_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *import)
+{
+	/*TODO: read so file .eyoung* sections*/
+	return 0;
+}
+
+static int ey_output_event_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *event)
+{
+	fprintf(fp, "#line %d \"%s\"\n", event->location.first_line, event->location.filename);
+	fprintf(fp, "typedef %s %s;\n", event->event->define, event->event->name);
+	return 0;
+}
+
+static int ey_output_prologue_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *prologue)
+{
+	assert(eng!=NULL);
+	assert(fp!=NULL);
+	assert(prologue!=NULL);
+
+	switch(prologue->type)
+	{
+		case EY_CODE_NORMAL:
+		{
+			return ey_output_code_cfile(eng, fp, prologue);
+		}
+		case EY_CODE_IMPORT:
+		{
+			return ey_output_import_cfile(eng, fp, prologue);
+		}
+		case EY_CODE_EVENT:
+		{
+			return ey_output_event_cfile(eng, fp, prologue);
+		}
+		default:
+		{
+			break;
+		}
+	}
+	return -1;
+}
+
+static int ey_output_rules_cfile(ey_engine_t *eng, FILE *fp, ey_signature_list_t *signature_list)
+{
+	assert(eng!=NULL);
+	assert(fp!=NULL);
+	assert(signature_list!=NULL);
+
+	ey_signature_t *signature=NULL;
+	TAILQ_FOREACH(signature, signature_list, link)
+	{
+		int line=0;
+		ey_rhs_signature_t *rhs_signature = NULL;
+		TAILQ_FOREACH(rhs_signature, &signature->rhs_signature_list, link)
+		{
+			int column = 0;
+			ey_rhs_item_t *rhs_item = NULL;
+			TAILQ_FOREACH(rhs_item, &rhs_signature->rhs_item_list, link)
+			{
+				ey_event_t *event = ey_find_event(eng, rhs_item->event_name);
+				if(!event)
+				{
+					engine_init_error("cannot find event %s in line %d(%lu, %d, %d)\n", 
+						rhs_item->event_name, 
+						rhs_item->location.first_line,
+						signature->id, line, column);
+					return -1;
+				}
+
+				ey_rhs_item_condition_t *condition = rhs_item->condition;
+				if(condition && condition->raw_code)
+				{
+					condition->func_name = (char*)engine_fzalloc(MAX_CONDITION_FUNC_NAME_LEN, ey_parser_fslab(eng));
+					if(!condition->func_name)
+					{
+						engine_init_error("failed to alloc func name in line %d(%lu, %d, %d)\n",
+							rhs_item->location.first_line,
+							signature->id, line, column);
+						return -1;
+					}
+					snprintf(condition->func_name, MAX_CONDITION_FUNC_NAME_LEN, "__condition_%lu_%d_%d",
+						signature->id, line, column);
+
+					fprintf(fp, "int %s(void* _LINK_, %s *_THIS_)\n", condition->func_name, event->name);
+					fprintf(fp, "{\n");
+					fprintf(fp, "\treturn %s;\n", condition->raw_code);
+					fprintf(fp, "}\n");
+				}
+
+				ey_rhs_item_action_t *action = rhs_item->action;
+				if(action && action->raw_code)
+				{
+					action->func_name = (char*)engine_fzalloc(MAX_ACTION_FUNC_NAME_LEN, ey_parser_fslab(eng));
+					if(!action->func_name)
+					{
+						engine_init_error("failed to alloc func name in line %d(%lu, %d, %d)\n",
+							rhs_item->location.first_line,
+							signature->id, line, column);
+						return -1;
+					}
+					snprintf(action->func_name, MAX_ACTION_FUNC_NAME_LEN, "__action_%lu_%d_%d",
+						signature->id, line, column);
+
+					fprintf(fp, "int %s(void* _LINK_, %s *_THIS_)\n", action->func_name, event->name);
+					fprintf(fp, "{\n");
+					fprintf(fp, "%s\n", action->raw_code);
+					fprintf(fp, "}\n");
+				}
+				column++;
+			}
+			line++;
+		}
+	}
+	return 0;
+}
+
+static int ey_output_cfile(ey_engine_t *eng, char *src_file, ey_signature_file_t *signature_file)
+{
+	if(!eng || !src_file || !src_file[0] || !signature_file)
+	{
+		engine_init_error("%s bad parameter\n", __FUNCTION__);
+		return -1;
+	}
+	
+	FILE *cfile = NULL;
+	if(!signature_file->output_file)
+	{
+		int len = strlen(src_file);
+		signature_file->output_file = (char*)engine_fzalloc(len+3, ey_parser_fslab(eng));
+		if(!signature_file->output_file)
+		{
+			engine_init_error("alloc output filename failed\n");
+			goto failed;
+		}
+		snprintf(signature_file->output_file, len+3, "%s.c", src_file);
+	}
+
+	cfile = fopen(signature_file->output_file, "w");
+	if(!cfile)
+	{
+		engine_init_error("open c file %s failed\n", signature_file->output_file);
+		goto failed;
+	}
+
+	/*output prologue*/
+	ey_code_t *prologue = NULL;
+	TAILQ_FOREACH(prologue, &signature_file->prologue_list, link)
+	{
+		if(ey_output_prologue_cfile(eng, cfile, prologue))
+		{
+			engine_init_error("output prologue failed, line %d\n", prologue->location.first_line);
+			goto failed;
+		}
+	}
+	
+	/*output rule condition/action function*/
+	if(ey_output_rules_cfile(eng, cfile, &signature_file->signature_list))
+	{
+		engine_init_error("output rules failed\n");
+		goto failed;
+	}
+
+	if(ey_output_code_cfile(eng, cfile, signature_file->epilogue))
+	{
+		engine_init_error("output epilogue failed\n");
+		goto failed;
+	}
+	
+	fclose(cfile);
+	return 0;
+
+failed:
+	if(cfile)
+		fclose(cfile);
+	return -1;
+}
+
 int ey_parse_file(ey_engine_t *eng, const char *filename)
 {
 	FILE *fp = NULL;
@@ -162,6 +345,11 @@ int ey_parse_file(ey_engine_t *eng, const char *filename)
 	else
 		engine_init_debug("parse %s successfully\n", parser->filename);
 	
+	if(ey_output_cfile(eng, parser->filename, parser->signature_file))
+		engine_init_error("load file %s failed\n", parser->filename);
+	else
+		engine_init_debug("load file %s successfully\n", parser->filename);
+
 failed:
 	if(parser)
 	{

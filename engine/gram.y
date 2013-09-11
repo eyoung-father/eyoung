@@ -16,6 +16,7 @@ int gram_error(GRAM_LTYPE *loc, void *eng, const char *format, ...);
 #define yydebug debug_engine_parser
 
 #define ENG ((ey_engine_t *)eng)
+static char *output_filename;
 %}
 
 %token TOKEN_STRING			"string"
@@ -163,6 +164,10 @@ eyoung_file:
 			engine_parser_error("alloc file failed\n");
 			YYABORT;
 		}
+
+		if(output_filename)
+			ret->output_file = output_filename;
+		ENG->parser->signature_file = ret;
 		$$ = ret;
 	}
 	;
@@ -207,7 +212,27 @@ prologue:
 	}
 	| TOKEN_OUTPUT TOKEN_STRING
 	{
-		/*TODO: set output filename*/
+		int len = strlen($2);
+		if(len==0)
+		{
+			engine_parser_error("null output filename\n");
+			YYABORT;
+		}
+
+		if(output_filename)
+		{
+			engine_parser_error("output option is already set\n");
+			YYABORT;
+		}
+
+		output_filename = (char*)engine_fzalloc(len+1, ey_parser_fslab(ENG));
+		if(!output_filename)
+		{
+			engine_parser_error("alloc output filename fialed\n");
+			YYABORT;
+		}
+		memcpy(output_filename, $2, len);
+		output_filename[len] = '\0';
 		$$ = NULL;
 	}
 	| TOKEN_IMPORT TOKEN_STRING
@@ -277,7 +302,13 @@ signature:
 		ey_signature_t *ret = ey_alloc_signature(ENG, $1, &@1, &$3);
 		if(!ret)
 		{
-			engine_parser_error("alloc signature failed\n");
+			engine_parser_error("alloc signature %lu failed\n", $1);
+			YYABORT;
+		}
+
+		if(ey_insert_signature(ENG, ret))
+		{
+			engine_parser_error("insert signature %lu failed\n", $1);
 			YYABORT;
 		}
 		$$ = ret;
@@ -287,6 +318,13 @@ signature:
 signature_lhs:
 	TOKEN_INT
 	{
+		ey_signature_t *find = ey_find_signature(ENG, $1);
+		if(find)
+		{
+			engine_parser_error("signature %lu is already defined in %s:%d\n", $1, 
+				find->location.filename, find->location.first_line);
+			YYABORT;
+		}
 		$$ = $1;
 	}
 	;
@@ -340,7 +378,11 @@ signature_rhs:
 rhs_name:
 	TOKEN_ID
 	{
-		/*TODO: do event name check*/
+		if(!ey_find_event(ENG, $1))
+		{
+			engine_parser_error("event %s is not defined\n", $1);
+			YYABORT;
+		}
 		$$ = $1;
 	}
 	;
@@ -352,7 +394,7 @@ rhs_condition_opt:
 	}
 	| TOKEN_RHS_CONDITION
 	{
-		ey_rhs_item_condition_t *ret = ey_alloc_rhs_item_condition(ENG, &@1, $1, NULL);
+		ey_rhs_item_condition_t *ret = ey_alloc_rhs_item_condition(ENG, &@1, $1, NULL, NULL);
 		if(!ret)
 		{
 			engine_parser_error("alloc condition failed\n");
@@ -380,7 +422,7 @@ rhs_action_opt:
 	}
 	| TOKEN_RHS_ACTION
 	{
-		ey_rhs_item_action_t *ret = ey_alloc_rhs_item_action(ENG, &@1, $1, NULL);
+		ey_rhs_item_action_t *ret = ey_alloc_rhs_item_action(ENG, &@1, $1, NULL, NULL);
 		if(!ret)
 		{
 			engine_parser_error("alloc action failed\n");
