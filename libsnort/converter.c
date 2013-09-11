@@ -6,8 +6,6 @@
 #include "snort_parser.h"
 #include "snort_lexer.h"
 
-static FILE *idmap_fp;
-
 typedef enum snort_ai
 {
 	SNORT_AI_FTP = 0,
@@ -44,35 +42,37 @@ typedef struct snort_ai_info
 	char *protocol_name;
 	char *file_name;
 	FILE *fp;
+	char *maps_name;
+	FILE *maps_fp;
 }snort_ai_info_t;
 
 static snort_ai_info_t ai_info[SNORT_AI_MAX] = 
 {
-	{1,		"ftp",		"bw_rules/ftp.rule",		NULL},
-	{1,		"telnet",	"bw_rules/telnet.rule",		NULL},
-	{1,		"smtp",		"bw_rules/smtp.rule",		NULL},
-	{1,		"dns",		"bw_rules/dns.rule",		NULL},
-	{1,		"dhcp",		"bw_rules/dhcp.rule",		NULL},
-	{1,		"tftp",		"bw_rules/tftp.rule",		NULL},
-	{1,		"finger",	"bw_rules/finger.rule",		NULL},
-	{1,		"http",		"bw_rules/http.rule",		NULL},
-	{1,		"pop3",		"bw_rules/pop3.rule",		NULL},
-	{1,		"sunrpc",	"bw_rules/sunrpc.rule",		NULL},
-	{1,		"msrpc",	"bw_rules/msrpc.rule",		NULL},
-	{1,		"netbios",	"bw_rules/nbname.rule",		NULL},
-	{4000,	"netbios",	"bw_rules/nbds.rule",		NULL},
-	{8000,	"netbios",	"bw_rules/smb.rule",		NULL},
-	{1,		"imap",		"bw_rules/imap.rule",		NULL},
-	{1,		"snmp",		"bw_rules/snmp.rule",		NULL},
-	{1,		"ldap",		"bw_rules/ldap.rule",		NULL},
-	{1,		"mssql",	"bw_rules/mssql.rule",		NULL},
-	{1,		"oracle",	"bw_rules/oracle.rule",		NULL},
-	{1,		"mysql",	"bw_rules/mysql.rule",		NULL},
-	{1,		"voip",		"bw_rules/voip.rule",		NULL},
-	{1,		"tcp",		"bw_rules/tcp.rule",		NULL},
-	{1,		"udp",		"bw_rules/udp.rule",		NULL},
-	{1,		"icmp",		"bw_rules/icmp.rule",		NULL},
-	{1,		"ip",		"bw_rules/ip.rule",			NULL},
+	{1,		"ftp",		"bw_rules/ftp.rule",		NULL,	"bw_rules/ftp.maps",		NULL},
+	{1,		"telnet",	"bw_rules/telnet.rule",		NULL,	"bw_rules/telnet.maps",		NULL},
+	{1,		"smtp",		"bw_rules/smtp.rule",		NULL,	"bw_rules/smtp.maps",		NULL},
+	{1,		"dns",		"bw_rules/dns.rule",		NULL,	"bw_rules/dns.maps",		NULL},
+	{1,		"dhcp",		"bw_rules/dhcp.rule",		NULL,	"bw_rules/dhcp.maps",		NULL},
+	{1,		"tftp",		"bw_rules/tftp.rule",		NULL,	"bw_rules/tftp.maps",		NULL},
+	{1,		"finger",	"bw_rules/finger.rule",		NULL,	"bw_rules/finger.maps",		NULL},
+	{1,		"http",		"bw_rules/http.rule",		NULL,	"bw_rules/http.maps",		NULL},
+	{1,		"pop3",		"bw_rules/pop3.rule",		NULL,	"bw_rules/pop3.maps",		NULL},
+	{1,		"sunrpc",	"bw_rules/sunrpc.rule",		NULL,	"bw_rules/sunrpc.maps",		NULL},
+	{1,		"msrpc",	"bw_rules/msrpc.rule",		NULL,	"bw_rules/msrpc.maps",		NULL},
+	{1,		"netbios",	"bw_rules/nbname.rule",		NULL,	"bw_rules/nbname.maps",		NULL},
+	{4000,	"netbios",	"bw_rules/nbds.rule",		NULL,	"bw_rules/nbds.maps",		NULL},
+	{8000,	"netbios",	"bw_rules/smb.rule",		NULL,	"bw_rules/smb.maps",		NULL},
+	{1,		"imap",		"bw_rules/imap.rule",		NULL,	"bw_rules/imap.maps",		NULL},
+	{1,		"snmp",		"bw_rules/snmp.rule",		NULL,	"bw_rules/snmp.maps",		NULL},
+	{1,		"ldap",		"bw_rules/ldap.rule",		NULL,	"bw_rules/ldap.maps",		NULL},
+	{1,		"mssql",	"bw_rules/mssql.rule",		NULL,	"bw_rules/mssql.maps",		NULL},
+	{1,		"oracle",	"bw_rules/oracle.rule",		NULL,	"bw_rules/oracle.maps",		NULL},
+	{1,		"mysql",	"bw_rules/mysql.rule",		NULL,	"bw_rules/mysql.maps",		NULL},
+	{1,		"voip",		"bw_rules/voip.rule",		NULL,	"bw_rules/voip.maps",		NULL},
+	{1,		"tcp",		"bw_rules/tcp.rule",		NULL,	"bw_rules/tcp.maps",		NULL},
+	{1,		"udp",		"bw_rules/udp.rule",		NULL,	"bw_rules/udp.maps",		NULL},
+	{1,		"icmp",		"bw_rules/icmp.rule",		NULL,	"bw_rules/icmp.maps",		NULL},
+	{1,		"ip",		"bw_rules/ip.rule",			NULL,	"bw_rules/ip.maps",			NULL},
 };
 
 static void snort_ai_init()
@@ -82,10 +82,10 @@ static void snort_ai_init()
 	{
 		ai_info[i].fp = fopen(ai_info[i].file_name, "w");
 		assert(ai_info[i].fp != NULL);
-	}
 
-	idmap_fp = fopen("bw_rules/id_map", "a+");
-	assert(idmap_fp != NULL);
+		ai_info[i].maps_fp = fopen(ai_info[i].maps_name, "w");
+		assert(ai_info[i].maps_fp != NULL);
+	}
 }
 
 typedef struct snort_app_map
@@ -218,7 +218,15 @@ other:
 	return 0;
 }
 
-static void convert_option(snort_signature_t *signature, int rule_id, FILE *out_fp)
+#define prepare_print					\
+	do									\
+	{									\
+		if(!first)						\
+			fprintf(out_fp, " and ");	\
+		first = 0;						\
+	}while(0)
+
+static void convert_option(snort_signature_t *signature, int rule_id, FILE *out_fp, FILE *idmap_fp)
 {
 	assert(signature!=NULL);
 	assert(out_fp!=NULL);
@@ -233,72 +241,166 @@ static void convert_option(snort_signature_t *signature, int rule_id, FILE *out_
 			case SNORT_OPTION_TYPE_CONTENT:
 			case SNORT_OPTION_TYPE_URICONTENT:
 			{
-				if(!first)
-					fprintf(out_fp, " and ");
-				first = 0;
+				prepare_print;
+				int is_content = (option->type==SNORT_OPTION_TYPE_CONTENT);
+				snort_option_t *saved_option = option;
+				char buf[64] = {0};
+				int offset = 0;
+				int depth = 0;
+				int relative = 0;
+				int nocase = 0;
+				int flag = 1;
+
+				while(flag && TAILQ_NEXT(option, link))
+				{
+					option = TAILQ_NEXT(option, link);
+					switch(option->type)
+					{
+						case SNORT_OPTION_TYPE_NOCASE:
+							nocase = 1;
+							break;
+						case SNORT_OPTION_TYPE_OFFSET:
+							offset = option->offset.offset;
+							break;
+						case SNORT_OPTION_TYPE_DEPTH:
+							depth = option->depth.depth;
+							break;
+						case SNORT_OPTION_TYPE_DISTANCE:
+							offset = option->distance.distance;
+							relative = 1;
+							break;
+						case SNORT_OPTION_TYPE_WITHIN:
+							depth = option->within.within;
+							relative = 1;
+							break;
+						default:
+							flag = 0;
+							option = TAILQ_PREV(option, snort_option_list, link);
+							break;
+					}
+				}
+
+				if(offset || depth)
+				{
+					if(offset && depth)
+						snprintf(buf, sizeof(buf), "[%d,%d]", offset, depth);
+					else if(offset)
+						snprintf(buf, sizeof(buf), "[%d,]", offset);
+					else
+						snprintf(buf, sizeof(buf), "[,%d]", depth);
+				}
+				
+				if(is_content)
+				{
+					if(!saved_option->content.negative)
+						fprintf(out_fp, "$1 <> /%s/%s%s%s", 
+							saved_option->content.content,
+							buf[0]?buf:"",
+							nocase?"i":"",
+							relative?"R":"");
+					else
+						fprintf(out_fp, "!($1 <> /%s/%s%s%s)", 
+							saved_option->content.content,
+							buf[0]?buf:"",
+							nocase?"i":"",
+							relative?"R":"");
+				}
+				else
+				{
+					if(!saved_option->uricontent.negative)
+						fprintf(out_fp, "$1 <> /%s/%s%s%s",
+							saved_option->uricontent.uricontent,
+							buf[0]?buf:"",
+							nocase?"i":"",
+							relative?"R":"");
+					else
+						fprintf(out_fp, "!($1 <> /%s/%s%s%s)", 
+							saved_option->uricontent.uricontent,
+							buf[0]?buf:"",
+							nocase?"i":"",
+							relative?"R":"");
+				}
 				break;
 			}
 			case SNORT_OPTION_TYPE_SID:
 			{
-				assert(output_idmap==0);
-				fprintf(idmap_fp, "%d,%d\n", option->sid.sid, rule_id);
-				output_idmap = 1;
+				if(idmap_fp)
+				{
+					assert(output_idmap==0);
+					fprintf(idmap_fp, "%d,%d\n", option->sid.sid, rule_id);
+					output_idmap = 1;
+				}
 				break;
 			}
 			case SNORT_OPTION_TYPE_DSIZE:
 			{
-				if(!first)
-					fprintf(out_fp, " and ");
-				first = 0;
+				prepare_print;
+				char *op = NULL;
+				if(option->dsize.operator==SNORT_OPERATOR_EQ)
+					op = "=";
+				else if(option->dsize.operator==SNORT_OPERATOR_LT)
+					op = "<";
+				else
+					op = ">";
+				fprintf(out_fp, "length($1)%s%d", op, option->dsize.dsize);
 				break;
 			}
 			case SNORT_OPTION_TYPE_BYTETEST:
 			{
-				if(!first)
-					fprintf(out_fp, " and ");
-				first = 0;
+				prepare_print;
+				fprintf(out_fp, "check_byte_test($1, %d, %d, %d, %d, %d, %d, %d, %d)",
+					option->bytetest.bytes,
+					option->bytetest.negative,
+					option->bytetest.operator,
+					option->bytetest.value,
+					option->bytetest.offset,
+					option->bytetest.relative,
+					option->bytetest.endian,
+					option->bytetest.string);
 				break;
 			}
 			case SNORT_OPTION_TYPE_BYTEJUMP:
 			{
-				if(!first)
-					fprintf(out_fp, " and ");
-				first = 0;
+				prepare_print;
+				fprintf(out_fp, "check_byte_jump($1, %d, %d, %d, %d, %d, %d, %d, %d)", 
+					option->bytejump.bytes,
+					option->bytejump.offset,
+					option->bytejump.relative,
+					option->bytejump.endian,
+					option->bytejump.multiplier,
+					option->bytejump.align,
+					option->bytejump.frombegin,
+					option->bytejump.postoffset);
 				break;
 			}
 			case SNORT_OPTION_TYPE_IPPROTO:
 			{
-				if(!first)
-					fprintf(out_fp, " and ");
-				first = 0;
+				prepare_print;
+				fprintf(out_fp, "check_ip_proto($1, %d)", option->ipproto.ipproto);
 				break;
 			}
 			case SNORT_OPTION_TYPE_TTL:
 			{
-				if(!first)
-					fprintf(out_fp, " and ");
-				first = 0;
+				prepare_print;
+				fprintf(out_fp, "check_ttl($1, %d, %d)", option->ttl.operator, option->ttl.ttl);
 				break;
 			}
 			case SNORT_OPTION_TYPE_ITYPE:
 			{
-				if(!first)
-					fprintf(out_fp, " and ");
-				first = 0;
+				prepare_print;
+				fprintf(out_fp, "check_itype($1, %d, %d)", option->itype.operator, option->itype.itype);
 				break;
 			}
 			case SNORT_OPTION_TYPE_ICODE:
 			{
-				if(!first)
-					fprintf(out_fp, " and ");
-				first = 0;
+				prepare_print;
+				fprintf(out_fp, "check_icode($1, %d, %d)", option->icode.operator, option->icode.icode);
 				break;
 			}
 			case SNORT_OPTION_TYPE_ICMPSEQ:
 			{
-				if(!first)
-					fprintf(out_fp, " and ");
-				first = 0;
+				prepare_print;
+				fprintf(out_fp, "check_icmp_seq($1, %d)", option->icmpseq.icmpseq);
 				break;
 			}
 			case SNORT_OPTION_TYPE_MSG:
@@ -321,6 +423,38 @@ static void convert_option(snort_signature_t *signature, int rule_id, FILE *out_
 	}
 }
 
+static void convert_port(snort_signature_t *signature, int rule_id, FILE *out_fp)
+{
+	assert(signature!=NULL);
+	assert(out_fp!=NULL);
+	
+	snort_port_t *src_port = &signature->src_port;
+	snort_port_t *dst_port = &signature->dst_port;
+	if(src_port->low_port==0 && 
+		src_port->high_port==65535 && 
+		dst_port->low_port==0 && 
+		dst_port->high_port==65535)
+		return;
+	fprintf(out_fp, "\tport:");
+	if(src_port->low_port==0 && src_port->high_port==65535)
+		fprintf(out_fp, "any");
+	else if(src_port->low_port != src_port->high_port)
+		fprintf(out_fp, "%s[%d:%d]", src_port->negative?"!":"", src_port->low_port, src_port->high_port);
+	else
+		fprintf(out_fp, "%s[%d]", src_port->negative?"!":"", src_port->low_port);
+	
+	fprintf(out_fp, ",");
+
+	if(dst_port->low_port==0 && dst_port->high_port==65535)
+		fprintf(out_fp, "any");
+	else if(dst_port->low_port != dst_port->high_port)
+		fprintf(out_fp, "%s[%d:%d]", dst_port->negative?"!":"", dst_port->low_port, dst_port->high_port);
+	else
+		fprintf(out_fp, "%s[%d]", dst_port->negative?"!":"", dst_port->low_port);
+	
+	fprintf(out_fp, ";\n");
+}
+
 static void convert_signature(snort_signature_t *signature)
 {
 	assert(signature!=NULL);
@@ -328,6 +462,7 @@ static void convert_signature(snort_signature_t *signature)
 	char elm_name1[128] = {0};
 	char elm_name2[128] = {0};
 	FILE *out_fp = NULL;
+	FILE *idmap_fp = NULL;
 	char *protocol = NULL;
 	int rule_id = 0;
 	int app_id = snort_ai(signature, 
@@ -335,20 +470,24 @@ static void convert_signature(snort_signature_t *signature)
 		elm_name2, sizeof(elm_name2));
 	
 	out_fp = ai_info[app_id].fp;
+	idmap_fp = ai_info[app_id].maps_fp;
 	protocol = ai_info[app_id].protocol_name;
-	rule_id = ai_info[app_id].start_id++;
+	rule_id = 30000 + ai_info[app_id].start_id++;
 
 	fprintf(out_fp, "idp_signature %d:%s\n", rule_id, protocol);
 	fprintf(out_fp, "{\n");
 	fprintf(out_fp, "\tsignature: %s(", elm_name1);
-	convert_option(signature, rule_id, out_fp);
-	fprintf(out_fp, ")\n");
+	convert_option(signature, rule_id, out_fp, idmap_fp);
+	fprintf(out_fp, ")");
 	if(elm_name2[0])
 	{
-		fprintf(out_fp, "\t| %s(", elm_name2);
-		convert_option(signature, rule_id, out_fp);
-		fprintf(out_fp, ")\n");
+		fprintf(out_fp, "\n\t| %s(", elm_name2);
+		convert_option(signature, rule_id, out_fp, NULL);
+		fprintf(out_fp, ")");
 	}
+	fprintf(out_fp, ";\n");
+	if(app_id == SNORT_AI_TCP || app_id == SNORT_AI_UDP)
+		convert_port(signature, rule_id, out_fp);
 	fprintf(out_fp, "};\n");
 }
 

@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <assert.h>
+#include <string.h>
 
 #include "snort_mem.h"
 #include "snort_signature.h"
@@ -14,6 +15,7 @@ int snort_error(SNORT_LTYPE *loc, const char *format, ...);
 #define yydebug debug_snort_parser
 
 snort_signature_list_t signature_list;
+static char *normalize_content(char *content);
 %}
 
 %token TOKEN_LPAREN			"("
@@ -455,7 +457,8 @@ content_item:
 	{
 		$$.type = SNORT_OPTION_TYPE_CONTENT;
 		$$.content.negative = $3;
-		$$.content.content = $4;
+		$$.content.content = normalize_content($4);
+		snort_free($4);
 	}
 	;
 
@@ -578,7 +581,8 @@ uricontent_item:
 	{
 		$$.type = SNORT_OPTION_TYPE_URICONTENT;
 		$$.uricontent.negative = $3;
-		$$.uricontent.uricontent = $4;
+		$$.uricontent.uricontent = normalize_content($4);
+		snort_free($4);
 	}
 	;
 
@@ -961,4 +965,25 @@ int snort_error(SNORT_LTYPE *loc, const char *format, ...)
 	va_end(ap);
 
 	return snort_parser_error("Error: %s\n", error_buf);
+}
+
+static char *normalize_content(char *content)
+{
+	assert(content!=NULL);
+	int n = strlen(content);
+
+	char *ret = (char*)snort_malloc(n * 2 + 1);
+	assert(ret != NULL);
+
+	int i, j;
+	for(i=0, j=0; i<n; i++)
+	{
+		if(content[i]=='/')
+			ret[j++] = '\\';
+		else if(content[i]=='\\' && (content[i+1]=='"' || content[i+1]==':' || content[i+1]==';'))
+			i++;
+		ret[j++] = content[i];
+	}
+	ret[j] = 0;
+	return ret;
 }

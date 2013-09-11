@@ -163,7 +163,20 @@ hex_number 0x{hex}+
 	/*quoted string*/
 	"\\\""				{add_buffer(yytext, yyleng);}
 	"\\\\"				{add_buffer(yytext, yyleng);}
-	"\""				{GOTO(INITIAL); snort_lexer_debug("we get: %s\n", buffer); return TOKEN_STRING;}
+	"\""				{
+							GOTO(INITIAL); 
+							snort_lexer_debug("we get: %s\n", buffer); 
+							yylval->string = (char*)snort_alloc(buffer_len + 1, yyscanner);
+							if(!yylval->string)
+							{
+								snort_lexer_error("copy buffer failed\n");
+								return -1;
+							}
+							memcpy(yylval->string, buffer, buffer_len);
+							yylval->string[buffer_len] = '\0';
+							reset_buffer();
+							return TOKEN_STRING;
+						}
 	.					{add_buffer(yytext, 1);}
 	<<EOF>>				{snort_lexer_error("EOF is not accepted\n"); return -1;}
 }
@@ -172,7 +185,7 @@ hex_number 0x{hex}+
 static void reset_buffer()
 {
 	if(buffer)
-		buffer[0] = '\0';
+		memset(buffer, 0, buffer_size);
 	buffer_len = 0;
 }
 
