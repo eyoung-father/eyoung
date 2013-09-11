@@ -92,8 +92,14 @@ hex_number 0x{hex}+
 	"any"				{RETURN(TOKEN_ANY);}
 	"->"				{RETURN(TOKEN_SARROW);}
 	"<>"				{RETURN(TOKEN_DARROW);}
-	{dec_number}		{RETURN(TOKEN_NUMBER);}
-	{hex_number}		{RETURN(TOKEN_NUMBER);}
+	{dec_number}		{
+							yylval->number = strtol(yytext, NULL, 10);
+							RETURN(TOKEN_NUMBER);
+						}
+	{hex_number}		{
+							yylval->number = strtol(yytext, NULL, 16);
+							RETURN(TOKEN_NUMBER);
+						}
 	":"					{RETURN(TOKEN_COLON);}
 	"("					{RETURN(TOKEN_LPAREN);}
 	")"					{RETURN(TOKEN_RPAREN);}

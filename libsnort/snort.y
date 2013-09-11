@@ -12,6 +12,8 @@ int snort_error(SNORT_LTYPE *loc, const char *format, ...);
 
 #undef yydebug
 #define yydebug debug_snort_parser
+
+snort_signature_list_t signature_list;
 %}
 
 %token TOKEN_LPAREN			"("
@@ -87,7 +89,7 @@ int snort_error(SNORT_LTYPE *loc, const char *format, ...);
 
 %union
 {
-	int number;
+	unsigned int number;
 	char *string;
 	snort_action_t action;
 	snort_protocol_t protocol;
@@ -98,7 +100,6 @@ int snort_error(SNORT_LTYPE *loc, const char *format, ...);
 	snort_option_t option;
 	snort_option_list_t option_list;
 	snort_signature_t signature;
-	snort_signature_list_t signature_list;
 	snort_classtype_t classtype;
 	snort_operator_t operator;
 	snort_option_bytetest_t bytetest;
@@ -137,7 +138,6 @@ int snort_error(SNORT_LTYPE *loc, const char *format, ...);
 %type	<option>			icode_item
 %type	<option>			icmpseq_item
 %type	<option_list>		body
-%type	<signature_list>	signature_list
 %type	<signature>			signature
 %type	<classtype>			classtype
 %type	<operator>			dsize_operator_opt
@@ -176,7 +176,7 @@ empty:
 signature_list:
 	empty
 	{
-		TAILQ_INIT(&$$);
+		TAILQ_INIT(&signature_list);
 	}
 	| signature_list signature
 	{
@@ -187,7 +187,7 @@ signature_list:
 			assert(0);
 		}
 		*signature = $2;
-		TAILQ_INSERT_TAIL(&$$, signature, link);
+		TAILQ_INSERT_TAIL(&signature_list, signature, link);
 	}
 	;
 

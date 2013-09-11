@@ -271,4 +271,6 @@ typedef struct snort_signature
 	snort_option_list_t option_list;
 }snort_signature_t;
 typedef TAILQ_HEAD(snort_signature_list, snort_signature) snort_signature_list_t;
+
+extern snort_signature_list_t signature_list;
 #endif
