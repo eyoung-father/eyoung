@@ -269,13 +269,13 @@ int ey_parse_file(ey_engine_t *eng, const char *filename)
 	if(!eng || !filename)
 	{
 		engine_init_error("null engine or filename\n");
-		return -1;
+		goto failed;
 	}
 	
 	if(ey_hash_find(ey_filename_hash(eng), (void*)filename))
 	{
 		engine_init_debug("file %s has been parsed\n", filename);
-		return 0;
+		goto failed;
 	}
 
 	if((fp=fopen(filename, "r")) == NULL)
@@ -349,6 +349,8 @@ int ey_parse_file(ey_engine_t *eng, const char *filename)
 		engine_init_error("load file %s failed\n", parser->filename);
 	else
 		engine_init_debug("load file %s successfully\n", parser->filename);
+	
+	return 0;
 
 failed:
 	if(parser)
@@ -367,5 +369,5 @@ failed:
 	if(fp)
 		fclose(fp);
 	eng->parser = NULL;
-	return 0;
+	return -1;
 }
