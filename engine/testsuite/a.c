@@ -23,8 +23,21 @@ static int /*testest*/my_printf(const char /*testtes*/*fmt, ...);
 1:http_uri(aaa(/*ttt*/))/"testest"
 	;
 
-2:http_cookie(aaa()) http_referer(bbb())
-	| http_referer(bbb()) http_cookie(aaa())/"testest"
+2:http_cookie(aaa()) 
+	{
+		printf("cookie aaa()\n");
+	}
+	http_referer(bbb())
+	{
+		printf("referer bbb()\n");
+	}
+	| http_referer(bbb())
+	{
+		printf("referer bbb()\n");
+	}http_cookie(aaa())/"testest"
+	{
+		printf("cookie aaa()\n");
+	}
 	;
 %%
 static int my_printf(const char *fmt, ...)
