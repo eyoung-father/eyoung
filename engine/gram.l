@@ -130,6 +130,7 @@ number	[1-9]{digit}*
 					RETURN(TOKEN_ID);
 				}
 	{number}	{
+					yylval->integer = atoi(yytext);
 					RETURN(TOKEN_INT);
 				}
 	";"			{

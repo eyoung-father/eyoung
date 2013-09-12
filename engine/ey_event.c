@@ -19,7 +19,7 @@ static int compare_event(void *k, void *v)
 	if(!k || !v)
 		return 1;
 	
-	return strcmp((char*)k, (char*)v);
+	return strcmp((char*)k, ((ey_event_t*)v)->name);
 }
 
 int ey_event_init(ey_engine_t *eng)

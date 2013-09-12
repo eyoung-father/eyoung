@@ -130,6 +130,7 @@ ey_signature_t *ey_alloc_signature(ey_engine_t *eng, unsigned long id,
 	if(!ret)
 		return NULL;
 	memset(ret, 0, sizeof(*ret));
+	ret->id = id;
 	ret->location = *location;
 	TAILQ_INIT(&ret->rhs_signature_list);
 	TAILQ_CONCAT(&ret->rhs_signature_list, signature_list, link);
@@ -245,7 +246,7 @@ static int compare_signature(void *k, void *v)
 	if(!k || !v)
 		return 1;
 	
-	return (unsigned int)k != (unsigned int)v;
+	return *(unsigned long*)k != ((ey_signature_t*)v)->id;
 }
 
 
@@ -287,7 +288,7 @@ ey_signature_t *ey_find_signature(ey_engine_t *eng, unsigned long id)
 		return NULL;
 	}
 
-	return ey_hash_find(ey_signature_hash(eng), (void*)id);
+	return ey_hash_find(ey_signature_hash(eng), (void*)&id);
 }
 
 int ey_insert_signature(ey_engine_t *eng, ey_signature_t *signature)
@@ -305,7 +306,7 @@ int ey_insert_signature(ey_engine_t *eng, ey_signature_t *signature)
 		return -1;
 	}
 
-	if(ey_hash_insert(ey_signature_hash(eng), (void*)signature->id, signature))
+	if(ey_hash_insert(ey_signature_hash(eng), (void*)&signature->id, signature))
 	{
 		engine_parser_error("signature %lu inserted failed\n", signature->id);
 		return -1;
