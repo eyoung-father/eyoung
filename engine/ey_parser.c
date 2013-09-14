@@ -265,6 +265,7 @@ int ey_parse_file(ey_engine_t *eng, const char *filename)
 	GRAM_STYPE sval;
 	GRAM_LTYPE lval = {1,1,1,1,filename};
 	int token = 0, pstate_ret = 0;
+	int ret = -1;
 
 	if(!eng || !filename)
 	{
@@ -350,7 +351,7 @@ int ey_parse_file(ey_engine_t *eng, const char *filename)
 	else
 		engine_init_debug("load file %s successfully\n", parser->filename);
 	
-	return 0;
+	ret = 0;
 
 failed:
 	if(parser)
@@ -369,5 +370,5 @@ failed:
 	if(fp)
 		fclose(fp);
 	eng->parser = NULL;
-	return -1;
+	return ret;
 }
