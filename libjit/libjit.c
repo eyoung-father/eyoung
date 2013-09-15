@@ -22,7 +22,7 @@ static char *jit_fileextension(const char *name)
     return e ? e : strchr(b, 0);
 }
 
-ey_jit_t *ey_jit_create(const char *option, void *priv_data, error_handle error_callback)
+ey_jit_t ey_jit_create(const char *option, void *priv_data, error_handle error_callback)
 {
 	TCCState *jit = tcc_new();
 	if(!jit)
@@ -53,13 +53,13 @@ failed:
 	return NULL;
 }
 
-void ey_jit_destroy(ey_jit_t *jit)
+void ey_jit_destroy(ey_jit_t jit)
 {
 	if(jit)
 		tcc_delete((TCCState*)jit);
 }
 
-void* ey_jit_get_private_data(ey_jit_t *jit)
+void* ey_jit_get_private_data(ey_jit_t jit)
 {
 	if(!jit)
 	{
@@ -69,7 +69,7 @@ void* ey_jit_get_private_data(ey_jit_t *jit)
 	return tcc_get_private_data((TCCState*)jit);
 }
 
-int ey_jit_add_include_path(ey_jit_t *jit, const char *pathname)
+int ey_jit_add_include_path(ey_jit_t jit, const char *pathname)
 {
 	if(!jit)
 	{
@@ -86,7 +86,7 @@ int ey_jit_add_include_path(ey_jit_t *jit, const char *pathname)
 	return tcc_add_include_path((TCCState*)jit, pathname);
 }
 
-int ey_jit_add_sysinclude_path(ey_jit_t *jit, const char *pathname)
+int ey_jit_add_sysinclude_path(ey_jit_t jit, const char *pathname)
 {
 	if(!jit)
 	{
@@ -103,7 +103,7 @@ int ey_jit_add_sysinclude_path(ey_jit_t *jit, const char *pathname)
 	return tcc_add_sysinclude_path((TCCState*)jit, pathname);
 }
 
-int ey_jit_define_symbol(ey_jit_t *jit, const char *sym, const char *value)
+int ey_jit_define_symbol(ey_jit_t jit, const char *sym, const char *value)
 {
 	if(!jit)
 	{
@@ -121,7 +121,7 @@ int ey_jit_define_symbol(ey_jit_t *jit, const char *sym, const char *value)
 	return 0;
 }
 
-int ey_jit_undefine_symbol(ey_jit_t *jit, const char *sym)
+int ey_jit_undefine_symbol(ey_jit_t jit, const char *sym)
 {
 	if(!jit)
 	{
@@ -139,7 +139,7 @@ int ey_jit_undefine_symbol(ey_jit_t *jit, const char *sym)
 	return 0;
 }
 
-int ey_jit_compile_file(ey_jit_t *jit, const char *filename)
+int ey_jit_compile_file(ey_jit_t jit, const char *filename)
 {
 	if(!jit)
 	{
@@ -166,7 +166,7 @@ int ey_jit_compile_file(ey_jit_t *jit, const char *filename)
 	return tcc_add_file((TCCState*)jit, filename);
 }
 
-int ey_jit_compile_string(ey_jit_t *jit, const char *code)
+int ey_jit_compile_string(ey_jit_t jit, const char *code)
 {
 	if(!jit)
 	{
@@ -183,7 +183,7 @@ int ey_jit_compile_string(ey_jit_t *jit, const char *code)
 	return tcc_compile_string((TCCState*)jit, code);
 }
 
-int ey_jit_add_library_path(ey_jit_t *jit, const char *pathname)
+int ey_jit_add_library_path(ey_jit_t jit, const char *pathname)
 {
 	if(!jit)
 	{
@@ -200,7 +200,7 @@ int ey_jit_add_library_path(ey_jit_t *jit, const char *pathname)
 	return tcc_add_library_path((TCCState*)jit, pathname);
 }
 
-int ey_jit_add_library(ey_jit_t *jit, const char *libname)
+int ey_jit_add_library(ey_jit_t jit, const char *libname)
 {
 	if(!jit)
 	{
@@ -217,7 +217,7 @@ int ey_jit_add_library(ey_jit_t *jit, const char *libname)
 	return tcc_add_library((TCCState*)jit, libname);
 }
 
-int ey_jit_add_symbol(ey_jit_t *jit, const char *name, const void *value)
+int ey_jit_add_symbol(ey_jit_t jit, const char *name, const void *value)
 {
 	if(!jit)
 	{
@@ -234,7 +234,7 @@ int ey_jit_add_symbol(ey_jit_t *jit, const char *name, const void *value)
 	return tcc_add_symbol((TCCState*)jit, name, value);
 }
 
-int ey_jit_relocate(ey_jit_t *jit, void *ptr)
+int ey_jit_relocate(ey_jit_t jit, void *ptr)
 {
 	if(!jit)
 	{
@@ -245,7 +245,7 @@ int ey_jit_relocate(ey_jit_t *jit, void *ptr)
 	return tcc_relocate((TCCState*)jit, ptr);
 }
 
-void *ey_jit_get_symbol(ey_jit_t *jit, const char *name)
+void *ey_jit_get_symbol(ey_jit_t jit, const char *name)
 {
 	if(!jit)
 	{
