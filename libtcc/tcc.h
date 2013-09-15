@@ -575,7 +575,7 @@ struct TCCState {
     int nb_crt_paths;
 
     /* error handling */
-    void *error_opaque;
+    void *private_data;
     void (*error_func)(void *opaque, const char *msg);
     int error_set_jmp_enabled;
     jmp_buf error_jmp_buf;

@@ -596,17 +596,25 @@ static void error1(TCCState *s1, int is_warning, const char *fmt, va_list ap)
         /* default case: stderr */
         fprintf(stderr, "%s\n", buf);
     } else {
-        s1->error_func(s1->error_opaque, buf);
+        s1->error_func(s1->private_data, buf);
     }
     if (!is_warning || s1->warn_error)
         s1->nb_errors++;
 }
 
-LIBTCCAPI void tcc_set_error_func(TCCState *s, void *error_opaque,
-                        void (*error_func)(void *opaque, const char *msg))
+LIBTCCAPI void tcc_set_error_func(TCCState *s, void (*error_func)(void *opaque, const char *msg))
 {
-    s->error_opaque = error_opaque;
     s->error_func = error_func;
+}
+
+LIBTCCAPI void* tcc_get_private_data(TCCState *s)
+{
+	return s->private_data;
+}
+
+LIBTCCAPI void tcc_set_private_data(TCCState *s, void *data)
+{
+	s->private_data = data;
 }
 
 /* error without aborting current compilation */
