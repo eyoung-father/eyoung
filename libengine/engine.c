@@ -33,6 +33,10 @@ engine_t ey_engine_create(const char *name)
 	/*init signature*/
 	if(ey_signature_init(ret))
 		goto failed;
+	
+	/*init JIT compiler*/
+	if(ey_compiler_init(ret))
+		goto failed;
 
 	return (engine_t)ret;
 
@@ -47,6 +51,7 @@ void ey_engine_destroy(engine_t engine)
 	if(!eng)
 		return;
 	
+	ey_compiler_finit(eng);
 	ey_parser_finit(eng);
 	ey_event_finit(eng);
 	ey_signature_finit(eng);

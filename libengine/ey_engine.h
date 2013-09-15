@@ -13,6 +13,8 @@
 #include "ey_info.h"
 #include "engine_mem.h"
 #include "ey_signature.h"
+#include "libjit.h"
+#include "ey_compiler.h"
 
 typedef struct ey_engine
 {
@@ -25,6 +27,8 @@ typedef struct ey_engine
 
 	ey_hash_t event_hash;
 	ey_hash_t signature_hash;
+
+	ey_jit_t jit;
 }ey_engine_t;
 
 #define ey_parser_fslab(eng) (((ey_engine_t*)(eng))->parser_fslab)
@@ -32,5 +36,6 @@ typedef struct ey_engine
 #define ey_filename_hash(eng) (((ey_engine_t*)(eng))->filename_hash)
 #define ey_event_hash(eng) (((ey_engine_t*)(eng))->event_hash)
 #define ey_signature_hash(eng) (((ey_engine_t*)(eng))->signature_hash)
+#define ey_jit(eng) (((ey_engine_t*)(eng))->jit)
 
 #endif

@@ -10,7 +10,7 @@ ifeq ($(DEMO),1)
 BUILD_TYPE = bin
 BUILD_NAME = engine
 CFLAGS_LOCAL += -DENGINE_DEBUG=1 -DENGINE_MAIN=1 -Wno-sign-compare
-LDFLAGS_LOCAL = -lmemory -ldl
+LDFLAGS_LOCAL = -lmemory -ldl -ljit -ltcc
 else
 BUILD_TYPE = dynlib
 endif
