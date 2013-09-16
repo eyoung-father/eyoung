@@ -175,11 +175,12 @@ int ey_detach_library(ey_engine_t *eng, char *libname)
 	return 0;
 }
 
-static void library_output(void *data, void *fp)
+static int library_output(void *data, void *fp)
 {
 	ey_extern_symbol_t *symbol = (ey_extern_symbol_t*)data;
 	if(symbol->decl)
 		fprintf((FILE*)fp, "%s\n", symbol->decl);
+	return 0;
 }
 
 int ey_extract_library(ey_engine_t *eng, char *libname, FILE *out_fp)
