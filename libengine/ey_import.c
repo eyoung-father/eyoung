@@ -5,6 +5,7 @@
 
 #include "ey_engine.h"
 #include "ey_import.h"
+#include "ey_export.h"
 
 static unsigned int hash_filename(void *filename)
 {
@@ -174,9 +175,11 @@ int ey_detach_library(ey_engine_t *eng, char *libname)
 	return 0;
 }
 
-static void library_output(const char *buf, void *fp)
+static void library_output(void *data, void *fp)
 {
-	fprintf((FILE*)fp, "%s\n", buf);
+	ey_extern_symbol_t *symbol = (ey_extern_symbol_t*)data;
+	if(symbol->decl)
+		fprintf((FILE*)fp, "%s\n", symbol->decl);
 }
 
 int ey_extract_library(ey_engine_t *eng, char *libname, FILE *out_fp)

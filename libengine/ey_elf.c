@@ -17,12 +17,12 @@ int ey_elf_read_finit(ey_engine_t *eng, const char *libname, finit_handler *fini
 	return 0;
 }
 
-int ey_elf_read_type(ey_engine_t *eng, const char *libname, elf_print cb, void *arg)
+int ey_elf_read_type(ey_engine_t *eng, const char *libname, elf_foreach cb, void *arg)
 {
 	return 0;
 }
 
-int ey_elf_read_ident(ey_engine_t *eng, const char *libname, elf_print cb, void *arg)
+int ey_elf_read_ident(ey_engine_t *eng, const char *libname, elf_foreach cb, void *arg)
 {
 	return 0;
 }
