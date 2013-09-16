@@ -38,10 +38,26 @@ int ey_import_init(ey_engine_t *eng)
 	return 0;
 }
 
+static int destroy_each(void *l, void *e)
+{
+	ey_library_t *lib = (ey_library_t*)l;
+	ey_engine_t *eng = (ey_engine_t*)e;
+
+	if(lib->finit_name)
+		engine_fzfree(ey_parser_fslab(eng), lib->finit_name);
+	if(lib->init_name)
+		engine_fzfree(ey_parser_fslab(eng), lib->init_name);
+	if(lib->lib_handle)
+		dlclose(lib->lib_handle);
+	engine_fzfree(ey_parser_fslab(eng), lib);
+	return 0;
+}
+
 void ey_import_finit(ey_engine_t *eng)
 {
 	if(ey_library_hash(eng))
 	{
+		ey_hash_foreach(ey_library_hash(eng), NULL, NULL, destroy_each, (void*)eng);
 		ey_hash_destroy(ey_library_hash(eng));
 		ey_library_hash(eng) = NULL;
 	}

@@ -278,3 +278,41 @@ int ey_hash_remove_all(ey_hash_t hash, void *key, hash_compare compare)
 	}
 	return 0;
 }
+
+int ey_hash_foreach(ey_hash_t hash, void *key, hash_compare compare, hash_foreach foreach, void *arg)
+{
+	if(!hash || !foreach)
+		return EY_HASH_BAD_PARAM;
+	
+	ey_hash *tbl = (ey_hash*)hash;
+	unsigned int index = 0, lines=tbl->mask+1;
+	ey_hash_line_t *line = NULL;
+
+	for(index=0, line=tbl->hash_lines; index<lines; index++, line++)
+	{
+		ey_hash_entry_t *entry = NULL, *tmp = NULL;
+		ey_rwlock_rdlock(&line->line_lock);
+		TAILQ_FOREACH_SAFE(entry, &line->entry_head, link, tmp)
+		{
+			if(compare && !compare(key, entry->value))
+			{
+				if(foreach(entry->value, arg))
+				{
+					ey_rwlock_rdunlock(&line->line_lock);
+					goto out;
+				}
+			}
+			else if(!compare)
+			{
+				if(foreach(entry->value, arg))
+				{
+					ey_rwlock_rdunlock(&line->line_lock);
+					goto out;
+				}
+			}
+		}
+		ey_rwlock_rdunlock(&line->line_lock);
+	}
+out:
+	return 0;
+}
