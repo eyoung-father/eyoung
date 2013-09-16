@@ -17,6 +17,7 @@
 #include "libjit.h"
 #include "ey_compiler.h"
 #include "ey_import.h"
+#include "ey_elf.h"
 
 typedef struct ey_engine
 {
