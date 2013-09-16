@@ -5,22 +5,8 @@
 
 #include "libtcc.h"
 #include "libjit.h"
+#include "libutil.h"
 #include "ey_memory.h"
-
-static char *jit_basename(const char *name)
-{
-    char *p = strchr(name, 0);
-    while (p > name && p[-1]!='/')
-        --p;
-    return p;
-}
-
-static char *jit_fileextension(const char *name)
-{
-    char *b = jit_basename(name);
-    char *e = strrchr(b, '.');
-    return e ? e : strchr(b, 0);
-}
 
 ey_jit_t ey_jit_create(const char *option, void *priv_data, error_handle error_callback)
 {
@@ -153,11 +139,7 @@ int ey_jit_compile_file(ey_jit_t jit, const char *filename)
 		return -1;
 	}
 
-	const char *ext = jit_fileextension(filename);
-	if(ext[0])
-		ext++;
-
-	if(strcmp(ext, "c"))
+	if(!ey_file_is_source(filename))
 	{
 		fprintf(stderr, "eyoung jit compiler can only compile c language source file\n");
 		return -1;
