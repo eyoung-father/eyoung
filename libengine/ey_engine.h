@@ -6,6 +6,7 @@
 #include <string.h>
 #include <assert.h>
 #include <stdarg.h>
+#include <dlfcn.h>
 
 #include "ey_memory.h"
 #include "ey_event.h"
@@ -28,6 +29,7 @@ typedef struct ey_engine
 
 	ey_hash_t event_hash;
 	ey_hash_t signature_hash;
+	ey_hash_t library_hash;
 
 	ey_jit_t jit;
 }ey_engine_t;
@@ -38,5 +40,6 @@ typedef struct ey_engine
 #define ey_event_hash(eng) (((ey_engine_t*)(eng))->event_hash)
 #define ey_signature_hash(eng) (((ey_engine_t*)(eng))->signature_hash)
 #define ey_jit(eng) (((ey_engine_t*)(eng))->jit)
+#define ey_library_hash(eng) (((ey_engine_t*)(eng))->library_hash)
 
 #endif

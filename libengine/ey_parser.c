@@ -65,11 +65,20 @@ void ey_parser_finit(ey_engine_t *eng)
 		return;
 
 	if(ey_filename_hash(eng))
+	{
 		ey_hash_destroy(ey_filename_hash(eng));
+		ey_filename_hash(eng) = NULL;
+	}
 	if(ey_filename_fslab(eng))
+	{
 		engine_fzfinit(ey_filename_fslab(eng));
+		ey_filename_fslab(eng) = NULL;
+	}
 	if(ey_parser_fslab(eng))
+	{
 		engine_fzfinit(ey_parser_fslab(eng));
+		ey_parser_fslab(eng) = NULL;
+	}
 	assert(eng->parser==NULL);
 }
 
