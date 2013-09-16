@@ -42,6 +42,9 @@ static int destroy_each(void *l, void *e)
 {
 	ey_library_t *lib = (ey_library_t*)l;
 	ey_engine_t *eng = (ey_engine_t*)e;
+	finit_handler finit_func = lib->finit;
+	engine_parser_debug("finit function for %s returns %d\n", lib->name, (*finit_func)(eng));
+
 
 	if(lib->finit_name)
 		engine_fzfree(ey_parser_fslab(eng), lib->finit_name);
@@ -68,7 +71,7 @@ int ey_attach_library(struct ey_engine *eng, char *libname)
 	init_handler init_func = NULL;
 	char *init_name = NULL;
 
-	init_handler finit_func = NULL;
+	finit_handler finit_func = NULL;
 	char *finit_name = NULL;
 
 	void *lib_handle = NULL;
