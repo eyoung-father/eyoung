@@ -5,6 +5,7 @@
 
 int debug_engine_init = 1;
 int debug_engine_lexier = 1;
+int debug_engine_compiler = 1;
 
 int engine_parser_error(const char *format, ...)
 {
@@ -74,6 +75,32 @@ int engine_init_error(const char *format, ...)
 int engine_init_debug(const char *format, ...)
 {
 	if(!debug_engine_init)
+		return 0;
+	
+	va_list ap;
+	int ret = 0;
+	va_start(ap, format);
+	ret = vfprintf(stderr, format, ap);
+	va_end(ap);
+	return ret;
+}
+
+int engine_compiler_error(const char *format, ...)
+{
+	if(!debug_engine_compiler)
+		return 0;
+	
+	va_list ap;
+	int ret = 0;
+	va_start(ap, format);
+	ret = vfprintf(stderr, format, ap);
+	va_end(ap);
+	return ret;
+}
+
+int engine_compiler_debug(const char *format, ...)
+{
+	if(!debug_engine_compiler)
 		return 0;
 	
 	va_list ap;

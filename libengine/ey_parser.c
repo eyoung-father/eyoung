@@ -91,8 +91,8 @@ static int ey_output_code_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *code)
 
 static int ey_output_import_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *import)
 {
-	/*TODO: read so file .eyoung* sections*/
-	return 0;
+	fprintf(fp, "#line %d \"%s\"\n", import->location.first_line, import->location.filename);
+	return ey_extract_library(eng, import->filename, fp);
 }
 
 static int ey_output_event_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *event)
@@ -351,14 +351,25 @@ int ey_parse_file(ey_engine_t *eng, const char *filename)
 	}
 
 	if(pstate_ret != YYPUSH_MORE && pstate_ret != 0)
+	{
 		engine_init_error("find error while parsing %s\n", parser->filename);
-	else
-		engine_init_debug("parse %s successfully\n", parser->filename);
+		goto failed;
+	}
+	engine_init_debug("parse %s successfully\n", parser->filename);
 	
 	if(ey_output_cfile(eng, parser->filename, parser->signature_file))
+	{
 		engine_init_error("load file %s failed\n", parser->filename);
-	else
-		engine_init_debug("load file %s successfully\n", parser->filename);
+		goto failed;
+	}
+	engine_init_debug("load file %s successfully, output %s\n", parser->filename, parser->signature_file->output_file);
+
+	if(ey_compile_signature_file(eng, parser->signature_file))
+	{
+		engine_init_error("compile file %s failed\n", parser->signature_file->output_file);
+		goto failed;
+	}
+	engine_init_debug("compile %s successfully\n", parser->signature_file->output_file);
 	
 	ret = 0;
 
