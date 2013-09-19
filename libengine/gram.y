@@ -237,6 +237,18 @@ prologue:
 	}
 	| TOKEN_IMPORT TOKEN_STRING
 	{
+		if(!ey_file_is_library($2))
+		{
+			engine_parser_error("attach library name is not dynamic library\n");
+			YYABORT;
+		}
+
+		if(ey_attach_library(ENG, $2))
+		{
+			engine_parser_error("attach library %s failed\n", $2);
+			YYABORT;
+		}
+
 		ey_code_t *ret = ey_alloc_code(ENG, &@2, (void*)$2, EY_CODE_IMPORT);
 		if(!ret)
 		{

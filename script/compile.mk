@@ -45,7 +45,7 @@ ifeq ($(OPTIMIZE), 1)
 CPPFLAGS_GLOBAL += -O2
 endif
 
-LDFLAGS_GLOBAL = -L/usr/lib -L$(TOP_DIR)/build/lib/ -L$(TOP_DIR)/build/prebuild
+LDFLAGS_GLOBAL = -L$(TOP_DIR)/build/lib/ -L$(TOP_DIR)/build/prebuild -L/usr/lib 
 
 LIB_DIR = $(TOP_DIR)/build/lib/
 BIN_DIR = $(TOP_DIR)/build/bin/

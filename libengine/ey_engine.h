@@ -14,6 +14,7 @@
 #include "ey_info.h"
 #include "engine_mem.h"
 #include "ey_signature.h"
+#include "libutil.h"
 #include "libjit.h"
 #include "ey_compiler.h"
 #include "ey_import.h"

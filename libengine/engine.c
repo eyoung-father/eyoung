@@ -38,6 +38,10 @@ engine_t ey_engine_create(const char *name)
 	if(ey_compiler_init(ret))
 		goto failed;
 
+	/*init import*/
+	if(ey_import_init(ret))
+		goto failed;
+
 	return (engine_t)ret;
 
 failed:
@@ -51,6 +55,7 @@ void ey_engine_destroy(engine_t engine)
 	if(!eng)
 		return;
 	
+	ey_import_finit(eng);
 	ey_compiler_finit(eng);
 	ey_parser_finit(eng);
 	ey_event_finit(eng);
