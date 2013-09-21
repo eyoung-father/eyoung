@@ -6,4 +6,5 @@
 extern void* ey_malloc(size_t size);
 extern void* ey_realloc(void *old, size_t new_size);
 extern void ey_free(void *ptr);
+extern void *ey_calloc(size_t nmemb, size_t size);
 #endif

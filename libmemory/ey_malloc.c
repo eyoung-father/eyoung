@@ -35,6 +35,21 @@ void *ey_malloc(size_t size)
 	return HEAD2PTR(ptr);
 }
 
+void *ey_calloc(size_t nmemb, size_t size)
+{
+	if(!size)
+		return NULL;
+	
+	size_t real_size = REAL_SIZE(size*nmemb);
+	malloc_head_t *ptr = (malloc_head_t*)malloc(sizeof(malloc_head_t) + real_size + sizeof(malloc_tail_t));
+	if(ptr)
+	{
+		ptr->real_size = real_size;
+		HEAD2TAIL(ptr)->magic = MEM_MAGIC;
+	}
+	return memset(HEAD2PTR(ptr), 0, real_size);
+}
+
 void ey_free(void* ptr)
 {
 	if(!ptr)
