@@ -1,14 +1,14 @@
 TOP_DIR = ..
 MODULE_TOP_DIR = .
 BUILD_TYPE = dynlib
-BUILD_NAME = libtcc
+BUILD_NAME = libjit
 SUB_MOD =
 SUB_DIR = 
 ARCH ?= x86-64
 TARGETOS ?= Linux
 CFLAGS_LOCAL = -Wno-sign-compare -Wno-missing-field-initializers
 
-SRCS = libtcc.c tccpp.c tccgen.c tccelf.c tccasm.c tccrun.c
+SRCS = libjit.c libtcc.c tccpp.c tccgen.c tccelf.c tccasm.c tccrun.c
 ifeq ($(ARCH), i386)
 	SRCS += i386-gen.c i386-asm.c
 	CFLAGS_LOCAL += -DTCC_TARGET_I386
