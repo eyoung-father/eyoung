@@ -34,8 +34,6 @@ typedef struct ey_engine
 	ey_hash_t library_hash;
 
 	ey_jit_t jit;
-
-	ey_signature_list_t signature_list;
 }ey_engine_t;
 
 #define ey_parser_fslab(eng) (((ey_engine_t*)(eng))->parser_fslab)
