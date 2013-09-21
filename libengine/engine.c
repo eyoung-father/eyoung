@@ -4,7 +4,7 @@
 
 #include "ey_info.h"
 #include "ey_memory.h"
-#include "engine.h"
+#include "libengine.h"
 #include "ey_engine.h"
 
 engine_t ey_engine_create(const char *name)
