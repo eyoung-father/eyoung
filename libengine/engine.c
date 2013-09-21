@@ -63,10 +63,24 @@ void ey_engine_destroy(engine_t engine)
 	ey_free(eng);
 }
 
-int ey_engine_load(engine_t engine, const char *root_file)
+int ey_engine_load(engine_t engine, char *files[], int files_num)
 {
+	if(!engine || !files || files_num<=0)
+	{
+		engine_init_error("%s bad paramters\n", __FUNCTION__);
+		return -1;
+	}
 	ey_engine_t *eng = (ey_engine_t *)engine;
-	return ey_parse_file(eng, root_file);
+	int index;
+	for(index=0; index<files_num; index++)
+	{
+		if(ey_parse_file(eng, files[index], 0))
+		{
+			engine_init_error("load %s failed\n", files[index]);
+			continue;
+		}
+	}
+	return 0;
 }
 
 engine_work_t ey_engine_work_create(engine_t engine)
@@ -81,7 +95,7 @@ void ey_engine_work_destroy(engine_t engine, engine_work_t work)
 	return;
 }
 
-int ey_engine_work_detect(engine_t eng, engine_work_t work, engine_event_t *event, engine_action_t *action)
+int ey_engine_work_detect(engine_t eng, engine_work_t work, engine_work_event_t *event, engine_action_t *action)
 {
 	/*TODO*/
 	return 0;
@@ -97,7 +111,7 @@ int main(int argc, char *argv[])
 	debug_engine_lexier = 1;
 	debug_engine_init = 1;
 
-	if(argc != 2)
+	if(argc < 2)
 	{
 		engine_init_error("use filename as parameter\n");
 		return -1;
@@ -110,7 +124,7 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
-	if(ey_engine_load(engine, argv[1]))
+	if(ey_engine_load(engine, &argv[1], argc-1))
 		engine_init_error("load signature failed\n");
 	
 	ey_engine_destroy(engine);

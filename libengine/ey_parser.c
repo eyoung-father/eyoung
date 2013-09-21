@@ -265,7 +265,7 @@ failed:
 	return -1;
 }
 
-int ey_parse_file(ey_engine_t *eng, const char *filename)
+int ey_parse_file(ey_engine_t *eng, const char *filename, int need_link)
 {
 	FILE *fp = NULL;
 	yyscan_t lexer = NULL;
@@ -364,7 +364,7 @@ int ey_parse_file(ey_engine_t *eng, const char *filename)
 	}
 	engine_init_debug("load file %s successfully, output %s\n", parser->filename, parser->signature_file->output_file);
 
-	if(ey_compile_signature_file(eng, parser->signature_file, 0))
+	if(ey_compile_signature_file(eng, parser->signature_file, need_link))
 	{
 		engine_init_error("compile file %s failed\n", parser->signature_file->output_file);
 		goto failed;
