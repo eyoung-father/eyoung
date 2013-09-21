@@ -42,7 +42,7 @@ ey_hash_t ey_hash_create(char *name, size_t power2_size, size_t limit,
 	memory_handler_t *memory_handler)
 {
 	ey_hash *ret = NULL;
-	memory_handler_t default_handler = {ey_malloc, ey_realloc, ey_free};
+	memory_handler_t default_handler = {ey_malloc, ey_realloc, ey_free, ey_calloc};
 	int lines = 0;
 
 	if(!gen_key || !compare_key)

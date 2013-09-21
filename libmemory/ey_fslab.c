@@ -34,7 +34,7 @@ ey_fslab_t ey_fzinit(char *name, int size, memory_handler_t *handler)
 		return NULL;
 	}
 
-	static memory_handler_t default_handler = {ey_malloc,ey_realloc,ey_free};
+	static memory_handler_t default_handler = {ey_malloc,ey_realloc,ey_free,ey_calloc};
 	struct ey_fslab *z = NULL;
 	int real_size = size + sizeof(fslab_head_t);
 

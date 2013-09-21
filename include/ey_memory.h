@@ -8,12 +8,14 @@
 typedef void* (*malloc_fn)(size_t size);
 typedef void* (*realloc_fn)(void *old, size_t new_size);
 typedef void (*free_fn)(void *ptr);
+typedef void* (*calloc_fn)(size_t nmemb, size_t size);
 
 typedef struct memory_handler
 {
 	malloc_fn malloc;
 	realloc_fn realloc;
 	free_fn free;
+	calloc_fn calloc;
 }memory_handler_t;
 
 #include "ey_slab.h"

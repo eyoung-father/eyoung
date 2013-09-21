@@ -178,7 +178,7 @@ ey_slab_t ey_zinit(char *name, int size, memory_handler_t *handler)
 		fprintf(stderr, "size %d must be positive\n", size);
 		return NULL;
 	}
-	static memory_handler_t default_handler = {ey_malloc,ey_realloc,ey_free};
+	static memory_handler_t default_handler = {ey_malloc,ey_realloc,ey_free,ey_calloc};
 	struct ey_slab *z = NULL;
 	int real_size = REAL_SIZE(size);
 	int total_size = real_size + sizeof(slab_item_head_t) + sizeof(slab_item_tail_t);
