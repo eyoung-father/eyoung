@@ -364,7 +364,7 @@ int ey_parse_file(ey_engine_t *eng, const char *filename)
 	}
 	engine_init_debug("load file %s successfully, output %s\n", parser->filename, parser->signature_file->output_file);
 
-	if(ey_compile_signature_file(eng, parser->signature_file))
+	if(ey_compile_signature_file(eng, parser->signature_file, 0))
 	{
 		engine_init_error("compile file %s failed\n", parser->signature_file->output_file);
 		goto failed;

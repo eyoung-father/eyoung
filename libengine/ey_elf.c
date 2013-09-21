@@ -145,16 +145,16 @@ static int read_nit(void *d, void *a)
 
 int ey_elf_read_init(ey_engine_t *eng, const char *libname, init_handler *init, char **init_name)
 {
-	read_arg_t arg = {NULL, NULL};
-	*init_name = NULL;
-	*init = NULL;
-	
 	if(!eng || !libname || !init || !init_name)
 	{
 		engine_parser_error("%s bad parameter\n", __FUNCTION__);
 		return -1;
 	}
 
+	read_arg_t arg = {NULL, NULL};
+	*init_name = NULL;
+	*init = NULL;
+	
 	if(ey_elf_read(eng, libname, EY_INIT_SECTION, read_nit, (void*)&arg))
 	{
 		engine_parser_error("read library %s init section failed\n");
@@ -177,16 +177,16 @@ int ey_elf_read_init(ey_engine_t *eng, const char *libname, init_handler *init, 
 
 int ey_elf_read_finit(ey_engine_t *eng, const char *libname, finit_handler *finit, char **finit_name)
 {
-	read_arg_t arg = {NULL, NULL};
-	*finit_name = NULL;
-	*finit = NULL;
-	
 	if(!eng || !libname || !finit || !finit_name)
 	{
 		engine_parser_error("%s bad parameter\n", __FUNCTION__);
 		return -1;
 	}
 
+	read_arg_t arg = {NULL, NULL};
+	*finit_name = NULL;
+	*finit = NULL;
+	
 	if(ey_elf_read(eng, libname, EY_FINIT_SECTION, read_nit, (void*)&arg))
 	{
 		engine_parser_error("read library %s finit section failed\n");
