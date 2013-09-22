@@ -5,6 +5,7 @@
 
 /*engine*/
 #define engine_malloc(sz) ey_malloc(sz)
+#define engine_calloc(mem,sz) ey_calloc(mem,sz)
 #define engine_realloc(ptr, sz) ey_realloc(ptr,sz)
 #define engine_free(ptr) ey_free(ptr)
 #define engine_zalloc(s) ey_zalloc(s)
@@ -21,6 +22,7 @@
 
 /*lexer*/
 #define lexer_malloc(sz) ey_malloc(sz)
+#define lexer_calloc(mem,sz) ey_calloc(mem,sz)
 #define lexer_realloc(ptr, sz) ey_realloc(ptr,sz)
 #define lexer_free(ptr) ey_free(ptr)
 #define lexer_zalloc(s) ey_zalloc(s)
@@ -31,6 +33,7 @@
 
 /*parser*/
 #define parser_malloc(sz) ey_malloc(sz)
+#define parser_calloc(mem,sz) ey_calloc(mem,sz)
 #define parser_realloc(ptr, sz) ey_realloc(ptr,sz)
 #define parser_free(ptr) ey_free(ptr)
 #define parser_zalloc(s) ey_zalloc(s)

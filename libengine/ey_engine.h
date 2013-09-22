@@ -28,9 +28,13 @@ typedef struct ey_engine
 	ey_fslab_t parser_fslab;
 
 	ey_hash_t filename_hash;
-	ey_hash_t event_hash;
 	ey_hash_t signature_hash;
 	ey_hash_t library_hash;
+
+	#define EVENT_ARRAY_STEP	32
+	ey_event_t *event_array;
+	int event_size;
+	int event_count;
 
 	ey_parser_t *parser;
 	ey_jit_t jit;
@@ -40,7 +44,9 @@ typedef struct ey_engine
 
 #define ey_parser_fslab(eng) (((ey_engine_t*)(eng))->parser_fslab)
 #define ey_filename_hash(eng) (((ey_engine_t*)(eng))->filename_hash)
-#define ey_event_hash(eng) (((ey_engine_t*)(eng))->event_hash)
+#define ey_event_array(eng) (((ey_engine_t*)(eng))->event_array)
+#define ey_event_size(eng) (((ey_engine_t*)(eng))->event_size)
+#define ey_event_count(eng) (((ey_engine_t*)(eng))->event_count)
 #define ey_signature_hash(eng) (((ey_engine_t*)(eng))->signature_hash)
 #define ey_jit(eng) (((ey_engine_t*)(eng))->jit)
 #define ey_library_hash(eng) (((ey_engine_t*)(eng))->library_hash)

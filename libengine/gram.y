@@ -278,13 +278,6 @@ prologue:
 			YYABORT;
 		}
 
-		ev = ey_define_event(ENG, ev);
-		if(!ev)
-		{
-			engine_parser_error("define event failed\n");
-			YYABORT;
-		}
-
 		ey_code_t *ret = ey_alloc_code(ENG, &@2, (void*)ev, EY_CODE_EVENT);
 		if(!ret)
 		{

@@ -143,7 +143,7 @@ ey_signature_t *ey_alloc_signature(ey_engine_t *eng, unsigned int id,
 	TAILQ_CONCAT(&ret->rhs_signature_list, signature_list, link);
 
 	unsigned int rhs_pos = 0;
-	ey_rhs_signature_t *rhs = NULL
+	ey_rhs_signature_t *rhs = NULL;
 	TAILQ_FOREACH(rhs, &ret->rhs_signature_list, link)
 	{
 		rhs->signature_id = id;
