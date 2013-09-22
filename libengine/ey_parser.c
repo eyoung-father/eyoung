@@ -32,18 +32,6 @@ int ey_parser_init(ey_engine_t *eng)
 		}
 	}
 
-	if(!ey_filename_fslab(eng))
-	{
-		snprintf(name, sizeof(name), "%s filename fslab\n", eng->name);
-		name[63] = '\0';
-		ey_filename_fslab(eng) = engine_fzinit(name, 128, NULL);
-		if(!ey_filename_fslab(eng))
-		{
-			engine_init_error("create filename fslab failed\n");
-			return -1;
-		}
-	}
-
 	if(!ey_filename_hash(eng))
 	{
 		snprintf(name, sizeof(name), "%s filename hash\n", eng->name);
@@ -69,11 +57,7 @@ void ey_parser_finit(ey_engine_t *eng)
 		ey_hash_destroy(ey_filename_hash(eng));
 		ey_filename_hash(eng) = NULL;
 	}
-	if(ey_filename_fslab(eng))
-	{
-		engine_fzfinit(ey_filename_fslab(eng));
-		ey_filename_fslab(eng) = NULL;
-	}
+
 	if(ey_parser_fslab(eng))
 	{
 		engine_fzfinit(ey_parser_fslab(eng));
@@ -318,7 +302,7 @@ int ey_parse_file(ey_engine_t *eng, const char *filename, int need_link)
 	}
 	parser->parser = pstate;
 	
-	parser->filename = engine_fzalloc(strlen(filename)+1, ey_filename_fslab(eng));
+	parser->filename = engine_fzalloc(strlen(filename)+1, ey_parser_fslab(eng));
 	if(!parser->filename)
 	{
 		engine_init_error("copy filename failed\n");
@@ -377,7 +361,7 @@ failed:
 	if(parser)
 	{
 		if(parser->filename)
-			engine_fzfree(ey_filename_fslab(eng), parser->filename);
+			engine_fzfree(ey_parser_fslab(eng), parser->filename);
 		if(parser->buffer)
 			engine_fzfree(ey_parser_fslab(eng), parser->buffer);
 	}
