@@ -38,6 +38,7 @@ typedef struct ey_rhs_item
 	unsigned int rhs_signature_position;
 	unsigned int rhs_item_position;
 	TAILQ_ENTRY(ey_rhs_item) link;
+	TAILQ_ENTRY(ey_rhs_item) event_link;
 	ey_location_t location;
 	char *event_name;
 	struct ey_acsm_pattern *cluster_condition;

@@ -1,6 +1,8 @@
 #ifndef EY_EVENT_H
 #define EY_EVENT_H 1
 
+#include "ey_queue.h"
+#include "ey_signature.h"
 #include "ey_loc.h"
 #include "libmatch.h"
 
@@ -12,6 +14,7 @@ typedef struct ey_event
 	char *define;
 
 	ey_acsm_t cluster_pattern;
+	ey_rhs_item_list_t item_list;
 }ey_event_t;
 
 typedef char* ey_event_key_t;
