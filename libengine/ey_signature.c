@@ -141,6 +141,23 @@ ey_signature_t *ey_alloc_signature(ey_engine_t *eng, unsigned int id,
 	ret->location = *location;
 	TAILQ_INIT(&ret->rhs_signature_list);
 	TAILQ_CONCAT(&ret->rhs_signature_list, signature_list, link);
+
+	unsigned int rhs_pos = 0;
+	ey_rhs_signature_t *rhs = NULL
+	TAILQ_FOREACH(rhs, &ret->rhs_signature_list, link)
+	{
+		rhs->signature_id = id;
+		rhs->rhs_signature_position = rhs_pos++;
+
+		ey_rhs_item_t *item = NULL;
+		unsigned int item_pos = 0;
+		TAILQ_FOREACH(item, &rhs->rhs_item_list, link)
+		{
+			item->signature_id = id;
+			item->rhs_signature_position = rhs->rhs_signature_position;
+			item->rhs_item_position = item_pos++;
+		}
+	}
 	return ret;
 }
 
