@@ -32,7 +32,11 @@ extern void ey_free_rhs_item_action(struct ey_engine *eng, ey_rhs_item_action_t 
 struct ey_acsm_pattern;
 typedef struct ey_rhs_item
 {
+	unsigned int signature_id;
 	unsigned int rhs_id;
+
+	unsigned int rhs_signature_position;
+	unsigned int rhs_item_position;
 	TAILQ_ENTRY(ey_rhs_item) link;
 	ey_location_t location;
 	char *event_name;
@@ -50,6 +54,8 @@ extern void ey_free_rhs_item(struct ey_engine *eng, ey_rhs_item_t *item);
 
 typedef struct ey_rhs_signature
 {
+	unsigned int signature_id;
+	unsigned int rhs_signature_position;
 	ey_location_t location;
 	TAILQ_ENTRY(ey_rhs_signature) link;
 	ey_rhs_item_list_t rhs_item_list;
@@ -61,13 +67,13 @@ extern void ey_free_rhs_signature(struct ey_engine *eng, ey_rhs_signature_t *rhs
 
 typedef struct ey_signature
 {
+	unsigned int signature_id;
 	TAILQ_ENTRY(ey_signature) link;
-	unsigned long id;
 	ey_location_t location;
 	ey_rhs_signature_list_t rhs_signature_list;
 }ey_signature_t;
 typedef TAILQ_HEAD(ey_signature_list, ey_signature) ey_signature_list_t;
-extern ey_signature_t *ey_alloc_signature(struct ey_engine *eng, unsigned long id,
+extern ey_signature_t *ey_alloc_signature(struct ey_engine *eng, unsigned int id,
 	ey_location_t *location, ey_rhs_signature_list_t *signature_list);
 extern void ey_free_signature(struct ey_engine *eng, ey_signature_t *signature);
 
@@ -106,6 +112,6 @@ extern void ey_free_signature_file(struct ey_engine *eng, ey_signature_file_t *f
 
 extern int ey_signature_init(struct ey_engine *eng);
 extern void ey_signature_finit(struct ey_engine *eng);
-extern ey_signature_t *ey_find_signature(struct ey_engine *eng, unsigned long id);
+extern ey_signature_t *ey_find_signature(struct ey_engine *eng, unsigned int id);
 extern int ey_insert_signature(struct ey_engine *eng, ey_signature_t *signature);
 #endif

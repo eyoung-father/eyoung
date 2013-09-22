@@ -134,10 +134,10 @@ static int ey_output_rules_cfile(ey_engine_t *eng, FILE *fp, ey_signature_list_t
 				ey_event_t *event = ey_find_event(eng, rhs_item->event_name);
 				if(!event)
 				{
-					engine_init_error("cannot find event %s in line %d(%lu, %d, %d)\n", 
+					engine_init_error("cannot find event %s in line %d(%u, %d, %d)\n", 
 						rhs_item->event_name, 
 						rhs_item->location.first_line,
-						signature->id, line, column);
+						signature->signature_id, line, column);
 					return -1;
 				}
 
@@ -147,13 +147,13 @@ static int ey_output_rules_cfile(ey_engine_t *eng, FILE *fp, ey_signature_list_t
 					condition->func_name = (char*)engine_fzalloc(MAX_CONDITION_FUNC_NAME_LEN, ey_parser_fslab(eng));
 					if(!condition->func_name)
 					{
-						engine_init_error("failed to alloc func name in line %d(%lu, %d, %d)\n",
+						engine_init_error("failed to alloc func name in line %d(%u, %d, %d)\n",
 							rhs_item->location.first_line,
-							signature->id, line, column);
+							signature->signature_id, line, column);
 						return -1;
 					}
-					snprintf(condition->func_name, MAX_CONDITION_FUNC_NAME_LEN, "__condition_%lu_%d_%d",
-						signature->id, line, column);
+					snprintf(condition->func_name, MAX_CONDITION_FUNC_NAME_LEN, "__condition_%u_%d_%d",
+						signature->signature_id, line, column);
 
 					fprintf(fp, "int %s(void* _LINK_, %s *_THIS_)\n", condition->func_name, event->name);
 					fprintf(fp, "{\n");
@@ -168,13 +168,13 @@ static int ey_output_rules_cfile(ey_engine_t *eng, FILE *fp, ey_signature_list_t
 					action->func_name = (char*)engine_fzalloc(MAX_ACTION_FUNC_NAME_LEN, ey_parser_fslab(eng));
 					if(!action->func_name)
 					{
-						engine_init_error("failed to alloc func name in line %d(%lu, %d, %d)\n",
+						engine_init_error("failed to alloc func name in line %d(%u, %d, %d)\n",
 							rhs_item->location.first_line,
-							signature->id, line, column);
+							signature->signature_id, line, column);
 						return -1;
 					}
-					snprintf(action->func_name, MAX_ACTION_FUNC_NAME_LEN, "__action_%lu_%d_%d",
-						signature->id, line, column);
+					snprintf(action->func_name, MAX_ACTION_FUNC_NAME_LEN, "__action_%u_%d_%d",
+						signature->signature_id, line, column);
 
 					fprintf(fp, "int %s(void* _LINK_, %s *_THIS_)\n", action->func_name, event->name);
 					fprintf(fp, "#line %d \"%s\"\n", action->location.first_line, action->location.filename);

@@ -128,7 +128,7 @@ void ey_free_rhs_signature(ey_engine_t *eng, ey_rhs_signature_t *rhs_signature)
 	}
 }
 
-ey_signature_t *ey_alloc_signature(ey_engine_t *eng, unsigned long id,
+ey_signature_t *ey_alloc_signature(ey_engine_t *eng, unsigned int id,
 	ey_location_t *location, ey_rhs_signature_list_t *signature_list)
 {
 	assert(location != NULL);
@@ -137,7 +137,7 @@ ey_signature_t *ey_alloc_signature(ey_engine_t *eng, unsigned long id,
 	if(!ret)
 		return NULL;
 	memset(ret, 0, sizeof(*ret));
-	ret->id = id;
+	ret->signature_id = id;
 	ret->location = *location;
 	TAILQ_INIT(&ret->rhs_signature_list);
 	TAILQ_CONCAT(&ret->rhs_signature_list, signature_list, link);
@@ -253,7 +253,7 @@ static int compare_signature(void *k, void *v)
 	if(!k || !v)
 		return 1;
 	
-	return *(unsigned long*)k != ((ey_signature_t*)v)->id;
+	return *(unsigned int*)k != ((ey_signature_t*)v)->signature_id;
 }
 
 
@@ -287,7 +287,7 @@ void ey_signature_finit(struct ey_engine *eng)
 	}
 }
 
-ey_signature_t *ey_find_signature(ey_engine_t *eng, unsigned long id)
+ey_signature_t *ey_find_signature(ey_engine_t *eng, unsigned int id)
 {
 	if(!eng|| !ey_signature_hash(eng))
 	{
@@ -306,18 +306,18 @@ int ey_insert_signature(ey_engine_t *eng, ey_signature_t *signature)
 		return -1;
 	}
 
-	ey_signature_t *find = ey_find_signature(eng, signature->id);
+	ey_signature_t *find = ey_find_signature(eng, signature->signature_id);
 	if(find)
 	{
-		engine_parser_error("signature %lu is already inserted\n",signature->id);
+		engine_parser_error("signature %lu is already inserted\n",signature->signature_id);
 		return -1;
 	}
 
-	if(ey_hash_insert(ey_signature_hash(eng), (void*)&signature->id, signature))
+	if(ey_hash_insert(ey_signature_hash(eng), (void*)&signature->signature_id, signature))
 	{
-		engine_parser_error("signature %lu inserted failed\n", signature->id);
+		engine_parser_error("signature %lu inserted failed\n", signature->signature_id);
 		return -1;
 	}
-	engine_parser_debug("signature %lu inserted successfully\n", signature->id);
+	engine_parser_debug("signature %lu inserted successfully\n", signature->signature_id);
 	return 0;
 }
