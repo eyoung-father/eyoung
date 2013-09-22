@@ -11,16 +11,16 @@ void ey_acsm_destroy(ey_acsm_t acsm)
 	acsmFree2((ACSM_STRUCT2*)acsm);
 }
 
-int ey_acsm_add_pattern(ey_acsm_t acsm, char *pattern, int pattern_len, void *id, ey_acsm_option_t *option)
+int ey_acsm_add_pattern(ey_acsm_t acsm, ey_acsm_pattern_t *pattern)
 {
 	return acsmAddPattern2((ACSM_STRUCT2*)acsm,
-							(unsigned char*)pattern,
-							pattern_len,
-							option?option->nocase:0,
-							option?option->offset:0,
-							option?option->depth:0,
-							option?option->negative:0,
-							id,
+							(unsigned char*)(pattern->pattern),
+							pattern->pattern_len,
+							pattern->nocase,
+							pattern->offset,
+							pattern->depth,
+							pattern->negative,
+							pattern->id,
 							0/*iid*/);
 }
 

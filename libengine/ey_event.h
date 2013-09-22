@@ -2,11 +2,15 @@
 #define EY_EVENT_H 1
 
 #include "ey_loc.h"
+#include "libmatch.h"
+
 typedef struct ey_event
 {
 	ey_location_t location;
 	char *name;
 	char *define;
+
+	ey_acsm_t cluster_pattern;
 }ey_event_t;
 
 typedef char* ey_event_key_t;
