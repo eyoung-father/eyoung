@@ -29,19 +29,21 @@ extern ey_rhs_item_action_t *ey_alloc_rhs_item_action(struct ey_engine *eng, ey_
 	char *code, char *func_name, void *addr);
 extern void ey_free_rhs_item_action(struct ey_engine *eng, ey_rhs_item_action_t *action);
 
+struct ey_acsm_pattern;
 typedef struct ey_rhs_item
 {
+	unsigned int rhs_id;
 	TAILQ_ENTRY(ey_rhs_item) link;
 	ey_location_t location;
 	char *event_name;
-	char *cluster_condition;
+	struct ey_acsm_pattern *cluster_condition;
 	ey_rhs_item_condition_t *condition;
 	ey_rhs_item_action_t *action;
 }ey_rhs_item_t;
 typedef TAILQ_HEAD(ey_rhs_item_list, ey_rhs_item) ey_rhs_item_list_t;
 extern ey_rhs_item_t *ey_alloc_rhs_item(struct ey_engine *eng, ey_location_t *location, 
 	char *event_name,
-	char *cluster_condition,
+	struct ey_acsm_pattern *cluster_condition,
 	ey_rhs_item_condition_t *condition, 
 	ey_rhs_item_action_t *action);
 extern void ey_free_rhs_item(struct ey_engine *eng, ey_rhs_item_t *item);

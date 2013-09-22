@@ -62,7 +62,7 @@ void ey_free_rhs_item_action(ey_engine_t *eng, ey_rhs_item_action_t *action)
 
 ey_rhs_item_t *ey_alloc_rhs_item(ey_engine_t *eng, ey_location_t *location, 
 	char *event_name,
-	char *cluster_condition,
+	ey_acsm_pattern_t *cluster_condition,
 	ey_rhs_item_condition_t *condition, 
 	ey_rhs_item_action_t *action)
 {
@@ -72,8 +72,11 @@ ey_rhs_item_t *ey_alloc_rhs_item(ey_engine_t *eng, ey_location_t *location,
 	if(!ret)
 		return NULL;
 	memset(ret, 0, sizeof(*ret));
+	ret->rhs_id = ++ey_rhs_id(eng);
 	ret->location = *location;
 	ret->event_name = event_name;
+	if(cluster_condition)
+		cluster_condition->id = (void*)ret->rhs_id;
 	ret->cluster_condition = cluster_condition;
 	ret->condition = condition;
 	ret->action = action;
@@ -87,7 +90,11 @@ void ey_free_rhs_item(ey_engine_t *eng, ey_rhs_item_t *item)
 	if(item->event_name)
 		engine_fzfree(ey_parser_fslab(eng), item->event_name);
 	if(item->cluster_condition)
+	{
+		if(item->cluster_condition->pattern)
+			engine_fzfree(ey_parser_fslab(eng), item->cluster_condition->pattern);
 		engine_fzfree(ey_parser_fslab(eng), item->cluster_condition);
+	}
 	if(item->condition)
 		ey_free_rhs_item_condition(eng, item->condition);
 	if(item->action)

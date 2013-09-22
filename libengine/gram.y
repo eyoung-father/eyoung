@@ -17,6 +17,7 @@ int gram_error(GRAM_LTYPE *loc, void *eng, const char *format, ...);
 
 #define ENG ((ey_engine_t *)eng)
 static char *output_filename;
+static ey_acsm_pattern_t *parse_cluster_string(ey_engine_t *eng, char *pattern);
 %}
 
 %token TOKEN_STRING			"string"
@@ -51,6 +52,7 @@ static char *output_filename;
 	ey_code_t *code;
 	ey_code_list_t code_list;
 	ey_signature_file_t *file;
+	ey_acsm_pattern_t *pattern;
 }
 
 %type	<integer>			TOKEN_INT
@@ -62,12 +64,22 @@ static char *output_filename;
 %type	<string>			TOKEN_EPILOGUE_CODE
 
 %type	<string>			rhs_name
-%type	<string>			rhs_cluster_opt
+%type	<pattern>			rhs_cluster_opt
 %destructor
 {
 	if($$)
 		engine_fzfree(ey_parser_fslab(ENG), $$);
-}rhs_name rhs_cluster_opt
+}rhs_name 
+
+%destructor
+{
+	if($$)
+	{
+		if($$->pattern)
+			engine_fzfree(ey_parser_fslab(ENG), $$->pattern);
+		engine_fzfree(ey_parser_fslab(ENG), $$);
+	}
+}rhs_cluster_opt
 
 %type	<action>			rhs_action_opt
 %destructor
@@ -423,7 +435,14 @@ rhs_cluster_opt:
 	}
 	| TOKEN_SLASH TOKEN_STRING
 	{
-		$$ = $2;
+		ey_acsm_pattern_t *ret = NULL;
+		ret = parse_cluster_string(ENG, $2);
+		if(!ret)
+		{
+			engine_parser_error("parse cluster string failed\n");
+			YYABORT;
+		}
+		$$ = ret;
 	}
 	;
 
@@ -473,4 +492,26 @@ int gram_error(GRAM_LTYPE *loc, void *eng, const char *format, ...)
 	va_end(ap);
 
 	return engine_parser_error("error(line %d): %s\n", loc->first_line, error_buf);
+}
+
+static ey_acsm_pattern_t *parse_cluster_string(ey_engine_t *eng, char *pattern)
+{
+	if(!eng || !pattern)
+	{
+		engine_parser_error("%s bad parameter\n", __FUNCTION__);
+		return NULL;
+	}
+
+	ey_acsm_pattern_t *ret = (ey_acsm_pattern_t*)engine_fzalloc(sizeof(ey_acsm_pattern_t), ey_parser_fslab(eng));
+	if(!ret)
+	{
+		engine_parser_error("alloc acsm pattern failed\n");
+		return NULL;
+	}
+	memset(ret, 0, sizeof(*ret));
+
+	/*TODO: pattern string parse*/
+	ret->pattern = pattern;
+	ret->pattern_len = strlen(pattern);
+	return ret;
 }

@@ -19,6 +19,7 @@
 #include "ey_compiler.h"
 #include "ey_import.h"
 #include "ey_elf.h"
+#include "libmatch.h"
 
 typedef struct ey_engine
 {
@@ -33,6 +34,8 @@ typedef struct ey_engine
 
 	ey_parser_t *parser;
 	ey_jit_t jit;
+
+	unsigned int rhs_id;
 }ey_engine_t;
 
 #define ey_parser_fslab(eng) (((ey_engine_t*)(eng))->parser_fslab)
@@ -41,5 +44,6 @@ typedef struct ey_engine
 #define ey_signature_hash(eng) (((ey_engine_t*)(eng))->signature_hash)
 #define ey_jit(eng) (((ey_engine_t*)(eng))->jit)
 #define ey_library_hash(eng) (((ey_engine_t*)(eng))->library_hash)
+#define ey_rhs_id(eng) (((ey_engine_t*)(eng))->rhs_id)
 
 #endif

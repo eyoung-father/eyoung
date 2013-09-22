@@ -7,6 +7,7 @@
 #include "ey_info.h"
 #include "ey_loc.h"
 #include "ey_signature.h"
+#include "libmatch.h"
 #include "gram_parser.h"
 #include "ey_engine.h"
 
