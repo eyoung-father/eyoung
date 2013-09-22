@@ -335,6 +335,23 @@ int ey_insert_signature(ey_engine_t *eng, ey_signature_t *signature)
 		engine_parser_error("signature %lu inserted failed\n", signature->signature_id);
 		return -1;
 	}
+
+	ey_rhs_signature_t *rhs = NULL;
+	TAILQ_FOREACH(rhs, &signature->rhs_signature_list, link)
+	{
+		ey_rhs_item_t *item = NULL;
+		TAILQ_FOREACH(item, &rhs->rhs_item_list, link)
+		{
+			ey_event_t *event = ey_find_event(eng, item->event_name);
+			assert(event!=NULL);
+			if(item->cluster_condition && ey_acsm_add_pattern(event->cluster_pattern, item->cluster_condition))
+			{
+				engine_parser_error("add pattern for %u:%u:%u failed\n", item->signature_id, 
+				item->rhs_signature_position, item->rhs_item_position);
+			}
+			TAILQ_INSERT_TAIL(&event->item_list, item, event_link);
+		}
+	}
 	engine_parser_debug("signature %lu inserted successfully\n", signature->signature_id);
 	return 0;
 }
