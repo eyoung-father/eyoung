@@ -87,6 +87,7 @@ ey_event_t *ey_alloc_event(ey_engine_t *eng, ey_location_t *location, char *name
 			return NULL;
 		}
 		memcpy(new_array, ey_event_array(eng), sizeof(ey_event_t)*ey_event_count(eng));
+		engine_free(ey_event_array(eng));
 		ey_event_array(eng) = new_array;
 		ey_event_size(eng) = new_size;
 	}
