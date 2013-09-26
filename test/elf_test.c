@@ -68,11 +68,11 @@ main(int argc, char **argv)
 
 		data = NULL; 
 		n = 0;
-		eyoung_symbol_t *p=NULL;
+		ey_extern_symbol_t *p=NULL;
 		data = elf_getdata(scn, data);
 		if(data)
 		{
-			for(n=0, p=(eyoung_symbol_t *)data->d_buf; n<shdr.sh_size/sizeof(eyoung_symbol_t); n++, p++)
+			for(n=0, p=(ey_extern_symbol_t*)data->d_buf; n<shdr.sh_size/sizeof(ey_extern_symbol_t); n++, p++)
 				printf("type[%d]: %s\n", n, p->name);
 		}
 	}
