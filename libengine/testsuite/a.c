@@ -2,10 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int test=10;
-extern int aaa(void);
-extern int bbb(void);
-static int /*testest*/my_printf(const char /*testtes*/*fmt, ...);
 #define MY_MACRO(eng)               \
 	do                              \
 	{                               \
@@ -20,27 +16,35 @@ static int /*testest*/my_printf(const char /*testtes*/*fmt, ...);
 %event "http_uri" "void*"
 
 %%
-1:http_uri(aaa(/*ttt*/))/"testest"
+1:http_uri(foo(_LINK_, _THIS_))/"testest"
+	{
+		printf("uri foo()\n");
+		return 1;
+	}
 	;
 
-2:http_cookie(aaa()) 
+2:http_cookie(foo(_LINK_, /*ct test*/_THIS_)) /*ct test*/
 	{
-		printf("cookie aaa()\n");
+		printf("cookie foo()\n");
+		return 1;
 	}
-	http_referer(bbb())
-	{
-		printf("referer bbb()\n");
+	http_referer(foo(_LINK_, _THIS_)/*ct test*/)
+	{/*ct test*/
+		printf("referer foo()\n");
+		return 1;
 	}
-	| http_referer(bbb())
+	| http_referer(bar(_LINK_, _THIS_))
 	{
-		printf("referer bbb()\n");
-	}http_cookie(aaa())/"testest"
+		printf("referer bar()\n");
+		return 1;
+	}http_cookie(bar(_LINK_, _THIS_))/"testest"
 	{
-		printf("cookie aaa()\n");
+		printf("cookie bar()\n");
+		return 1;
 	}
 	;
 %%
 static int my_printf(const char *fmt, ...)
 {
-		return fprintf(stderr, /*testtest*/"%s\n", fmt);
+	return fprintf(stderr, /*testtest*/"%s\n", fmt);
 }

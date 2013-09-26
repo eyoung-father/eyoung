@@ -76,7 +76,7 @@ ey_rhs_item_t *ey_alloc_rhs_item(ey_engine_t *eng, ey_location_t *location,
 	ret->location = *location;
 	ret->event_name = event_name;
 	if(cluster_condition)
-		cluster_condition->id = (void*)ret->rhs_id;
+		cluster_condition->id = (void*)(unsigned long)ret->rhs_id;
 	ret->cluster_condition = cluster_condition;
 	ret->condition = condition;
 	ret->action = action;
