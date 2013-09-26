@@ -1,19 +1,28 @@
+#include <stdio.h>
 #include "ey_export.h"
 
-int a;
-int foo()
+int a=1;
+
+int foo(void *link, void *event)
 {
+	printf("call foo, a=%d\n", ++a);
+	return 1;
+}
+
+int bar(void *link, void *event)
+{
+	printf("call bar, a=%d\n", ++a);
 	return 0;
 }
 
 static void test_init()
 {
-
+	printf("call init, a=%d\n", a);
 }
 
 static void test_exit()
 {
-
+	printf("call finit, a=%d\n", a);
 }
 
 struct s
