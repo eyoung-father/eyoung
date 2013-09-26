@@ -25,7 +25,10 @@ static int ey_elf_read(ey_engine_t *eng, void *lib_handle, const char *libname, 
 	Elf_Scn *scn = NULL;
 	Elf_Data *data = NULL;
 	GElf_Shdr shdr;
-	size_t n, shstrndx, index=0;
+	Elf_Scn *rodata_scn = NULL;
+	Elf_Data *rodata_data = NULL;
+	GElf_Shdr rodata_shdr;
+	size_t n, shstrndx, index=0, rodata_index=0;
 	
 	if (elf_version(EV_CURRENT) == EV_NONE)
 	{
@@ -73,12 +76,36 @@ static int ey_elf_read(ey_engine_t *eng, void *lib_handle, const char *libname, 
 		}
 
 		if(!strcmp(name, section))
-		{
 			index = elf_ndxscn(scn);
-			break;
-		}
+		
+		if(!strcmp(name, ".rodata"))
+			rodata_index = elf_ndxscn(scn);
 	}
 	
+	if(!rodata_index)
+	{
+		engine_parser_error("get .rodata section failed\n");
+		goto failed;
+	}
+	
+	if ((rodata_scn = elf_getscn(e, rodata_index)) == NULL)         
+	{
+		engine_parser_error("getscn() for rodata failed: %s.", elf_errmsg(-1));
+		goto failed;
+	}
+
+	if (gelf_getshdr(rodata_scn, &rodata_shdr) != &rodata_shdr)
+	{
+		engine_parser_error("rodata getshdr(shstrndx) failed: %s.", elf_errmsg(-1));
+		goto failed;
+	}
+	rodata_data = elf_getdata(rodata_scn, rodata_data);
+	if(!rodata_data)
+	{
+		engine_parser_error("rodata getdata failed: %s.", elf_errmsg(-1));
+		goto failed;
+	}
+
 	if(index)
 	{
 		if ((scn = elf_getscn(e, index)) == NULL)         
@@ -101,8 +128,13 @@ static int ey_elf_read(ey_engine_t *eng, void *lib_handle, const char *libname, 
 		{
 			for(n=0, p=(ey_extern_symbol_t*)data->d_buf; n<shdr.sh_size/sizeof(ey_extern_symbol_t); n++, p++)
 			{
-				engine_parser_debug("symbol[%d]: %s\n", n, p->name);
-				if(cb((void*)p, arg))
+				void *start = rodata_data->d_buf - rodata_shdr.sh_addr;
+				engine_parser_debug("symbol[%d]:\n", n);
+				engine_parser_debug("  name: %s\n", p->name?(char*)(start + (unsigned long)p->name):"null");
+				engine_parser_debug("  decl: %s\n", p->decl?(char*)(start + (unsigned long)p->decl):"null");
+				engine_parser_debug("  pos: %s:%d\n", p->file?(char*)(start + (unsigned long)p->file):"null", p->line);
+				engine_parser_debug("  value: %p\n", p->value);
+				if(cb((void*)p, start, arg))
 				{
 					engine_parser_debug("elf foreach function returns non-zero\n");
 					break;
@@ -125,12 +157,12 @@ failed:
 
 typedef struct read_arg
 {
-	void *func;
 	char *name;
+	ey_engine_t *engine;
 }read_arg_t;
 static int check_one;
 
-static int read_nit(void *d, void *a)
+static int read_nit(void *d, void *start, void *a)
 {
 	ey_extern_symbol_t *symbol = (ey_extern_symbol_t*)d;
 	read_arg_t *arg = (read_arg_t*)a;
@@ -141,8 +173,14 @@ static int read_nit(void *d, void *a)
 		return 1;
 	}
 	check_one++;
-	arg->func = symbol->value;
-	arg->name = symbol->name;
+	char *name = (char*)(start + (unsigned long)symbol->name);
+	arg->name = (char*)engine_fzalloc(strlen(name) + 1, ey_parser_fslab(arg->engine));
+	if(!arg->name)
+	{
+		engine_parser_error("alloc function name %s failed\n", name);
+		return 1;
+	}
+	strcpy(arg->name, name);
 	return 0;
 }
 
@@ -154,9 +192,10 @@ int ey_elf_read_init(ey_engine_t *eng, void *lib_handle, const char *libname, in
 		return -1;
 	}
 
-	read_arg_t arg = {NULL, NULL};
+	read_arg_t arg = {NULL, eng};
 	*init_name = NULL;
 	*init = NULL;
+	check_one = 0;
 	
 	if(ey_elf_read(eng, lib_handle, libname, EY_INIT_SECTION, read_nit, (void*)&arg))
 	{
@@ -164,22 +203,12 @@ int ey_elf_read_init(ey_engine_t *eng, void *lib_handle, const char *libname, in
 		return -1;
 	}
 
-	if(arg.name)
+	*init_name = arg.name;
+	*init = (init_handler)dlsym(lib_handle, arg.name);
+	if(!*init)
 	{
-		*init_name = (char*)engine_fzalloc(strlen(arg.name)+1, ey_parser_fslab(eng));
-		if(!*init_name)
-		{
-			engine_parser_error("alloc init function name failed\n");
-			return -1;
-		}
-		strcpy(*init_name, arg.name);
-
-		*init = (init_handler)dlsym(lib_handle, arg.name);
-		if(!*init)
-		{
-			engine_parser_error("find init function %s failed\n", arg.name);
-			return -1;
-		}
+		engine_parser_error("find init function %s failed\n", arg.name);
+		return -1;
 	}
 	return 0;
 }
@@ -192,9 +221,10 @@ int ey_elf_read_finit(ey_engine_t *eng, void *lib_handle, const char *libname, f
 		return -1;
 	}
 
-	read_arg_t arg = {NULL, NULL};
+	read_arg_t arg = {NULL, eng};
 	*finit_name = NULL;
 	*finit = NULL;
+	check_one = 0;
 	
 	if(ey_elf_read(eng, lib_handle, libname, EY_FINIT_SECTION, read_nit, (void*)&arg))
 	{
@@ -202,22 +232,12 @@ int ey_elf_read_finit(ey_engine_t *eng, void *lib_handle, const char *libname, f
 		return -1;
 	}
 
-	if(arg.name)
+	*finit_name = arg.name;
+	*finit = (finit_handler)dlsym(lib_handle, arg.name);
+	if(!*finit)
 	{
-		*finit_name = (char*)engine_fzalloc(strlen(arg.name)+1, ey_parser_fslab(eng));
-		if(!*finit_name)
-		{
-			engine_parser_error("alloc finit function name failed\n");
-			return -1;
-		}
-		strcpy(*finit_name, arg.name);
-
-		*finit = (finit_handler)dlsym(lib_handle, arg.name);
-		if(!*finit)
-		{
-			engine_parser_error("find finit function %s failed\n", arg.name);
-			return -1;
-		}
+		engine_parser_error("find finit function %s failed\n", arg.name);
+		return -1;
 	}
 	return 0;
 }
