@@ -98,13 +98,13 @@ int ey_attach_library(struct ey_engine *eng, char *libname)
 		goto failed;
 	}
 
-	if(ey_elf_read_init(eng, libname, &init_func, &init_name))
+	if(ey_elf_read_init(eng, lib_handle, libname, &init_func, &init_name))
 	{
 		engine_parser_error("parse %s init section failed\n", libname);
 		goto failed;
 	}
 
-	if(ey_elf_read_finit(eng, libname, &finit_func, &finit_name))
+	if(ey_elf_read_finit(eng, lib_handle, libname, &finit_func, &finit_name))
 	{
 		engine_parser_error("parse %s finit section failed\n", libname);
 		goto failed;

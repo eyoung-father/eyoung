@@ -7,6 +7,7 @@
 	{                               \
 		printf("test:%d\n", (eng)); \
 	}while(0)
+static int my_printf(const char *fmt, ...);
 %}
 
 %import "libtest.so"
@@ -18,28 +19,28 @@
 %%
 1:http_uri(foo(_LINK_, _THIS_))/"testest"
 	{
-		printf("uri foo()\n");
+		my_printf("uri foo()\n");
 		return 1;
 	}
 	;
 
 2:http_cookie(foo(_LINK_, /*ct test*/_THIS_)) /*ct test*/
 	{
-		printf("cookie foo()\n");
+		my_printf("cookie foo()\n");
 		return 1;
 	}
 	http_referer(foo(_LINK_, _THIS_)/*ct test*/)
 	{/*ct test*/
-		printf("referer foo()\n");
+		my_printf("referer foo()\n");
 		return 1;
 	}
 	| http_referer(bar(_LINK_, _THIS_))
 	{
-		printf("referer bar()\n");
+		my_printf("referer bar()\n");
 		return 1;
 	}http_cookie(bar(_LINK_, _THIS_))/"testest"
 	{
-		printf("cookie bar()\n");
+		my_printf("cookie bar()\n");
 		return 1;
 	}
 	;

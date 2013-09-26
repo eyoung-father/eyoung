@@ -11,7 +11,7 @@
 #include "engine_mem.h"
 #include "ey_export.h"
 
-static int ey_elf_read(ey_engine_t *eng, const char *libname, const char *section, elf_foreach cb, void *arg)
+static int ey_elf_read(ey_engine_t *eng, void *lib_handle, const char *libname, const char *section, elf_foreach cb, void *arg)
 {
 	if(!eng || !libname || !section || !cb)
 	{
@@ -73,7 +73,10 @@ static int ey_elf_read(ey_engine_t *eng, const char *libname, const char *sectio
 		}
 
 		if(!strcmp(name, section))
+		{
 			index = elf_ndxscn(scn);
+			break;
+		}
 	}
 	
 	if(index)
@@ -143,9 +146,9 @@ static int read_nit(void *d, void *a)
 	return 0;
 }
 
-int ey_elf_read_init(ey_engine_t *eng, const char *libname, init_handler *init, char **init_name)
+int ey_elf_read_init(ey_engine_t *eng, void *lib_handle, const char *libname, init_handler *init, char **init_name)
 {
-	if(!eng || !libname || !init || !init_name)
+	if(!eng || !libname || !init || !init_name || !lib_handle)
 	{
 		engine_parser_error("%s bad parameter\n", __FUNCTION__);
 		return -1;
@@ -155,13 +158,12 @@ int ey_elf_read_init(ey_engine_t *eng, const char *libname, init_handler *init, 
 	*init_name = NULL;
 	*init = NULL;
 	
-	if(ey_elf_read(eng, libname, EY_INIT_SECTION, read_nit, (void*)&arg))
+	if(ey_elf_read(eng, lib_handle, libname, EY_INIT_SECTION, read_nit, (void*)&arg))
 	{
 		engine_parser_error("read library %s init section failed\n");
 		return -1;
 	}
 
-	*init = (init_handler)(arg.func);
 	if(arg.name)
 	{
 		*init_name = (char*)engine_fzalloc(strlen(arg.name)+1, ey_parser_fslab(eng));
@@ -171,13 +173,20 @@ int ey_elf_read_init(ey_engine_t *eng, const char *libname, init_handler *init, 
 			return -1;
 		}
 		strcpy(*init_name, arg.name);
+
+		*init = (init_handler)dlsym(lib_handle, arg.name);
+		if(!*init)
+		{
+			engine_parser_error("find init function %s failed\n", arg.name);
+			return -1;
+		}
 	}
 	return 0;
 }
 
-int ey_elf_read_finit(ey_engine_t *eng, const char *libname, finit_handler *finit, char **finit_name)
+int ey_elf_read_finit(ey_engine_t *eng, void *lib_handle, const char *libname, finit_handler *finit, char **finit_name)
 {
-	if(!eng || !libname || !finit || !finit_name)
+	if(!eng || !libname || !finit || !finit_name || !lib_handle)
 	{
 		engine_parser_error("%s bad parameter\n", __FUNCTION__);
 		return -1;
@@ -187,13 +196,12 @@ int ey_elf_read_finit(ey_engine_t *eng, const char *libname, finit_handler *fini
 	*finit_name = NULL;
 	*finit = NULL;
 	
-	if(ey_elf_read(eng, libname, EY_FINIT_SECTION, read_nit, (void*)&arg))
+	if(ey_elf_read(eng, lib_handle, libname, EY_FINIT_SECTION, read_nit, (void*)&arg))
 	{
 		engine_parser_error("read library %s finit section failed\n");
 		return -1;
 	}
 
-	*finit = (finit_handler)(arg.func);
 	if(arg.name)
 	{
 		*finit_name = (char*)engine_fzalloc(strlen(arg.name)+1, ey_parser_fslab(eng));
@@ -203,16 +211,23 @@ int ey_elf_read_finit(ey_engine_t *eng, const char *libname, finit_handler *fini
 			return -1;
 		}
 		strcpy(*finit_name, arg.name);
+
+		*finit = (finit_handler)dlsym(lib_handle, arg.name);
+		if(!*finit)
+		{
+			engine_parser_error("find finit function %s failed\n", arg.name);
+			return -1;
+		}
 	}
 	return 0;
 }
 
 int ey_elf_read_type(ey_engine_t *eng, const char *libname, elf_foreach cb, void *arg)
 {
-	return ey_elf_read(eng, libname, EY_TYPE_SECTION, cb, arg);
+	return ey_elf_read(eng, NULL, libname, EY_TYPE_SECTION, cb, arg);
 }
 
 int ey_elf_read_ident(ey_engine_t *eng, const char *libname, elf_foreach cb, void *arg)
 {
-	return ey_elf_read(eng, libname, EY_IDENT_SECTION, cb, arg);
+	return ey_elf_read(eng, NULL, libname, EY_IDENT_SECTION, cb, arg);
 }
