@@ -11,7 +11,7 @@ static int my_printf(const char *fmt, ...);
 %}
 
 %import "libtest.so"
-%output "test.cxx"
+%output "test.ey"
 %event "http_cookie" "void*"
 %event "http_referer" "void*"
 %event "http_uri" "void*"

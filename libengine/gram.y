@@ -149,7 +149,7 @@ static ey_acsm_pattern_t *parse_cluster_string(ey_engine_t *eng, char *pattern);
 %type	<file>				eyoung_file
 %destructor
 {
-	ey_free_signature_file(ENG, $$);
+	/*ey_free_signature_file(ENG, $$);*/
 }eyoung_file
 
 %debug

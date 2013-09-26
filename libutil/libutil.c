@@ -26,7 +26,7 @@ int ey_file_is_source(const char *filename)
 	if(ext[0])
 		ext++;
 
-	return !strcmp(ext, "c");
+	return !strcmp(ext, "c") || !strcmp(ext, "ey");
 }
 
 int ey_file_is_header(const char *filename)
