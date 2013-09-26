@@ -22,10 +22,10 @@ main(int argc, char **argv)
 	int fd, flag;
 	Elf *e;
 	char *name, *p, *sym_start;
-	Elf_Scn *scn;
-	Elf_Data *data;
-	GElf_Shdr shdr;
-	size_t n, shstrndx, sz, ey_type_index=0;
+	Elf_Scn *scn, *rodata_scn;
+	Elf_Data *data, *rodata_data;
+	GElf_Shdr shdr, rodata_shdr;
+	size_t n, shstrndx, sz, ey_type_index=0, rodata_index=0;
 
 	if (argc != 3)
 		errx(EX_USAGE, "usage: %s file-name section_name", argv[0]);
@@ -56,6 +56,9 @@ main(int argc, char **argv)
 
 		if(!strcmp(name, argv[2]))
 			ey_type_index = elf_ndxscn(scn);
+
+		if(!strcmp(name, ".rodata"))
+			rodata_index = elf_ndxscn(scn);
 	}
 	
 	if(ey_type_index)
@@ -66,6 +69,17 @@ main(int argc, char **argv)
 		if (gelf_getshdr(scn, &shdr) != &shdr)
 			errx(EX_SOFTWARE, "getshdr(shstrndx) failed: %s.", elf_errmsg(-1));
 
+		if ((rodata_scn = elf_getscn(e, rodata_index)) == NULL)         
+			errx(EX_SOFTWARE, "getscn() failed: %s.", elf_errmsg(-1));
+
+		if (gelf_getshdr(rodata_scn, &rodata_shdr) != &rodata_shdr)
+			errx(EX_SOFTWARE, "getshdr(shstrndx) failed: %s.", elf_errmsg(-1));
+		
+		rodata_data = NULL;
+		rodata_data = elf_getdata(rodata_scn, rodata_data);
+		if(!rodata_data)
+			errx(EX_SOFTWARE, "elf_getdata(rodata_scn) failed: %s.", elf_errmsg(-1));
+
 		data = NULL; 
 		n = 0;
 		ey_extern_symbol_t *p=NULL;
@@ -73,7 +87,10 @@ main(int argc, char **argv)
 		if(data)
 		{
 			for(n=0, p=(ey_extern_symbol_t*)data->d_buf; n<shdr.sh_size/sizeof(ey_extern_symbol_t); n++, p++)
-				printf("type[%d]: %s\n", n, p->name);
+				printf("type[%d]: %s, %s, %s\n", n, 
+					p->name?(char*)(rodata_data->d_buf + (unsigned long)p->name - rodata_shdr.sh_addr):"null",
+					p->decl?(char*)(rodata_data->d_buf + (unsigned long)p->decl - rodata_shdr.sh_addr):"null",
+					p->file?(char*)(rodata_data->d_buf + (unsigned long)p->file - rodata_shdr.sh_addr):"null");
 		}
 	}
 
