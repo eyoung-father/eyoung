@@ -82,7 +82,7 @@ static int ey_output_import_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *import)
 static int ey_output_event_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *event)
 {
 	fprintf(fp, "#line %d \"%s\"\n", event->location.first_line, event->location.filename);
-	fprintf(fp, "typedef %s %s;\n", event->event->define, event->event->name);
+	fprintf(fp, "typedef %s *%s;\n", event->event->define, event->event->name);
 	return 0;
 }
 
@@ -155,7 +155,7 @@ static int ey_output_rules_cfile(ey_engine_t *eng, FILE *fp, ey_signature_list_t
 					snprintf(condition->func_name, MAX_CONDITION_FUNC_NAME_LEN, "__condition_%u_%d_%d",
 						signature->signature_id, line, column);
 
-					fprintf(fp, "int %s(void* _LINK_, %s *_THIS_)\n", condition->func_name, event->name);
+					fprintf(fp, "int %s(void* _LINK_, %s _THIS_)\n", condition->func_name, event->name);
 					fprintf(fp, "{\n");
 					fprintf(fp, "#line %d \"%s\"\n", condition->location.first_line, condition->location.filename);
 					fprintf(fp, "\treturn %s;\n", condition->raw_code);
@@ -176,7 +176,7 @@ static int ey_output_rules_cfile(ey_engine_t *eng, FILE *fp, ey_signature_list_t
 					snprintf(action->func_name, MAX_ACTION_FUNC_NAME_LEN, "__action_%u_%d_%d",
 						signature->signature_id, line, column);
 
-					fprintf(fp, "int %s(void* _LINK_, %s *_THIS_)\n", action->func_name, event->name);
+					fprintf(fp, "int %s(void* _LINK_, %s _THIS_)\n", action->func_name, event->name);
 					fprintf(fp, "#line %d \"%s\"\n", action->location.first_line, action->location.filename);
 					fprintf(fp, "%s\n", action->raw_code);
 				}

@@ -12,9 +12,9 @@ static int my_printf(const char *fmt, ...);
 
 %import "libtest.so"
 %output "test.ey"
-%event "http_cookie" "void*"
-%event "http_referer" "void*"
-%event "http_uri" "void*"
+%event "http_cookie" "void"
+%event "http_referer" "void"
+%event "http_uri" "void"
 
 %%
 1:http_uri(foo(_LINK_, _THIS_))/"testest"
