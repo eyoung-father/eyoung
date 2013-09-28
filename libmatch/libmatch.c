@@ -24,6 +24,11 @@ int ey_acsm_add_pattern(ey_acsm_t acsm, ey_acsm_pattern_t *pattern)
 							0/*iid*/);
 }
 
+int ey_acsm_compile(ey_acsm_t acsm)
+{
+	return acsmCompile2((ACSM_STRUCT2*)acsm, NULL, NULL);
+}
+
 int ey_acsm_search(ey_acsm_t acsm, char *buf, int buf_len, acsm_match_fn callback, void *arg, int *last_state)
 {
 	return acsmSearch2((ACSM_STRUCT2*)acsm, (unsigned char*)buf, buf_len, callback, arg, last_state);

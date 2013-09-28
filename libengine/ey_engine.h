@@ -30,6 +30,9 @@ typedef struct ey_engine
 	ey_hash_t filename_hash;
 	ey_hash_t signature_hash;
 	ey_hash_t library_hash;
+	ey_hash_t rhs_item_hash;
+
+	ey_signature_list_t signature_list;
 
 	#define EVENT_ARRAY_STEP	32
 	ey_event_t *event_array;
@@ -40,6 +43,8 @@ typedef struct ey_engine
 	ey_jit_t jit;
 
 	unsigned int rhs_id;
+	unsigned int *prefix_array;
+	unsigned int *postfix_array;
 }ey_engine_t;
 
 #define ey_parser_fslab(eng) (((ey_engine_t*)(eng))->parser_fslab)
@@ -51,5 +56,10 @@ typedef struct ey_engine
 #define ey_jit(eng) (((ey_engine_t*)(eng))->jit)
 #define ey_library_hash(eng) (((ey_engine_t*)(eng))->library_hash)
 #define ey_rhs_id(eng) (((ey_engine_t*)(eng))->rhs_id)
+#define ey_rhs_item_hash(eng) (((ey_engine_t*)(eng))->rhs_item_hash)
+#define ey_prefix_array(eng) (((ey_engine_t*)(eng))->prefix_array)
+#define ey_postfix_array(eng) (((ey_engine_t*)(eng))->postfix_array)
+#define ey_signature_list(eng) (((ey_engine_t*)(eng))->signature_list)
 
+extern int ey_load_post_action(ey_engine_t *eng);
 #endif

@@ -59,6 +59,37 @@ void ey_compiler_finit(struct ey_engine *eng)
 	ey_jit(eng) = NULL;
 }
 
+int ey_compile_post_action(ey_engine_t *eng, ey_signature_file_t *file)
+{
+	if(!eng || !ey_jit(eng) || !file || !file->output_file)
+	{
+		engine_compiler_error("%s bad parameter\n", __FUNCTION__);
+		return -1;
+	}
+
+	ey_signature_t *signature = NULL;
+	TAILQ_FOREACH(signature, &file->signature_list, link)
+	{
+		ey_rhs_signature_t *rhs_signature = NULL;
+		TAILQ_FOREACH(rhs_signature, &signature->rhs_signature_list, link)
+		{
+			ey_rhs_item_t *item = NULL;
+			TAILQ_FOREACH(item, &rhs_signature->rhs_item_list, link)
+			{
+				if(ey_hash_insert(ey_rhs_item_hash(eng), (void*)&item->rhs_id, item))
+				{
+					engine_compiler_error("insert item %u:%u:%u failed\n",
+						item->signature_id, item->rhs_signature_position, item->rhs_item_position);
+					return -1;
+				}
+			}
+		}
+	}
+
+	TAILQ_CONCAT(&ey_signature_list(eng), &file->signature_list, link);
+	return 0;
+}
+
 int ey_compile_signature_file(ey_engine_t *eng, ey_signature_file_t *file, int need_relocate)
 {
 	if(!eng || !ey_jit(eng) || !file || !file->output_file)

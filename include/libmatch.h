@@ -18,5 +18,6 @@ typedef struct ey_acsm_pattern
 extern ey_acsm_t ey_acsm_create();
 extern void ey_acsm_destroy(ey_acsm_t acsm);
 extern int ey_acsm_add_pattern(ey_acsm_t acsm, ey_acsm_pattern_t *option);
+extern int ey_acsm_compile(ey_acsm_t acsm);
 extern int ey_acsm_search(ey_acsm_t acsm, char *buf, int buf_len, acsm_match_fn callback, void *arg, int *last_state);
 #endif

@@ -273,6 +273,18 @@ static int compare_signature(void *k, void *v)
 	return *(unsigned int*)k != ((ey_signature_t*)v)->signature_id;
 }
 
+static unsigned int hash_rhs_item(void *rhs_item)
+{
+	return (unsigned int)rhs_item;
+}
+
+static int compare_rhs_item(void *k, void *v)
+{
+	if(!k || !v)
+		return 1;
+	
+	return *(unsigned int*)k != ((ey_rhs_item_t*)v)->rhs_id;
+}
 
 int ey_signature_init(struct ey_engine *eng)
 {
@@ -289,6 +301,19 @@ int ey_signature_init(struct ey_engine *eng)
 		}
 	}
 
+	if(!ey_rhs_item_hash(eng))
+	{
+		snprintf(name, sizeof(name), "%s signature rhs item hash\n", eng->name);
+		name[63] = '\0';
+		ey_rhs_item_hash(eng) = ey_hash_create(name, 10, 8192, hash_rhs_item, compare_rhs_item, NULL, NULL);
+		if(!ey_rhs_item_hash(eng))
+		{
+			engine_init_error("create signature rhs item hash failed\n");
+			return -1;
+		}
+	}
+
+	TAILQ_INIT(&ey_signature_list(eng));
 	return 0;
 }
 
@@ -301,6 +326,12 @@ void ey_signature_finit(struct ey_engine *eng)
 	{
 		ey_hash_destroy(ey_signature_hash(eng));
 		ey_signature_hash(eng) = NULL;
+	}
+
+	if(ey_rhs_item_hash(eng))
+	{
+		ey_hash_destroy(ey_rhs_item_hash(eng));
+		ey_rhs_item_hash(eng) = NULL;
 	}
 }
 

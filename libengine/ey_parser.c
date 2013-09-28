@@ -353,6 +353,13 @@ int ey_parse_file(ey_engine_t *eng, const char *filename, int need_link)
 		engine_init_error("compile file %s failed\n", parser->signature_file->output_file);
 		goto failed;
 	}
+
+	if(ey_compile_post_action(eng, parser->signature_file))
+	{
+		engine_init_error("do post compile %s action s failed\n", parser->filename);
+		goto failed;
+	}
+
 	engine_init_debug("compile %s successfully\n", parser->signature_file->output_file);
 	
 	ret = 0;
