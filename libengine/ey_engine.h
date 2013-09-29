@@ -33,6 +33,8 @@ typedef struct ey_engine
 	ey_hash_t rhs_item_hash;
 
 	ey_signature_list_t signature_list;
+	ey_code_list_t init_list;
+	ey_code_list_t finit_list;
 
 	#define EVENT_ARRAY_STEP	32
 	ey_event_t *event_array;
@@ -60,6 +62,8 @@ typedef struct ey_engine
 #define ey_prefix_array(eng) (((ey_engine_t*)(eng))->prefix_array)
 #define ey_postfix_array(eng) (((ey_engine_t*)(eng))->postfix_array)
 #define ey_signature_list(eng) (((ey_engine_t*)(eng))->signature_list)
+#define ey_init_list(eng) (((ey_engine_t*)(eng))->init_list)
+#define ey_finit_list(eng) (((ey_engine_t*)(eng))->finit_list)
 
-extern int ey_load_post_action(ey_engine_t *eng);
+extern int ey_load_post_action(ey_engine_t *eng, int need_link);
 #endif

@@ -37,6 +37,8 @@ static ey_acsm_pattern_t *parse_cluster_string(ey_engine_t *eng, char *pattern);
 %token TOKEN_OUTPUT			"%output"
 %token TOKEN_IMPORT			"%import"
 %token TOKEN_EVENT			"%event"
+%token TOKEN_INIT			"%init"
+%token TOKEN_FINIT			"%finit"
 
 %union
 {
@@ -265,6 +267,26 @@ prologue:
 		if(!ret)
 		{
 			engine_parser_error("alloc import code failed\n");
+			YYABORT;
+		}
+		$$ = ret;
+	}
+	| TOKEN_INIT TOKEN_STRING
+	{
+		ey_code_t *ret = ey_alloc_code(ENG, &@2, (void*)$2, EY_CODE_INIT);
+		if(!ret)
+		{
+			engine_parser_error("alloc init code failed\n");
+			YYABORT;
+		}
+		$$ = ret;
+	}
+	| TOKEN_FINIT TOKEN_STRING
+	{
+		ey_code_t *ret = ey_alloc_code(ENG, &@2, (void*)$2, EY_CODE_FINIT);
+		if(!ret)
+		{
+			engine_parser_error("alloc finit code failed\n");
 			YYABORT;
 		}
 		$$ = ret;

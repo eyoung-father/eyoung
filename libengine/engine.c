@@ -55,11 +55,11 @@ void ey_engine_destroy(engine_t engine)
 	if(!eng)
 		return;
 	
+	ey_signature_finit(eng);
 	ey_import_finit(eng);
 	ey_compiler_finit(eng);
 	ey_parser_finit(eng);
 	ey_event_finit(eng);
-	ey_signature_finit(eng);
 	ey_free(eng);
 }
 
@@ -81,7 +81,7 @@ int ey_engine_load(engine_t engine, char *files[], int files_num)
 		}
 	}
 
-	if(ey_load_post_action(eng))
+	if(ey_load_post_action(eng, 1))
 	{
 		engine_init_error("do post parsing action failed\n");
 		return -1;

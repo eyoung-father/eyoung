@@ -15,12 +15,12 @@ int bar(void *link, void *event)
 	return 0;
 }
 
-void test_init()
+int test_init(void *eng)
 {
 	printf("call init, a=%d\n", a++);
 }
 
-void test_exit()
+int test_exit(void *eng)
 {
 	printf("call finit, a=%d\n", a--);
 }

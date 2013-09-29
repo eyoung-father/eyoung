@@ -189,6 +189,11 @@ ey_code_t *ey_alloc_code(ey_engine_t *eng, ey_location_t *location, void *code, 
 		case EY_CODE_IMPORT:
 			ret->filename = (char*)code;
 			break;
+		case EY_CODE_INIT:
+		case EY_CODE_FINIT:
+			ret->function = (char*)code;
+			ret->handle = NULL;
+			break;
 		case EY_CODE_EVENT:
 		default:
 			ret->event = (ey_event_t*)code;
@@ -204,14 +209,22 @@ void ey_free_code(ey_engine_t *eng, ey_code_t *code)
 	switch(code->type)
 	{
 		case EY_CODE_NORMAL:
-			if(code->raw_code) engine_fzfree(ey_parser_fslab(eng), code->raw_code);
+			if(code->raw_code) 
+				engine_fzfree(ey_parser_fslab(eng), code->raw_code);
 			break;
 		case EY_CODE_IMPORT:
-			if(code->filename) engine_fzfree(ey_parser_fslab(eng), code->filename);
+			if(code->filename) 
+				engine_fzfree(ey_parser_fslab(eng), code->filename);
+			break;
+		case EY_CODE_INIT:
+		case EY_CODE_FINIT:
+			if(code->function) 
+				engine_fzfree(ey_parser_fslab(eng), code->function);
 			break;
 		case EY_CODE_EVENT:
 		default:
-			if(code->event) ey_free_event(eng, code->event);
+			if(code->event) 
+				ey_free_event(eng, code->event);
 			break;
 	}
 	engine_fzfree(ey_parser_fslab(eng), code);
@@ -314,6 +327,8 @@ int ey_signature_init(struct ey_engine *eng)
 	}
 
 	TAILQ_INIT(&ey_signature_list(eng));
+	TAILQ_INIT(&ey_init_list(eng));
+	TAILQ_INIT(&ey_finit_list(eng));
 	return 0;
 }
 
@@ -321,7 +336,22 @@ void ey_signature_finit(struct ey_engine *eng)
 {
 	if(!eng)
 		return;
-
+	
+	ey_code_t *func = NULL, *tmp = NULL;
+	/*free ey_finit_list*/
+	TAILQ_FOREACH_SAFE(func, &ey_finit_list(eng), link, tmp)
+	{
+		if(func->handle)
+			((init_handler)(func->handle))(eng);	/*call finit in signature file*/
+		ey_free_code(eng, func);
+	}
+	
+	/*free ey_init_list*/
+	TAILQ_FOREACH_SAFE(func, &ey_init_list(eng), link, tmp)
+	{
+		ey_free_code(eng, func);
+	}
+	
 	if(ey_signature_hash(eng))
 	{
 		ey_hash_destroy(ey_signature_hash(eng));

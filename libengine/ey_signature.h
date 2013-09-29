@@ -86,12 +86,19 @@ typedef struct ey_code
 	#define EY_CODE_NORMAL 	1
 	#define EY_CODE_IMPORT	2
 	#define EY_CODE_EVENT	3
+	#define EY_CODE_INIT	4
+	#define EY_CODE_FINIT	5
 	int type;
 	union
 	{
 		char *raw_code;
 		char *filename;
 		struct ey_event *event;
+		struct
+		{
+			char *function;
+			void *handle;
+		};
 	};
 }ey_code_t;
 typedef TAILQ_HEAD(ey_code_list, ey_code) ey_code_list_t;

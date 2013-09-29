@@ -117,6 +117,12 @@ number	[1-9]{digit}*
 	"%event"	{
 					RETURN(TOKEN_EVENT);
 				}
+	"%init"		{
+					RETURN(TOKEN_INIT);
+				}
+	"%finit"	{
+					RETURN(TOKEN_FINIT);
+				}
 	{ident}		{
 					ey_engine_t *eng = (ey_engine_t *)gram_get_extra(yyscanner);
 					char *ident = (char*)engine_fzalloc(yyleng+1, ey_parser_fslab(eng));
