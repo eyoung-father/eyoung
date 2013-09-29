@@ -128,8 +128,8 @@ static int ey_elf_read(ey_engine_t *eng, void *lib_handle, const char *libname, 
 		{
 			int elm_size = sizeof(ey_extern_symbol_t);
 			void *start = rodata_data->d_buf - rodata_shdr.sh_addr;
-			if(shdr.sh_addralign && (elm_size & ~(shdr.sh_addralign-1)))
-				elm_size = (elm_size & shdr.sh_addralign) + shdr.sh_addralign;
+			if(shdr.sh_addralign && (elm_size & (shdr.sh_addralign-1)))
+				elm_size = (elm_size & ~(shdr.sh_addralign-1)) + shdr.sh_addralign;
 			engine_parser_debug("get elm size: %d\n", elm_size);
 
 			n = 0;
