@@ -74,14 +74,14 @@ int ey_engine_load(engine_t engine, char *files[], int files_num)
 	int index;
 	for(index=0; index<files_num; index++)
 	{
-		if(ey_parse_file(eng, files[index], 0))
+		if(ey_parse_file(eng, files[index]))
 		{
 			engine_init_error("load %s failed\n", files[index]);
 			return -1;
 		}
 	}
 
-	if(ey_load_post_action(eng, 1))
+	if(ey_load_post_action(eng))
 	{
 		engine_init_error("do post parsing action failed\n");
 		return -1;

@@ -133,7 +133,7 @@ static int do_acsm_compile(ey_engine_t *eng)
 	return 0;
 }
 
-int ey_load_post_action(ey_engine_t *eng, int need_link)
+int ey_load_post_action(ey_engine_t *eng)
 {
 	if(!eng || !ey_rhs_id(eng) || !ey_jit(eng))
 	{
@@ -142,7 +142,7 @@ int ey_load_post_action(ey_engine_t *eng, int need_link)
 	}
 	
 	/*relocate*/
-	if(need_link && do_link(eng))
+	if(do_link(eng))
 		return -1;
 	
 	if(do_prefix_postfix(eng))

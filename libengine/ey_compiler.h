@@ -12,8 +12,7 @@ struct ey_signature_file;
 extern int ey_compiler_init(struct ey_engine *eng);
 extern void ey_compiler_finit(struct ey_engine *eng);
 extern int ey_compile_string(struct ey_engine *eng, const char *filename);
-extern int ey_compile_signature_file(struct ey_engine *eng, struct ey_signature_file *signature_file, int need_relocate);
+extern int ey_compile_signature_file(struct ey_engine *eng, struct ey_signature_file *signature_file);
 extern int ey_compile_post_action(struct ey_engine *eng, struct ey_signature_file *signature_file);
 extern int ey_compiler_link(struct ey_engine *eng);
-extern int ey_load_post_action(struct ey_engine *eng, int need_link);
 #endif

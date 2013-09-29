@@ -90,7 +90,7 @@ int ey_compile_post_action(ey_engine_t *eng, ey_signature_file_t *file)
 	return 0;
 }
 
-int ey_compile_signature_file(ey_engine_t *eng, ey_signature_file_t *file, int need_relocate)
+int ey_compile_signature_file(ey_engine_t *eng, ey_signature_file_t *file)
 {
 	if(!eng || !ey_jit(eng) || !file || !file->output_file)
 	{
@@ -104,51 +104,6 @@ int ey_compile_signature_file(ey_engine_t *eng, ey_signature_file_t *file, int n
 		return -1;
 	}
 	
-	if(need_relocate)
-	{
-		if(ey_jit_relocate(ey_jit(eng), EY_JIT_RELOCATE_AUTO))
-		{
-			engine_compiler_error("link file %s failed\n", file->output_file);
-			return -1;
-		}
-
-		ey_signature_t *signature = NULL;
-		TAILQ_FOREACH(signature, &file->signature_list, link)
-		{
-			ey_rhs_signature_t *rhs_signature = NULL;
-			TAILQ_FOREACH(rhs_signature, &signature->rhs_signature_list, link)
-			{
-				ey_rhs_item_t *item = NULL;
-				TAILQ_FOREACH(item, &rhs_signature->rhs_item_list, link)
-				{
-					ey_rhs_item_condition_t *condition = item->condition;
-					if(condition && condition->raw_code && condition->func_name)
-					{
-						condition->addr = ey_jit_get_symbol(ey_jit(eng), condition->func_name);
-						if(!condition->addr)
-						{
-							engine_compiler_error("relocate condition function %s[%s:%d] failed\n", condition->func_name,
-								condition->location.filename, condition->location.first_line);
-							return -1;
-						}
-					}
-
-					ey_rhs_item_action_t *action = item->action;
-					if(action && action->raw_code && action->func_name)
-					{
-						action->addr = ey_jit_get_symbol(ey_jit(eng), action->func_name);
-						if(!action->addr)
-						{
-							engine_compiler_error("relocate action function %s[%s:%d] failed\n", action->func_name,
-								action->location.filename, action->location.first_line);
-							return -1;
-						}
-					}
-				}
-			}
-		}
-	}
-
 	return 0;
 }
 

@@ -65,5 +65,5 @@ typedef struct ey_engine
 #define ey_init_list(eng) (((ey_engine_t*)(eng))->init_list)
 #define ey_finit_list(eng) (((ey_engine_t*)(eng))->finit_list)
 
-extern int ey_load_post_action(ey_engine_t *eng, int need_link);
+extern int ey_load_post_action(ey_engine_t *eng);
 #endif
