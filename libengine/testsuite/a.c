@@ -15,6 +15,8 @@ static int my_printf(const char *fmt, ...);
 %event "http_cookie" "void"
 %event "http_referer" "void"
 %event "http_uri" "void"
+%init "ac_init"
+%finit "ac_finit"
 
 %%
 1:http_uri(foo(_LINK_, _THIS_))/"testest"
@@ -48,4 +50,16 @@ static int my_printf(const char *fmt, ...);
 static int my_printf(const char *fmt, ...)
 {
 	return fprintf(stderr, /*testtest*/"%s\n", fmt);
+}
+
+int ac_init(void *eng)
+{
+	fprintf(stderr, "ac_init return 0\n");
+	return 0;
+}
+
+int ac_finit(void *eng)
+{
+	fprintf(stderr, "ac_finit return 0\n");
+	return 0;
 }
