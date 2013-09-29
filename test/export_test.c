@@ -17,12 +17,12 @@ int bar(void *link, void *event)
 
 void test_init()
 {
-	printf("call init, a=%d\n", a);
+	printf("call init, a=%d\n", a++);
 }
 
 void test_exit()
 {
-	printf("call finit, a=%d\n", a);
+	printf("call finit, a=%d\n", a--);
 }
 
 struct s
