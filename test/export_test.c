@@ -31,8 +31,9 @@ struct s
 	int b;
 };
 
-EY_EXPORT_IDENT(a, "int a;");
-EY_EXPORT_IDENT(foo, "int foo();");
+EY_EXPORT_IDENT(a, "extern int a;");
+EY_EXPORT_IDENT(foo, "int foo(void *link, void *event);");
+EY_EXPORT_IDENT(bar, "int bar(void *link, void *event);");
 EY_EXPORT_TYPE(s, "struct s{int a; int b;};");
 
 EY_EXPORT_INIT(test_init);
