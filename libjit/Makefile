@@ -6,7 +6,7 @@ SUB_MOD =
 SUB_DIR = 
 ARCH ?= x86-64
 TARGETOS ?= Linux
-CFLAGS_LOCAL = -Wno-sign-compare -Wno-missing-field-initializers
+CFLAGS_LOCAL = -DWITHOUT_LIBTCC -Wno-sign-compare -Wno-missing-field-initializers
 
 SRCS = libjit.c libtcc.c tccpp.c tccgen.c tccelf.c tccasm.c tccrun.c
 ifeq ($(ARCH), i386)
