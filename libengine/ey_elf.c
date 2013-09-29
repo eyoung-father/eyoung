@@ -28,7 +28,7 @@ static int ey_elf_read(ey_engine_t *eng, void *lib_handle, const char *libname, 
 	Elf_Scn *rodata_scn = NULL;
 	Elf_Data *rodata_data = NULL;
 	GElf_Shdr rodata_shdr;
-	size_t n, shstrndx, index=0, rodata_index=0;
+	size_t n, shstrndx, index=0, rodata_index=0, sz=0;
 	
 	if (elf_version(EV_CURRENT) == EV_NONE)
 	{
@@ -126,9 +126,17 @@ static int ey_elf_read(ey_engine_t *eng, void *lib_handle, const char *libname, 
 		data = elf_getdata(scn, data);
 		if(data)
 		{
-			for(n=0, p=(ey_extern_symbol_t*)data->d_buf; n<shdr.sh_size/sizeof(ey_extern_symbol_t); n++, p++)
+			int elm_size = sizeof(ey_extern_symbol_t);
+			void *start = rodata_data->d_buf - rodata_shdr.sh_addr;
+			if(shdr.sh_addralign && (elm_size & ~(shdr.sh_addralign-1)))
+				elm_size = (elm_size & shdr.sh_addralign) + shdr.sh_addralign;
+			engine_parser_debug("get elm size: %d\n", elm_size);
+
+			n = 0;
+			sz = 0;
+			p=(ey_extern_symbol_t*)data->d_buf;
+			while(sz < shdr.sh_size)
 			{
-				void *start = rodata_data->d_buf - rodata_shdr.sh_addr;
 				engine_parser_debug("symbol[%d]:\n", n);
 				engine_parser_debug("  name: %s\n", p->name?(char*)(start + (unsigned long)p->name):"null");
 				engine_parser_debug("  decl: %s\n", p->decl?(char*)(start + (unsigned long)p->decl):"null");
@@ -139,6 +147,9 @@ static int ey_elf_read(ey_engine_t *eng, void *lib_handle, const char *libname, 
 					engine_parser_debug("elf foreach function returns non-zero\n");
 					break;
 				}
+				p = (ey_extern_symbol_t*)((void*)p + elm_size);
+				sz += elm_size;
+				n++;
 			}
 		}
 	}
