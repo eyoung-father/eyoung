@@ -26,7 +26,7 @@ int ey_file_is_source(const char *filename)
 	if(ext[0])
 		ext++;
 
-	return !strcmp(ext, "c") || !strcmp(ext, "ey");
+	return !strcmp(ext, "c") || !strcmp(ext, "eyc");
 }
 
 int ey_file_is_header(const char *filename)
@@ -45,4 +45,13 @@ int ey_file_is_library(const char *filename)
 		ext++;
 
 	return !strcmp(ext, "so");
+}
+
+int ey_file_is_signature(const char *filename)
+{
+	const char *ext = ey_fileextension(filename);
+	if(ext[0])
+		ext++;
+
+	return !strcmp(ext, "ey");
 }
