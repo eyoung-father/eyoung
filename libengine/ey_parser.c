@@ -150,11 +150,11 @@ static int ey_output_prologue_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *prolo
 		{
 			return ey_output_event_cfile(eng, fp, prologue);
 		}
-		case EY_CODE_INIT:
+		case EY_CODE_FILE_INIT:
 		{
 			return ey_output_init_cfile(eng, fp, prologue);
 		}
-		case EY_CODE_FINIT:
+		case EY_CODE_FILE_FINIT:
 		{
 			return ey_output_finit_cfile(eng, fp, prologue);
 		}

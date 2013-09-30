@@ -21,6 +21,7 @@ static int do_link(ey_engine_t *eng)
 				ey_rhs_item_condition_t *condition = item->condition;
 				if(condition && condition->raw_code && condition->func_name)
 				{
+					assert(condition->addr == NULL);
 					condition->addr = ey_jit_get_symbol(ey_jit(eng), condition->func_name);
 					if(!condition->addr)
 					{
@@ -33,6 +34,7 @@ static int do_link(ey_engine_t *eng)
 				ey_rhs_item_action_t *action = item->action;
 				if(action && action->raw_code && action->func_name)
 				{
+					assert(action->addr == NULL);
 					action->addr = ey_jit_get_symbol(ey_jit(eng), action->func_name);
 					if(!action->addr)
 					{
@@ -49,6 +51,7 @@ static int do_link(ey_engine_t *eng)
 	ey_code_t *function = NULL;
 	TAILQ_FOREACH(function, &ey_init_list(eng), link)
 	{
+		assert(function->handle == NULL);
 		function->handle = ey_jit_get_symbol(ey_jit(eng), function->function);
 		if(!function->handle)
 		{
@@ -67,6 +70,7 @@ static int do_link(ey_engine_t *eng)
 
 	TAILQ_FOREACH(function, &ey_finit_list(eng), link)
 	{
+		assert(function->handle == NULL);
 		function->handle = ey_jit_get_symbol(ey_jit(eng), function->function);
 		if(!function->handle)
 		{

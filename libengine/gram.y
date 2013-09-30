@@ -273,7 +273,7 @@ prologue:
 	}
 	| TOKEN_INIT TOKEN_STRING
 	{
-		ey_code_t *ret = ey_alloc_code(ENG, &@2, (void*)$2, EY_CODE_INIT);
+		ey_code_t *ret = ey_alloc_code(ENG, &@2, (void*)$2, EY_CODE_FILE_INIT);
 		if(!ret)
 		{
 			engine_parser_error("alloc init code failed\n");
@@ -283,7 +283,7 @@ prologue:
 	}
 	| TOKEN_FINIT TOKEN_STRING
 	{
-		ey_code_t *ret = ey_alloc_code(ENG, &@2, (void*)$2, EY_CODE_FINIT);
+		ey_code_t *ret = ey_alloc_code(ENG, &@2, (void*)$2, EY_CODE_FILE_FINIT);
 		if(!ret)
 		{
 			engine_parser_error("alloc finit code failed\n");
