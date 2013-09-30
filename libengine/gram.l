@@ -105,345 +105,351 @@ number	[1-9]{digit}*
 <INITIAL>
 {
 	/*init state*/
-	"/*" 		{
-					GOTO(C_COMMENT);
-				}
-	"%output"	{
-					RETURN(TOKEN_OUTPUT);
-				}
-	"%import"	{
-					RETURN(TOKEN_IMPORT);
-				}
-	"%event"	{
-					RETURN(TOKEN_EVENT);
-				}
-	"%file-init" {
-					RETURN(TOKEN_FILE_INIT);
-				}
-	"%file-finit" {
-					RETURN(TOKEN_FILE_FINIT);
-				}
-	{ident}		{
-					ey_engine_t *eng = (ey_engine_t *)gram_get_extra(yyscanner);
-					char *ident = (char*)engine_fzalloc(yyleng+1, ey_parser_fslab(eng));
-					if(!ident)
-					{
-						engine_lexer_error("alloc ident name failed\n");
-						return -1;
+	"/*" 			{
+						GOTO(C_COMMENT);
 					}
-					memcpy(ident, yytext, yyleng);
-					ident[yyleng] = '\0';
-					yylval->string = ident;
-					RETURN(TOKEN_ID);
-				}
-	{number}	{
-					yylval->integer = atoi(yytext);
-					RETURN(TOKEN_INT);
-				}
-	";"			{
-					RETURN(TOKEN_SEMICOLON);
-				}
-	":"			{
-					RETURN(TOKEN_COLON);
-				}
-	"|"			{
-					RETURN(TOKEN_PIPE);
-				}
-	"/"			{
-					RETURN(TOKEN_SLASH);
-				}
-	"%%"		{
-					if(after_prologue) 
-					{
-						GOTO(EYOUNG_EPILOGUE);
+	"%output"		{
+						RETURN(TOKEN_OUTPUT);
+					}
+	"%import"		{
+						RETURN(TOKEN_IMPORT);
+					}
+	"%event"		{
+						RETURN(TOKEN_EVENT);
+					}
+	"%file-init"	{
+						RETURN(TOKEN_FILE_INIT);
+					}
+	"%file-finit"	{
+						RETURN(TOKEN_FILE_FINIT);
+					}
+	"%work-init"	{
+						RETURN(TOKEN_WORK_INIT);
+					}
+	"%work-finit"	{
+						RETURN(TOKEN_WORK_FINIT);
+					}
+	{ident}			{
+						ey_engine_t *eng = (ey_engine_t *)gram_get_extra(yyscanner);
+						char *ident = (char*)engine_fzalloc(yyleng+1, ey_parser_fslab(eng));
+						if(!ident)
+						{
+							engine_lexer_error("alloc ident name failed\n");
+							return -1;
+						}
+						memcpy(ident, yytext, yyleng);
+						ident[yyleng] = '\0';
+						yylval->string = ident;
+						RETURN(TOKEN_ID);
+					}
+	{number}		{
+						yylval->integer = atoi(yytext);
+						RETURN(TOKEN_INT);
+					}
+	";"				{
+						RETURN(TOKEN_SEMICOLON);
+					}
+	":"				{
+						RETURN(TOKEN_COLON);
+					}
+	"|"				{
+						RETURN(TOKEN_PIPE);
+					}
+	"/"				{
+						RETURN(TOKEN_SLASH);
+					}
+	"%%"			{
+						if(after_prologue) 
+						{
+							GOTO(EYOUNG_EPILOGUE);
+							in_code = 1;
+						}
+						after_prologue++;
+						RETURN(TOKEN_DPERCENT);
+					}
+	"\""			{
+						reset_string(yyscanner);
+						GOTO(C_STRING);
+					}
+	"'"				{
+						reset_string(yyscanner);
+						GOTO(C_CHARACTER);
+					}
+	"%{"			{
+						reset_string(yyscanner);
+						GOTO(EYOUNG_PROLOGUE);
 						in_code = 1;
 					}
-					after_prologue++;
-					RETURN(TOKEN_DPERCENT);
-				}
-	"\""		{
-					reset_string(yyscanner);
-					GOTO(C_STRING);
-				}
-	"'"			{
-					reset_string(yyscanner);
-					GOTO(C_CHARACTER);
-				}
-	"%{"		{
-					reset_string(yyscanner);
-					GOTO(EYOUNG_PROLOGUE);
-					in_code = 1;
-				}
-	"{"			{
-					reset_string(yyscanner);
-					add_string(yyscanner, yytext, yyleng);
-					GOTO(EYOUNG_ACTION);
-					in_code = 1;
-					brace_level = 0;
-				}
-	"("			{
-					reset_string(yyscanner);
-					add_string(yyscanner, yytext, yyleng);
-					GOTO(EYOUNG_CONDITION);
-					in_code = 1;
-					paren_level = 0;
-				}
-	{space}		{
-					/*eat space*/
-				}
-	{newline}	{
-					yycolumn=1;
-				}
-	.			{
-					engine_lexer_error("bad char %x\n", yytext[0]);
-					return -1;
-				}
+	"{"				{
+						reset_string(yyscanner);
+						add_string(yyscanner, yytext, yyleng);
+						GOTO(EYOUNG_ACTION);
+						in_code = 1;
+						brace_level = 0;
+					}
+	"("				{
+						reset_string(yyscanner);
+						add_string(yyscanner, yytext, yyleng);
+						GOTO(EYOUNG_CONDITION);
+						in_code = 1;
+						paren_level = 0;
+					}
+	{space}			{
+						/*eat space*/
+					}
+	{newline}		{
+						yycolumn=1;
+					}
+	.				{
+						engine_lexer_error("bad char %x\n", yytext[0]);
+						return -1;
+					}
 }
 
 <C_STRING>
 {
 	/*c language string state*/
-	"\\\""		{
-					/*eat it*/
-					add_string(yyscanner, yytext, yyleng);
-				}
-	"\""		{
-					if(in_code)
+	"\\\""			{
+						/*eat it*/
 						add_string(yyscanner, yytext, yyleng);
-					GOTO(saved_state);
-					if(!in_code) 
-					{
-						yylval->string = copy_string(yyscanner);
-						if(!yylval->string)
-							return -1;
-						RETURN(TOKEN_STRING);
 					}
-				}
-	{newline}	{
-					yycolumn=1;
-					add_string(yyscanner, yytext, yyleng);
-				}
-	.			{
-					/*eat it*/
-					add_string(yyscanner, yytext, yyleng);
-				}
+	"\""			{
+						if(in_code)
+							add_string(yyscanner, yytext, yyleng);
+						GOTO(saved_state);
+						if(!in_code) 
+						{
+							yylval->string = copy_string(yyscanner);
+							if(!yylval->string)
+								return -1;
+							RETURN(TOKEN_STRING);
+						}
+					}
+	{newline}		{
+						yycolumn=1;
+						add_string(yyscanner, yytext, yyleng);
+					}
+	.				{
+						/*eat it*/
+						add_string(yyscanner, yytext, yyleng);
+					}
 }
 
 <C_CHARACTER>
 {
 	/*c language char state*/
-	"\\\'"		{
-					/*eat it*/
-					add_string(yyscanner, yytext, yyleng);
-				}
-	"'"			{
-					if(in_code)
+	"\\\'"			{
+						/*eat it*/
 						add_string(yyscanner, yytext, yyleng);
-					GOTO(saved_state);
-					if(!in_code) 
-					{
-						yylval->string = copy_string(yyscanner);
-						if(!yylval->string)
-							return -1;
-						RETURN(TOKEN_STRING);
 					}
-				}
-	{newline}	{
-					yycolumn=1;
-					add_string(yyscanner, yytext, yyleng);
-				}
-	.			{
-					/*eat it*/
-					add_string(yyscanner, yytext, yyleng);
-				}
+	"'"				{
+						if(in_code)
+							add_string(yyscanner, yytext, yyleng);
+						GOTO(saved_state);
+						if(!in_code) 
+						{
+							yylval->string = copy_string(yyscanner);
+							if(!yylval->string)
+								return -1;
+							RETURN(TOKEN_STRING);
+						}
+					}
+	{newline}		{
+						yycolumn=1;
+						add_string(yyscanner, yytext, yyleng);
+					}
+	.				{
+						/*eat it*/
+						add_string(yyscanner, yytext, yyleng);
+					}
 }
 
 <C_COMMENT>
 {
 	/*comment*/
-	"*/"		{
-					if(in_code)
+	"*/"			{
+						if(in_code)
+							add_string(yyscanner, yytext, yyleng);
+						GOTO(saved_state);
+					}
+	{newline}		{
 						add_string(yyscanner, yytext, yyleng);
-					GOTO(saved_state);
-				}
-	{newline}	{
-					add_string(yyscanner, yytext, yyleng);
-					yycolumn=1;
-				}
-	.			{
-					add_string(yyscanner, yytext, yyleng);
-					/*eat it*/
-				}
+						yycolumn=1;
+					}
+	.				{
+						add_string(yyscanner, yytext, yyleng);
+						/*eat it*/
+					}
 }
 
 <EYOUNG_PROLOGUE>
 {
 	/*prologue state*/
-	"'"			{
-					add_string(yyscanner, yytext, yyleng);
-					saved_state = EYOUNG_PROLOGUE;
-					GOTO(C_CHARACTER);
-				}
-	"\""		{
-					add_string(yyscanner, yytext, yyleng);
-					saved_state = EYOUNG_PROLOGUE;
-					GOTO(C_STRING);
-				}
-	"/*"		{
-					add_string(yyscanner, yytext, yyleng);
-					saved_state = EYOUNG_PROLOGUE;
-					GOTO(C_COMMENT);
-				}
-	"%}"		{
-					GOTO(INITIAL);
-					saved_state = INITIAL;
-					in_code = 0;
-					yylval->string = copy_string(yyscanner);
-					if(!yylval->string)
-						return -1;
-					RETURN(TOKEN_PROLOGUE_CODE);
-				}
-	{newline}	{
-					add_string(yyscanner, yytext, yyleng);
-					yycolumn=1;
-				}
-	.			{
-					add_string(yyscanner, yytext, yyleng);
-					/*eat it*/
-				}
+	"'"				{
+						add_string(yyscanner, yytext, yyleng);
+						saved_state = EYOUNG_PROLOGUE;
+						GOTO(C_CHARACTER);
+					}
+	"\""			{
+						add_string(yyscanner, yytext, yyleng);
+						saved_state = EYOUNG_PROLOGUE;
+						GOTO(C_STRING);
+					}
+	"/*"			{
+						add_string(yyscanner, yytext, yyleng);
+						saved_state = EYOUNG_PROLOGUE;
+						GOTO(C_COMMENT);
+					}
+	"%}"			{
+						GOTO(INITIAL);
+						saved_state = INITIAL;
+						in_code = 0;
+						yylval->string = copy_string(yyscanner);
+						if(!yylval->string)
+							return -1;
+						RETURN(TOKEN_PROLOGUE_CODE);
+					}
+	{newline}		{
+						add_string(yyscanner, yytext, yyleng);
+						yycolumn=1;
+					}
+	.				{
+						add_string(yyscanner, yytext, yyleng);
+						/*eat it*/
+					}
 }
 
 <EYOUNG_EPILOGUE>
 {
 	/*epilogue state*/
-	"'"			{
-					add_string(yyscanner, yytext, yyleng);
-					saved_state = EYOUNG_EPILOGUE;
-					GOTO(C_CHARACTER);
-				}
-	"\""		{
-					add_string(yyscanner, yytext, yyleng);
-					saved_state = EYOUNG_EPILOGUE;
-					GOTO(C_STRING);
-				}
-	"/*"		{
-					add_string(yyscanner, yytext, yyleng);
-					saved_state = EYOUNG_EPILOGUE;
-					GOTO(C_COMMENT);
-				}
-	{newline}	{
-					add_string(yyscanner, yytext, yyleng);
-					yycolumn=1;
-				}
-	.			{
-					add_string(yyscanner, yytext, yyleng);
-					/*eat it*/
-				}
-	<<EOF>>		{
-					GOTO(INITIAL);
-					saved_state = INITIAL;
-					in_code = 0;
-					yylval->string = copy_string(yyscanner);
-					if(!yylval->string)
-						return -1;
-					RETURN(TOKEN_EPILOGUE_CODE);
-				}
+	"'"				{
+						add_string(yyscanner, yytext, yyleng);
+						saved_state = EYOUNG_EPILOGUE;
+						GOTO(C_CHARACTER);
+					}
+	"\""			{
+						add_string(yyscanner, yytext, yyleng);
+						saved_state = EYOUNG_EPILOGUE;
+						GOTO(C_STRING);
+					}
+	"/*"			{
+						add_string(yyscanner, yytext, yyleng);
+						saved_state = EYOUNG_EPILOGUE;
+						GOTO(C_COMMENT);
+					}
+	{newline}		{
+						add_string(yyscanner, yytext, yyleng);
+						yycolumn=1;
+					}
+	.				{
+						add_string(yyscanner, yytext, yyleng);
+						/*eat it*/
+					}
+	<<EOF>>			{
+						GOTO(INITIAL);
+						saved_state = INITIAL;
+						in_code = 0;
+						yylval->string = copy_string(yyscanner);
+						if(!yylval->string)
+							return -1;
+						RETURN(TOKEN_EPILOGUE_CODE);
+					}
 }
 
 <EYOUNG_ACTION>
 {
 	/*action state*/
-	"'"			{
-					add_string(yyscanner, yytext, yyleng);
-					saved_state = EYOUNG_ACTION;
-					GOTO(C_CHARACTER);
-				}
-	"\""		{
-					add_string(yyscanner, yytext, yyleng);
-					saved_state = EYOUNG_ACTION;
-					GOTO(C_STRING);
-				}
-	"/*"		{
-					add_string(yyscanner, yytext, yyleng);
-					saved_state = EYOUNG_ACTION;
-					GOTO(C_COMMENT);
-				}
-	"{"			{
-					add_string(yyscanner, yytext, yyleng);
-					brace_level++;
-					engine_lexer_debug("add brace level(%d)\n", brace_level);
-				}
-	"}"			{
-					add_string(yyscanner, yytext, yyleng);
-					brace_level--;
-					engine_lexer_debug("sub brace level(%d)\n", brace_level);
-					if(brace_level<0)
-					{
-						GOTO(INITIAL);
-						saved_state = INITIAL;
-						in_code = 0;
-						yylval->string = copy_string(yyscanner);
-						if(!yylval->string)
-							return -1;
-						RETURN(TOKEN_RHS_ACTION);
+	"'"				{
+						add_string(yyscanner, yytext, yyleng);
+						saved_state = EYOUNG_ACTION;
+						GOTO(C_CHARACTER);
 					}
-				}
-	{newline}	{
-					add_string(yyscanner, yytext, yyleng);
-					yycolumn=1;
-				}
-	.			{
-					/*eat it*/
-					add_string(yyscanner, yytext, yyleng);
-				}
+	"\""			{
+						add_string(yyscanner, yytext, yyleng);
+						saved_state = EYOUNG_ACTION;
+						GOTO(C_STRING);
+					}
+	"/*"			{
+						add_string(yyscanner, yytext, yyleng);
+						saved_state = EYOUNG_ACTION;
+						GOTO(C_COMMENT);
+					}
+	"{"				{
+						add_string(yyscanner, yytext, yyleng);
+						brace_level++;
+						engine_lexer_debug("add brace level(%d)\n", brace_level);
+					}
+	"}"				{
+						add_string(yyscanner, yytext, yyleng);
+						brace_level--;
+						engine_lexer_debug("sub brace level(%d)\n", brace_level);
+						if(brace_level<0)
+						{
+							GOTO(INITIAL);
+							saved_state = INITIAL;
+							in_code = 0;
+							yylval->string = copy_string(yyscanner);
+							if(!yylval->string)
+								return -1;
+							RETURN(TOKEN_RHS_ACTION);
+						}
+					}
+	{newline}		{
+						add_string(yyscanner, yytext, yyleng);
+						yycolumn=1;
+					}
+	.				{
+						/*eat it*/
+						add_string(yyscanner, yytext, yyleng);
+					}
 }
 
 <EYOUNG_CONDITION>
 {
 	/*condition state*/
-	"'"			{
-					add_string(yyscanner, yytext, yyleng);
-					saved_state = EYOUNG_CONDITION;
-					GOTO(C_CHARACTER);
-				}
-	"\""		{
-					add_string(yyscanner, yytext, yyleng);
-					saved_state = EYOUNG_CONDITION;
-					GOTO(C_STRING);
-				}
-	"/*"		{
-					add_string(yyscanner, yytext, yyleng);
-					saved_state = EYOUNG_CONDITION;
-					GOTO(C_COMMENT);
-				}
-	"("			{
-					add_string(yyscanner, yytext, yyleng);
-					paren_level++;
-					engine_lexer_debug("add paren level(%d)\n", paren_level);
-				}
-	")"			{
-					add_string(yyscanner, yytext, yyleng);
-					paren_level--;
-					engine_lexer_debug("sub paren level(%d)\n", paren_level);
-					if(paren_level<0)
-					{
-						GOTO(INITIAL);
-						saved_state = INITIAL;
-						in_code = 0;
-						yylval->string = copy_string(yyscanner);
-						if(!yylval->string)
-							return -1;
-						RETURN(TOKEN_RHS_CONDITION);
+	"'"				{
+						add_string(yyscanner, yytext, yyleng);
+						saved_state = EYOUNG_CONDITION;
+						GOTO(C_CHARACTER);
 					}
-				}
-	{newline}	{
-					add_string(yyscanner, yytext, yyleng);
-					yycolumn=1;
-				}
-	.			{
-					add_string(yyscanner, yytext, yyleng);
-					/*eat it*/
-				}
+	"\""			{
+						add_string(yyscanner, yytext, yyleng);
+						saved_state = EYOUNG_CONDITION;
+						GOTO(C_STRING);
+					}
+	"/*"			{
+						add_string(yyscanner, yytext, yyleng);
+						saved_state = EYOUNG_CONDITION;
+						GOTO(C_COMMENT);
+					}
+	"("				{
+						add_string(yyscanner, yytext, yyleng);
+						paren_level++;
+						engine_lexer_debug("add paren level(%d)\n", paren_level);
+					}
+	")"				{
+						add_string(yyscanner, yytext, yyleng);
+						paren_level--;
+						engine_lexer_debug("sub paren level(%d)\n", paren_level);
+						if(paren_level<0)
+						{
+							GOTO(INITIAL);
+							saved_state = INITIAL;
+							in_code = 0;
+							yylval->string = copy_string(yyscanner);
+							if(!yylval->string)
+								return -1;
+							RETURN(TOKEN_RHS_CONDITION);
+						}
+					}
+	{newline}		{
+						add_string(yyscanner, yytext, yyleng);
+						yycolumn=1;
+					}
+	.				{
+						add_string(yyscanner, yytext, yyleng);
+						/*eat it*/
+					}
 }
 %%
 

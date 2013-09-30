@@ -229,8 +229,8 @@ void ey_free_code(ey_engine_t *eng, ey_code_t *code)
 		case EY_CODE_EVENT_FINIT:
 			if(code->function) 
 				engine_fzfree(ey_parser_fslab(eng), code->function);
-			if(code->event)
-				engine_fzfree(ey_parser_fslab(eng), code->event);
+			if(code->event_name)
+				engine_fzfree(ey_parser_fslab(eng), code->event_name);
 			break;
 		case EY_CODE_EVENT:
 		default:
@@ -338,8 +338,8 @@ int ey_signature_init(struct ey_engine *eng)
 	}
 
 	TAILQ_INIT(&ey_signature_list(eng));
-	TAILQ_INIT(&ey_init_list(eng));
-	TAILQ_INIT(&ey_finit_list(eng));
+	TAILQ_INIT(&ey_file_init_list(eng));
+	TAILQ_INIT(&ey_file_finit_list(eng));
 	return 0;
 }
 
@@ -349,16 +349,16 @@ void ey_signature_finit(struct ey_engine *eng)
 		return;
 	
 	ey_code_t *func = NULL, *tmp = NULL;
-	/*free ey_finit_list*/
-	TAILQ_FOREACH_SAFE(func, &ey_finit_list(eng), link, tmp)
+	/*free ey_file_finit_list*/
+	TAILQ_FOREACH_SAFE(func, &ey_file_finit_list(eng), link, tmp)
 	{
 		if(func->handle)
 			((init_handler)(func->handle))(eng);	/*call finit in signature file*/
 		ey_free_code(eng, func);
 	}
 	
-	/*free ey_init_list*/
-	TAILQ_FOREACH_SAFE(func, &ey_init_list(eng), link, tmp)
+	/*free ey_file_init_list*/
+	TAILQ_FOREACH_SAFE(func, &ey_file_init_list(eng), link, tmp)
 	{
 		ey_free_code(eng, func);
 	}

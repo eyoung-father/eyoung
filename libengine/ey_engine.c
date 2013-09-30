@@ -47,39 +47,65 @@ static int do_link(ey_engine_t *eng)
 		}
 	}
 
-	/*set init/finit function, and call init function*/
+	/*set file init/finit function, and call init function*/
 	ey_code_t *function = NULL;
-	TAILQ_FOREACH(function, &ey_init_list(eng), link)
+	TAILQ_FOREACH(function, &ey_file_init_list(eng), link)
 	{
 		assert(function->handle == NULL);
 		function->handle = ey_jit_get_symbol(ey_jit(eng), function->function);
 		if(!function->handle)
 		{
-			engine_compiler_error("relocate init function %s[%s:%d] failed\n", function->function,
+			engine_compiler_error("relocate file init function %s[%s:%d] failed\n", function->function,
 				function->location.filename, function->location.first_line);
 			return -1;
 		}
 
 		if(((init_handler)(function->handle))(eng))
 		{
-			engine_compiler_error("init function %s[%s,%d] run failed\n", function->function,
+			engine_compiler_error("file init function %s[%s,%d] run failed\n", function->function,
 				function->location.filename, function->location.first_line);
 			return -1;
 		}
 	}
 
-	TAILQ_FOREACH(function, &ey_finit_list(eng), link)
+	/*set work init/finit function*/
+	TAILQ_FOREACH(function, &ey_file_finit_list(eng), link)
 	{
 		assert(function->handle == NULL);
 		function->handle = ey_jit_get_symbol(ey_jit(eng), function->function);
 		if(!function->handle)
 		{
-			engine_compiler_error("relocate finit function %s[%s:%d] failed\n", function->function,
+			engine_compiler_error("relocate file finit function %s[%s:%d] failed\n", function->function,
 				function->location.filename, function->location.first_line);
 			return -1;
 		}
 	}
 
+	TAILQ_FOREACH(function, &ey_work_init_list(eng), link)
+	{
+		if(function->handle)
+			continue;
+		function->handle = ey_jit_get_symbol(ey_jit(eng), function->function);
+		if(!function->handle)
+		{
+			engine_compiler_error("relocate work init function %s[%s:%d] failed\n", function->function,
+				function->location.filename, function->location.first_line);
+			return -1;
+		}
+	}
+
+	TAILQ_FOREACH(function, &ey_work_finit_list(eng), link)
+	{
+		if(function->handle)
+			continue;
+		function->handle = ey_jit_get_symbol(ey_jit(eng), function->function);
+		if(!function->handle)
+		{
+			engine_compiler_error("relocate work finit function %s[%s:%d] failed\n", function->function,
+				function->location.filename, function->location.first_line);
+			return -1;
+		}
+	}
 	engine_compiler_debug("do link successfully\n");
 	return 0;
 }

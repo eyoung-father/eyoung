@@ -86,14 +86,14 @@ static int ey_output_event_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *event)
 	return 0;
 }
 
-static int ey_output_init_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *init)
+static int ey_output_file_init_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *init)
 {
 	ey_code_t *find = NULL;
-	TAILQ_FOREACH(find, &ey_init_list(eng), link)
+	TAILQ_FOREACH(find, &ey_file_init_list(eng), link)
 	{
 		if(!strcmp(init->function, find->function))
 		{
-			engine_parser_debug("init function is already called %s:%d\n", find->location.filename, find->location.first_line);
+			engine_parser_debug("file init function is already called %s:%d\n", find->location.filename, find->location.first_line);
 			return 0;
 		}
 	}
@@ -101,21 +101,21 @@ static int ey_output_init_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *init)
 	find = ey_alloc_code(eng, &init->location, init->function, NULL, NULL, init->type);
 	if(!find)
 	{
-		engine_parser_error("copy init function %s failed\n", init->function);
+		engine_parser_error("copy file init function %s failed\n", init->function);
 		return -1;
 	}
-	TAILQ_INSERT_TAIL(&ey_init_list(eng), find, link);
+	TAILQ_INSERT_TAIL(&ey_file_init_list(eng), find, link);
 	return 0;
 }
 
-static int ey_output_finit_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *finit)
+static int ey_output_file_finit_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *finit)
 {
 	ey_code_t *find = NULL;
-	TAILQ_FOREACH(find, &ey_finit_list(eng), link)
+	TAILQ_FOREACH(find, &ey_file_finit_list(eng), link)
 	{
 		if(!strcmp(finit->function, find->function))
 		{
-			engine_parser_debug("finit function is already called %s:%d\n", find->location.filename, find->location.first_line);
+			engine_parser_debug("file finit function is already called %s:%d\n", find->location.filename, find->location.first_line);
 			return 0;
 		}
 	}
@@ -123,10 +123,54 @@ static int ey_output_finit_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *finit)
 	find = ey_alloc_code(eng, &finit->location, finit->function, NULL, NULL, finit->type);
 	if(!find)
 	{
-		engine_parser_error("copy finit function %s failed\n", finit->function);
+		engine_parser_error("copy file finit function %s failed\n", finit->function);
 		return -1;
 	}
-	TAILQ_INSERT_TAIL(&ey_finit_list(eng), find, link);
+	TAILQ_INSERT_TAIL(&ey_file_finit_list(eng), find, link);
+	return 0;
+}
+
+static int ey_output_work_init_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *init)
+{
+	ey_code_t *find = NULL;
+	TAILQ_FOREACH(find, &ey_work_init_list(eng), link)
+	{
+		if(!strcmp(init->function, find->function))
+		{
+			engine_parser_debug("work init function is already called %s:%d\n", find->location.filename, find->location.first_line);
+			return 0;
+		}
+	}
+
+	find = ey_alloc_code(eng, &init->location, init->function, NULL, NULL, init->type);
+	if(!find)
+	{
+		engine_parser_error("copy work init function %s failed\n", init->function);
+		return -1;
+	}
+	TAILQ_INSERT_TAIL(&ey_work_init_list(eng), find, link);
+	return 0;
+}
+
+static int ey_output_work_finit_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *finit)
+{
+	ey_code_t *find = NULL;
+	TAILQ_FOREACH(find, &ey_work_finit_list(eng), link)
+	{
+		if(!strcmp(finit->function, find->function))
+		{
+			engine_parser_debug("work finit function is already called %s:%d\n", find->location.filename, find->location.first_line);
+			return 0;
+		}
+	}
+
+	find = ey_alloc_code(eng, &finit->location, finit->function, NULL, NULL, finit->type);
+	if(!find)
+	{
+		engine_parser_error("copy work finit function %s failed\n", finit->function);
+		return -1;
+	}
+	TAILQ_INSERT_TAIL(&ey_work_finit_list(eng), find, link);
 	return 0;
 }
 
@@ -152,11 +196,19 @@ static int ey_output_prologue_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *prolo
 		}
 		case EY_CODE_FILE_INIT:
 		{
-			return ey_output_init_cfile(eng, fp, prologue);
+			return ey_output_file_init_cfile(eng, fp, prologue);
 		}
 		case EY_CODE_FILE_FINIT:
 		{
-			return ey_output_finit_cfile(eng, fp, prologue);
+			return ey_output_file_finit_cfile(eng, fp, prologue);
+		}
+		case EY_CODE_WORK_INIT:
+		{
+			return ey_output_work_init_cfile(eng, fp, prologue);
+		}
+		case EY_CODE_WORK_FINIT:
+		{
+			return ey_output_work_finit_cfile(eng, fp, prologue);
 		}
 		default:
 		{

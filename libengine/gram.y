@@ -295,6 +295,26 @@ prologue:
 		}
 		$$ = ret;
 	}
+	| TOKEN_WORK_INIT TOKEN_STRING
+	{
+		ey_code_t *ret = ey_alloc_code(ENG, &@2, (void*)$2, NULL, NULL, EY_CODE_WORK_INIT);
+		if(!ret)
+		{
+			engine_parser_error("alloc work init code failed\n");
+			YYABORT;
+		}
+		$$ = ret;
+	}
+	| TOKEN_WORK_FINIT TOKEN_STRING
+	{
+		ey_code_t *ret = ey_alloc_code(ENG, &@2, (void*)$2, NULL, NULL, EY_CODE_WORK_FINIT);
+		if(!ret)
+		{
+			engine_parser_error("alloc work finit code failed\n");
+			YYABORT;
+		}
+		$$ = ret;
+	}
 	| TOKEN_EVENT TOKEN_STRING TOKEN_STRING
 	{
 		ey_event_t *ev = ey_alloc_event(ENG, &@2, $2, $3);
