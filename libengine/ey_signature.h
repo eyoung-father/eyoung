@@ -101,12 +101,13 @@ typedef struct ey_code
 		struct
 		{
 			char *function;
+			char *event_name;
 			void *handle;
 		};
 	};
 }ey_code_t;
 typedef TAILQ_HEAD(ey_code_list, ey_code) ey_code_list_t;
-extern ey_code_t *ey_alloc_code(struct ey_engine *eng, ey_location_t *location, void *code, int type);
+extern ey_code_t *ey_alloc_code(struct ey_engine *eng, ey_location_t *location, void *code, void *addr, void *event, int type);
 extern void ey_free_code(struct ey_engine *eng, ey_code_t *code);
 
 typedef struct ey_signature_file

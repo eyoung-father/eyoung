@@ -172,7 +172,7 @@ void ey_free_signature(ey_engine_t *eng, ey_signature_t *signature)
 	}
 }
 
-ey_code_t *ey_alloc_code(ey_engine_t *eng, ey_location_t *location, void *code, int type)
+ey_code_t *ey_alloc_code(ey_engine_t *eng, ey_location_t *location, void *code, void *addr, void *event, int type)
 {
 	assert(location != NULL);
 	ey_code_t *ret = (ey_code_t*)engine_fzalloc(sizeof(*ret), ey_parser_fslab(eng));
@@ -196,7 +196,8 @@ ey_code_t *ey_alloc_code(ey_engine_t *eng, ey_location_t *location, void *code, 
 		case EY_CODE_EVENT_INIT:
 		case EY_CODE_EVENT_FINIT:
 			ret->function = (char*)code;
-			ret->handle = NULL;
+			ret->handle = addr;
+			ret->event_name = (char*)event;
 			break;
 		case EY_CODE_EVENT:
 		default:
@@ -228,6 +229,8 @@ void ey_free_code(ey_engine_t *eng, ey_code_t *code)
 		case EY_CODE_EVENT_FINIT:
 			if(code->function) 
 				engine_fzfree(ey_parser_fslab(eng), code->function);
+			if(code->event)
+				engine_fzfree(ey_parser_fslab(eng), code->event);
 			break;
 		case EY_CODE_EVENT:
 		default:

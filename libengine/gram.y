@@ -39,6 +39,10 @@ static ey_acsm_pattern_t *parse_cluster_string(ey_engine_t *eng, char *pattern);
 %token TOKEN_EVENT			"%event"
 %token TOKEN_FILE_INIT		"%file-init"
 %token TOKEN_FILE_FINIT		"%file-finit"
+%token TOKEN_WORK_INIT		"%work-init"
+%token TOKEN_WORK_FINIT		"%work-finit"
+%token TOKEN_EVENT_INIT		"%event-init"
+%token TOKEN_EVENT_FINIT	"%event-finit"
 
 %union
 {
@@ -216,7 +220,7 @@ prologue_list:
 prologue:
 	TOKEN_PROLOGUE_CODE
 	{
-		ey_code_t *ret = ey_alloc_code(ENG, &@1, (void*)$1, EY_CODE_NORMAL);
+		ey_code_t *ret = ey_alloc_code(ENG, &@1, (void*)$1, NULL, NULL, EY_CODE_NORMAL);
 		if(!ret)
 		{
 			engine_parser_error("alloc prologue code failed\n");
@@ -263,7 +267,7 @@ prologue:
 			YYABORT;
 		}
 
-		ey_code_t *ret = ey_alloc_code(ENG, &@2, (void*)$2, EY_CODE_IMPORT);
+		ey_code_t *ret = ey_alloc_code(ENG, &@2, (void*)$2, NULL, NULL, EY_CODE_IMPORT);
 		if(!ret)
 		{
 			engine_parser_error("alloc import code failed\n");
@@ -273,20 +277,20 @@ prologue:
 	}
 	| TOKEN_FILE_INIT TOKEN_STRING
 	{
-		ey_code_t *ret = ey_alloc_code(ENG, &@2, (void*)$2, EY_CODE_FILE_INIT);
+		ey_code_t *ret = ey_alloc_code(ENG, &@2, (void*)$2, NULL, NULL, EY_CODE_FILE_INIT);
 		if(!ret)
 		{
-			engine_parser_error("alloc init code failed\n");
+			engine_parser_error("alloc file init code failed\n");
 			YYABORT;
 		}
 		$$ = ret;
 	}
 	| TOKEN_FILE_FINIT TOKEN_STRING
 	{
-		ey_code_t *ret = ey_alloc_code(ENG, &@2, (void*)$2, EY_CODE_FILE_FINIT);
+		ey_code_t *ret = ey_alloc_code(ENG, &@2, (void*)$2, NULL, NULL, EY_CODE_FILE_FINIT);
 		if(!ret)
 		{
-			engine_parser_error("alloc finit code failed\n");
+			engine_parser_error("alloc file finit code failed\n");
 			YYABORT;
 		}
 		$$ = ret;
@@ -300,7 +304,7 @@ prologue:
 			YYABORT;
 		}
 
-		ey_code_t *ret = ey_alloc_code(ENG, &@2, (void*)ev, EY_CODE_EVENT);
+		ey_code_t *ret = ey_alloc_code(ENG, &@2, (void*)ev, NULL, NULL, EY_CODE_EVENT);
 		if(!ret)
 		{
 			engine_parser_error("alloc event code failed\n");
@@ -485,7 +489,7 @@ epilogue_opt:
 	}
 	| TOKEN_EPILOGUE_CODE
 	{
-		ey_code_t *ret = ey_alloc_code(ENG, &@1, (void*)$1, EY_CODE_NORMAL);
+		ey_code_t *ret = ey_alloc_code(ENG, &@1, (void*)$1, NULL, NULL, EY_CODE_NORMAL);
 		if(!ret)
 		{
 			engine_parser_error("alloc epilogue code failed\n");

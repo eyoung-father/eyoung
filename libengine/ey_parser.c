@@ -98,7 +98,7 @@ static int ey_output_init_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *init)
 		}
 	}
 
-	find = ey_alloc_code(eng, &init->location, init->function, init->type);
+	find = ey_alloc_code(eng, &init->location, init->function, NULL, NULL, init->type);
 	if(!find)
 	{
 		engine_parser_error("copy init function %s failed\n", init->function);
@@ -120,7 +120,7 @@ static int ey_output_finit_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *finit)
 		}
 	}
 
-	find = ey_alloc_code(eng, &finit->location, finit->function, finit->type);
+	find = ey_alloc_code(eng, &finit->location, finit->function, NULL, NULL, finit->type);
 	if(!find)
 	{
 		engine_parser_error("copy finit function %s failed\n", finit->function);
