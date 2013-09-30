@@ -37,8 +37,8 @@ static ey_acsm_pattern_t *parse_cluster_string(ey_engine_t *eng, char *pattern);
 %token TOKEN_OUTPUT			"%output"
 %token TOKEN_IMPORT			"%import"
 %token TOKEN_EVENT			"%event"
-%token TOKEN_INIT			"%init"
-%token TOKEN_FINIT			"%finit"
+%token TOKEN_FILE_INIT		"%file-init"
+%token TOKEN_FILE_FINIT		"%file-finit"
 
 %union
 {
@@ -271,7 +271,7 @@ prologue:
 		}
 		$$ = ret;
 	}
-	| TOKEN_INIT TOKEN_STRING
+	| TOKEN_FILE_INIT TOKEN_STRING
 	{
 		ey_code_t *ret = ey_alloc_code(ENG, &@2, (void*)$2, EY_CODE_FILE_INIT);
 		if(!ret)
@@ -281,7 +281,7 @@ prologue:
 		}
 		$$ = ret;
 	}
-	| TOKEN_FINIT TOKEN_STRING
+	| TOKEN_FILE_FINIT TOKEN_STRING
 	{
 		ey_code_t *ret = ey_alloc_code(ENG, &@2, (void*)$2, EY_CODE_FILE_FINIT);
 		if(!ret)

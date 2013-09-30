@@ -88,6 +88,10 @@ typedef struct ey_code
 	#define EY_CODE_EVENT			3
 	#define EY_CODE_FILE_INIT		4
 	#define EY_CODE_FILE_FINIT		5
+	#define EY_CODE_WORK_INIT		6
+	#define EY_CODE_WORK_FINIT		7
+	#define EY_CODE_EVENT_INIT		8
+	#define EY_CODE_EVENT_FINIT		9
 	int type;
 	union
 	{

@@ -15,8 +15,8 @@ static int my_printf(const char *fmt, ...);
 %event "http_cookie" "void"
 %event "http_referer" "void"
 %event "http_uri" "void"
-%init "ac_init"
-%finit "ac_finit"
+%file-init "ac_init"
+%file-finit "ac_finit"
 
 %%
 1:http_uri(foo(_LINK_, _THIS_))/"testest"

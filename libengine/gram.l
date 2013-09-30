@@ -117,11 +117,11 @@ number	[1-9]{digit}*
 	"%event"	{
 					RETURN(TOKEN_EVENT);
 				}
-	"%init"		{
-					RETURN(TOKEN_INIT);
+	"%file-init" {
+					RETURN(TOKEN_FILE_INIT);
 				}
-	"%finit"	{
-					RETURN(TOKEN_FINIT);
+	"%file-finit" {
+					RETURN(TOKEN_FILE_FINIT);
 				}
 	{ident}		{
 					ey_engine_t *eng = (ey_engine_t *)gram_get_extra(yyscanner);

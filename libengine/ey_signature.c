@@ -191,6 +191,10 @@ ey_code_t *ey_alloc_code(ey_engine_t *eng, ey_location_t *location, void *code, 
 			break;
 		case EY_CODE_FILE_INIT:
 		case EY_CODE_FILE_FINIT:
+		case EY_CODE_WORK_INIT:
+		case EY_CODE_WORK_FINIT:
+		case EY_CODE_EVENT_INIT:
+		case EY_CODE_EVENT_FINIT:
 			ret->function = (char*)code;
 			ret->handle = NULL;
 			break;
@@ -218,6 +222,10 @@ void ey_free_code(ey_engine_t *eng, ey_code_t *code)
 			break;
 		case EY_CODE_FILE_INIT:
 		case EY_CODE_FILE_FINIT:
+		case EY_CODE_WORK_INIT:
+		case EY_CODE_WORK_FINIT:
+		case EY_CODE_EVENT_INIT:
+		case EY_CODE_EVENT_FINIT:
 			if(code->function) 
 				engine_fzfree(ey_parser_fslab(eng), code->function);
 			break;
