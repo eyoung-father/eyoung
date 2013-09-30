@@ -359,6 +359,15 @@ static int ey_output_rules_cfile(ey_engine_t *eng, FILE *fp, ey_signature_list_t
 	return 0;
 }
 
+static int ey_output_include_cfile(ey_engine_t *eng, FILE *fp)
+{
+	assert(eng!=NULL);
+	assert(fp!=NULL);
+
+	fprintf(fp, "#include \"libengine_type.h\"\n");
+	return 0;
+}
+
 static int ey_output_cfile(ey_engine_t *eng, char *src_file, ey_signature_file_t *signature_file)
 {
 	if(!eng || !src_file || !src_file[0] || !signature_file)
@@ -386,6 +395,9 @@ static int ey_output_cfile(ey_engine_t *eng, char *src_file, ey_signature_file_t
 		engine_parser_error("open c file %s failed\n", signature_file->output_file);
 		goto failed;
 	}
+
+	/*output default include header files*/
+	ey_output_include_cfile(eng, cfile);
 
 	/*output prologue*/
 	ey_code_t *prologue = NULL;
