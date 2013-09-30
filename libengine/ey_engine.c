@@ -29,6 +29,7 @@ static int do_link(ey_engine_t *eng)
 							condition->location.filename, condition->location.first_line);
 						return -1;
 					}
+					engine_compiler_debug("compile %s, address: %p\n", condition->func_name, condition->addr);
 				}
 
 				ey_rhs_item_action_t *action = item->action;
@@ -42,6 +43,7 @@ static int do_link(ey_engine_t *eng)
 							action->location.filename, action->location.first_line);
 						return -1;
 					}
+					engine_compiler_debug("compile %s, address: %p\n", action->func_name, action->addr);
 				}
 			}
 		}
@@ -59,6 +61,7 @@ static int do_link(ey_engine_t *eng)
 				function->location.filename, function->location.first_line);
 			return -1;
 		}
+		engine_compiler_debug("compile %s, address: %p\n", function->function, function->handle);
 
 		if(((init_handler)(function->handle))(eng))
 		{
@@ -68,7 +71,6 @@ static int do_link(ey_engine_t *eng)
 		}
 	}
 
-	/*set work init/finit function*/
 	TAILQ_FOREACH(function, &ey_file_finit_list(eng), link)
 	{
 		assert(function->handle == NULL);
@@ -79,8 +81,10 @@ static int do_link(ey_engine_t *eng)
 				function->location.filename, function->location.first_line);
 			return -1;
 		}
+		engine_compiler_debug("compile %s, address: %p\n", function->function, function->handle);
 	}
 
+	/*set work init/finit function*/
 	TAILQ_FOREACH(function, &ey_work_init_list(eng), link)
 	{
 		if(function->handle)
@@ -92,6 +96,7 @@ static int do_link(ey_engine_t *eng)
 				function->location.filename, function->location.first_line);
 			return -1;
 		}
+		engine_compiler_debug("compile %s, address: %p\n", function->function, function->handle);
 	}
 
 	TAILQ_FOREACH(function, &ey_work_finit_list(eng), link)
@@ -104,6 +109,42 @@ static int do_link(ey_engine_t *eng)
 			engine_compiler_error("relocate work finit function %s[%s:%d] failed\n", function->function,
 				function->location.filename, function->location.first_line);
 			return -1;
+		}
+		engine_compiler_debug("compile %s, address: %p\n", function->function, function->handle);
+	}
+
+	/*set event init/finit function*/
+	int index;
+	ey_event_t *event = NULL;
+	for(index=0, event=ey_event_array(eng); index<ey_event_count(eng); index++, event++)
+	{
+		engine_compiler_debug("compile functions for event %s\n", event->name);
+		TAILQ_FOREACH(function, &event->event_init_list, link)
+		{
+			if(function->handle)
+				continue;
+			function->handle = ey_jit_get_symbol(ey_jit(eng), function->function);
+			if(!function->handle)
+			{
+				engine_compiler_error("relocate event %s init function %s[%s:%d] failed\n", event->name, 
+					function->function, function->location.filename, function->location.first_line);
+				return -1;
+			}
+			engine_compiler_debug("compile %s, address: %p\n", function->function, function->handle);
+		}
+
+		TAILQ_FOREACH(function, &event->event_finit_list, link)
+		{
+			if(function->handle)
+				continue;
+			function->handle = ey_jit_get_symbol(ey_jit(eng), function->function);
+			if(!function->handle)
+			{
+				engine_compiler_error("relocate event %s finit function %s[%s:%d] failed\n", event->name,
+					function->function, function->location.filename, function->location.first_line);
+				return -1;
+			}
+			engine_compiler_debug("compile %s, address: %p\n", function->function, function->handle);
 		}
 	}
 	engine_compiler_debug("do link successfully\n");

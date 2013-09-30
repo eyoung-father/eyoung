@@ -315,6 +315,38 @@ prologue:
 		}
 		$$ = ret;
 	}
+	| TOKEN_EVENT_INIT TOKEN_STRING TOKEN_STRING
+	{
+		if(!ey_find_event(ENG, $3))
+		{
+			engine_parser_error("event %s is not defined before\n");
+			YYABORT;
+		}
+
+		ey_code_t *ret = ey_alloc_code(ENG, &@2, (void*)$2, NULL, $3, EY_CODE_EVENT_INIT);
+		if(!ret)
+		{
+			engine_parser_error("alloc work init code failed\n");
+			YYABORT;
+		}
+		$$ = ret;
+	}
+	| TOKEN_EVENT_FINIT TOKEN_STRING TOKEN_STRING
+	{
+		if(!ey_find_event(ENG, $3))
+		{
+			engine_parser_error("event %s is not defined before\n");
+			YYABORT;
+		}
+
+		ey_code_t *ret = ey_alloc_code(ENG, &@2, (void*)$2, NULL, $3, EY_CODE_EVENT_FINIT);
+		if(!ret)
+		{
+			engine_parser_error("alloc work finit code failed\n");
+			YYABORT;
+		}
+		$$ = ret;
+	}
 	| TOKEN_EVENT TOKEN_STRING TOKEN_STRING
 	{
 		ey_event_t *ev = ey_alloc_event(ENG, &@2, $2, $3);

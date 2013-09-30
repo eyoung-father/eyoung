@@ -108,6 +108,8 @@ ey_event_t *ey_alloc_event(ey_engine_t *eng, ey_location_t *location, char *name
 	ret->cluster_pattern = ac;
 	TAILQ_INIT(&ret->cluster_item_list);
 	TAILQ_INIT(&ret->uncluster_item_list);
+	TAILQ_INIT(&ret->event_init_list);
+	TAILQ_INIT(&ret->event_finit_list);
 	ey_event_count(eng)++;
 	return ret;
 }

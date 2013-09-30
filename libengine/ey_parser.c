@@ -174,6 +174,64 @@ static int ey_output_work_finit_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *fin
 	return 0;
 }
 
+static int ey_output_event_init_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *init)
+{
+	ey_event_t *event = ey_find_event(eng, init->event_name);
+	if(!event)
+	{
+		engine_parser_error("event %s is not defined\n", init->event_name);
+		return -1;
+	}
+
+	ey_code_t *find = NULL;
+	TAILQ_FOREACH(find, &event->event_init_list, link)
+	{
+		if(!strcmp(init->function, find->function))
+		{
+			engine_parser_debug("event init function is already called %s:%d\n", find->location.filename, find->location.first_line);
+			return 0;
+		}
+	}
+
+	find = ey_alloc_code(eng, &init->location, init->function, NULL, NULL, init->type);
+	if(!find)
+	{
+		engine_parser_error("copy event init function %s failed\n", init->function);
+		return -1;
+	}
+	TAILQ_INSERT_TAIL(&event->event_init_list, find, link);
+	return 0;
+}
+
+static int ey_output_event_finit_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *finit)
+{
+	ey_event_t *event = ey_find_event(eng, finit->event_name);
+	if(!event)
+	{
+		engine_parser_error("event %s is not defined\n", finit->event_name);
+		return -1;
+	}
+
+	ey_code_t *find = NULL;
+	TAILQ_FOREACH(find, &event->event_finit_list, link)
+	{
+		if(!strcmp(finit->function, find->function))
+		{
+			engine_parser_debug("event finit function is already called %s:%d\n", find->location.filename, find->location.first_line);
+			return 0;
+		}
+	}
+
+	find = ey_alloc_code(eng, &finit->location, finit->function, NULL, NULL, finit->type);
+	if(!find)
+	{
+		engine_parser_error("copy event finit function %s failed\n", finit->function);
+		return -1;
+	}
+	TAILQ_INSERT_TAIL(&event->event_finit_list, find, link);
+	return 0;
+}
+
 static int ey_output_prologue_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *prologue)
 {
 	assert(eng!=NULL);
@@ -209,6 +267,14 @@ static int ey_output_prologue_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *prolo
 		case EY_CODE_WORK_FINIT:
 		{
 			return ey_output_work_finit_cfile(eng, fp, prologue);
+		}
+		case EY_CODE_EVENT_INIT:
+		{
+			return ey_output_event_init_cfile(eng, fp, prologue);
+		}
+		case EY_CODE_EVENT_FINIT:
+		{
+			return ey_output_event_finit_cfile(eng, fp, prologue);
 		}
 		default:
 		{
