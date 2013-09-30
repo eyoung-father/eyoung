@@ -89,19 +89,19 @@ int ey_engine_load(engine_t engine, char *files[], int files_num)
 	return 0;
 }
 
-engine_work_t ey_engine_work_create(engine_t engine)
+engine_work_t *ey_engine_work_create(engine_t engine)
 {
 	/*TODO*/
-	return 0;
+	return NULL;
 }
 
-void ey_engine_work_destroy(engine_t engine, engine_work_t work)
+void ey_engine_work_destroy(engine_t engine, engine_work_t *work)
 {
 	/*TODO*/
 	return;
 }
 
-int ey_engine_work_detect(engine_t eng, engine_work_t work, engine_work_event_t *event, engine_action_t *action)
+int ey_engine_work_detect(engine_t eng, engine_work_t *work, engine_work_event_t *event, engine_action_t *action)
 {
 	/*TODO*/
 	return 0;
