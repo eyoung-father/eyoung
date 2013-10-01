@@ -19,28 +19,28 @@ static int my_printf(const char *fmt, ...);
 %file-finit "ac_finit"
 
 %%
-1:http_uri(foo(_LINK_, _THIS_))/"testest"
+1:http_uri(foo(_WORK_, _THIS_))/"testest"
 	{
 		my_printf("uri foo()\n");
 		return 1;
 	}
 	;
 
-2:http_cookie(foo(_LINK_, /*ct test*/_THIS_)) /*ct test*/
+2:http_cookie(foo(_WORK_, /*ct test*/_THIS_)) /*ct test*/
 	{
 		my_printf("cookie foo()\n");
 		return 1;
 	}
-	http_referer(foo(_LINK_, _THIS_)/*ct test*/)
+	http_referer(foo(_WORK_, _THIS_)/*ct test*/)
 	{/*ct test*/
 		my_printf("referer foo()\n");
 		return 1;
 	}
-	| http_referer(bar(_LINK_, _THIS_))
+	| http_referer(bar(_WORK_, _THIS_))
 	{
 		my_printf("referer bar()\n");
 		return 1;
-	}http_cookie(bar(_LINK_, _THIS_))/"testest"
+	}http_cookie(bar(_WORK_, _THIS_))/"testest"
 	{
 		my_printf("cookie bar()\n");
 		return 1;
