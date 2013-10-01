@@ -52,13 +52,13 @@ static int my_printf(const char *fmt, ...)
 	return fprintf(stderr, /*testtest*/"%s\n", fmt);
 }
 
-int ac_init(void *eng)
+int ac_init(engine_t eng)
 {
 	fprintf(stderr, "ac_init return 0\n");
 	return 0;
 }
 
-int ac_finit(void *eng)
+int ac_finit(engine_t eng)
 {
 	fprintf(stderr, "ac_finit return 0\n");
 	return 0;
