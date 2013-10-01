@@ -149,10 +149,19 @@ static int ey_output_work_init_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *init
 	}
 	else
 	{
-		find = ey_alloc_code(eng, &init->location, init->function, NULL, NULL, init->type);
+		char *name = engine_fzalloc(strlen(init->function)+1, ey_parser_fslab(eng));
+		if(!name)
+		{
+			engine_parser_error("alloc function name failed\n");
+			return -1;
+		}
+		strcpy(name, init->function);
+
+		find = ey_alloc_code(eng, &init->location, name, NULL, NULL, init->type);
 		if(!find)
 		{
 			engine_parser_error("copy work init function %s failed\n", init->function);
+			engine_fzfree(ey_parser_fslab(eng), name);
 			return -1;
 		}
 		ey_work_init_userdefined(eng) = find;
@@ -179,10 +188,19 @@ static int ey_output_work_finit_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *fin
 	}
 	else
 	{
-		find = ey_alloc_code(eng, &finit->location, finit->function, NULL, NULL, finit->type);
+		char *name = engine_fzalloc(strlen(finit->function)+1, ey_parser_fslab(eng));
+		if(!name)
+		{
+			engine_parser_error("alloc function name failed\n");
+			return -1;
+		}
+		strcpy(name, finit->function);
+
+		find = ey_alloc_code(eng, &finit->location, name, NULL, NULL, finit->type);
 		if(!find)
 		{
 			engine_parser_error("copy work finit function %s failed\n", finit->function);
+			engine_fzfree(ey_parser_fslab(eng), name);
 			return -1;
 		}
 		ey_work_finit_userdefined(eng) = find;
@@ -215,10 +233,19 @@ static int ey_output_event_init_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *ini
 	}
 	else
 	{
+		char *name = engine_fzalloc(strlen(init->function)+1, ey_parser_fslab(eng));
+		if(!name)
+		{
+			engine_parser_error("alloc function name failed\n");
+			return -1;
+		}
+		strcpy(name, init->function);
+
 		find = ey_alloc_code(eng, &init->location, init->function, NULL, NULL, init->type);
 		if(!find)
 		{
 			engine_parser_error("copy event init function %s failed\n", init->function);
+			engine_fzfree(ey_parser_fslab(eng), name);
 			return -1;
 		}
 		event->event_init_userdefined = find;
@@ -251,10 +278,19 @@ static int ey_output_event_finit_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *fi
 	}
 	else
 	{
+		char *name = engine_fzalloc(strlen(finit->function)+1, ey_parser_fslab(eng));
+		if(!name)
+		{
+			engine_parser_error("alloc function name failed\n");
+			return -1;
+		}
+		strcpy(name, finit->function);
+
 		find = ey_alloc_code(eng, &finit->location, finit->function, NULL, NULL, finit->type);
 		if(!find)
 		{
 			engine_parser_error("copy event finit function %s failed\n", finit->function);
+			engine_fzfree(ey_parser_fslab(eng), name);
 			return -1;
 		}
 		event->event_finit_userdefined = find;
