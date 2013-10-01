@@ -2,6 +2,7 @@
 #define LIBENGINE_FUNCTION_H 1
 
 #include "libengine_type.h"
+#include "libengine_export.h"
 extern engine_t ey_engine_create(const char *name);
 extern void ey_engine_destroy(engine_t engine);
 extern int ey_engine_load(engine_t engine, char *files[], int files_num);

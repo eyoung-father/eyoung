@@ -20,6 +20,7 @@ prepare_local:
 	$(FREPLACE) gram__ gram_ gram_lexer.c
 	$(FREPLACE) gram__ gram_ gram_lexer.h
 	cp ../include/libengine_type.h ./testsuite/include
+	cp ../include/libengine_export.h ./testsuite/include
 
 clean_local:
 	$(RM) gram_lexer.c gram_lexer.h gram_parser.c gram_parser.h gram_parser.output

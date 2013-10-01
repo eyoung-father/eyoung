@@ -431,6 +431,7 @@ static int ey_output_include_cfile(ey_engine_t *eng, FILE *fp)
 	assert(fp!=NULL);
 
 	fprintf(fp, "#include \"libengine_type.h\"\n");
+	fprintf(fp, "#include \"libengine_export.h\"\n");
 	return 0;
 }
 

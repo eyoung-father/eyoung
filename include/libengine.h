@@ -3,5 +3,6 @@
 
 #include "libengine_type.h"
 #include "libengine_function.h"
+#include "libengine_export.h"
 
 #endif
