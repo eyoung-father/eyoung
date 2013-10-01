@@ -2,6 +2,8 @@
 #define LIBENGINE_TYPE_H 1
 
 typedef void* engine_t;
+typedef int (*file_init_handle)(engine_t eng);
+typedef int (*file_finit_handle)(engine_t eng);
 
 typedef struct engine_work
 {
@@ -10,6 +12,8 @@ typedef struct engine_work
 	void *predefined;
 	void *user_defined;
 }engine_work_t;
+typedef int (*work_init_handle)(engine_work_t *work);
+typedef int (*work_finit_handle)(engine_work_t *work);
 
 typedef struct engine_work_event
 {
@@ -18,6 +22,8 @@ typedef struct engine_work_event
 	void *predefined;
 	void *user_defined;
 }engine_work_event_t;
+typedef int (*event_init_handle)(engine_work_event_t *work_event);
+typedef int (*event_finit_handle)(engine_work_event_t *work_event);
 
 typedef struct engine_action
 {
