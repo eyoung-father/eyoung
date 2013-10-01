@@ -8,8 +8,8 @@ extern void ey_engine_destroy(engine_t engine);
 extern int ey_engine_load(engine_t engine, char *files[], int files_num);
 
 extern engine_work_t *ey_engine_work_create(engine_t engine);
-extern void ey_engine_work_destroy(engine_t engine, engine_work_t *work);
-extern int ey_engine_work_detect(engine_t eng, engine_work_t *work, engine_work_event_t *event, engine_action_t *action);
+extern void ey_engine_work_destroy(engine_work_t *work);
+extern int ey_engine_work_detect(engine_work_event_t *event, engine_action_t *action);
 
 extern int debug_engine_parser;
 extern int debug_engine_lexier;
