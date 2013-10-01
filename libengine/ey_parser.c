@@ -88,214 +88,32 @@ static int ey_output_event_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *event)
 
 static int ey_output_file_init_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *init)
 {
-	ey_code_t *find = NULL;
-	TAILQ_FOREACH(find, &ey_file_init_list(eng), link)
-	{
-		if(!strcmp(init->function, find->function))
-		{
-			engine_parser_debug("file init function is already called %s:%d\n", find->location.filename, find->location.first_line);
-			return 0;
-		}
-	}
-
-	find = ey_alloc_code(eng, &init->location, init->function, NULL, NULL, init->type);
-	if(!find)
-	{
-		engine_parser_error("copy file init function %s failed\n", init->function);
-		return -1;
-	}
-	TAILQ_INSERT_TAIL(&ey_file_init_list(eng), find, link);
-	return 0;
+	return ey_signature_add_init(eng, init->function, NULL, &init->location);
 }
 
 static int ey_output_file_finit_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *finit)
 {
-	ey_code_t *find = NULL;
-	TAILQ_FOREACH(find, &ey_file_finit_list(eng), link)
-	{
-		if(!strcmp(finit->function, find->function))
-		{
-			engine_parser_debug("file finit function is already called %s:%d\n", find->location.filename, find->location.first_line);
-			return 0;
-		}
-	}
-
-	find = ey_alloc_code(eng, &finit->location, finit->function, NULL, NULL, finit->type);
-	if(!find)
-	{
-		engine_parser_error("copy file finit function %s failed\n", finit->function);
-		return -1;
-	}
-	TAILQ_INSERT_TAIL(&ey_file_finit_list(eng), find, link);
-	return 0;
+	return ey_signature_add_finit(eng, finit->function, NULL, &finit->location);
 }
 
 static int ey_output_work_init_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *init)
 {
-	ey_code_t *find = ey_work_init_userdefined(eng);
-	if(find)
-	{
-		if(!strcmp(init->function, find->function))
-		{
-			engine_parser_debug("work init function is already called %s:%d\n", find->location.filename, find->location.first_line);
-			return 0;
-		}
-		else
-		{
-			engine_parser_error("user-defined work init function is already set in %s:%d\n", 
-				find->location.filename, find->location.first_line);
-			return -1;
-		}
-	}
-	else
-	{
-		char *name = engine_fzalloc(strlen(init->function)+1, ey_parser_fslab(eng));
-		if(!name)
-		{
-			engine_parser_error("alloc function name failed\n");
-			return -1;
-		}
-		strcpy(name, init->function);
-
-		find = ey_alloc_code(eng, &init->location, name, NULL, NULL, init->type);
-		if(!find)
-		{
-			engine_parser_error("copy work init function %s failed\n", init->function);
-			engine_fzfree(ey_parser_fslab(eng), name);
-			return -1;
-		}
-		ey_work_init_userdefined(eng) = find;
-		return 0;
-	}
+	return ey_work_set_init(eng, 1, init->function, NULL, &init->location);
 }
 
 static int ey_output_work_finit_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *finit)
 {
-	ey_code_t *find = ey_work_finit_userdefined(eng);
-	if(find)
-	{
-		if(!strcmp(finit->function, find->function))
-		{
-			engine_parser_debug("work finit function is already called %s:%d\n", find->location.filename, find->location.first_line);
-			return 0;
-		}
-		else
-		{
-			engine_parser_error("user-defined work finit function is already set in %s:%d\n", 
-				find->location.filename, find->location.first_line);
-			return -1;
-		}
-	}
-	else
-	{
-		char *name = engine_fzalloc(strlen(finit->function)+1, ey_parser_fslab(eng));
-		if(!name)
-		{
-			engine_parser_error("alloc function name failed\n");
-			return -1;
-		}
-		strcpy(name, finit->function);
-
-		find = ey_alloc_code(eng, &finit->location, name, NULL, NULL, finit->type);
-		if(!find)
-		{
-			engine_parser_error("copy work finit function %s failed\n", finit->function);
-			engine_fzfree(ey_parser_fslab(eng), name);
-			return -1;
-		}
-		ey_work_finit_userdefined(eng) = find;
-		return 0;
-	}
+	return ey_work_set_finit(eng, 1, finit->function, NULL, &finit->location);
 }
 
 static int ey_output_event_init_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *init)
 {
-	ey_event_t *event = ey_find_event(eng, init->event_name);
-	if(!event)
-	{
-		engine_parser_error("event %s is not defined\n", init->event_name);
-		return -1;
-	}
-
-	ey_code_t *find = event->event_init_userdefined;
-	if(find)
-	{
-		if(!strcmp(init->function, find->function))
-		{
-			engine_parser_debug("event init function is already called %s:%d\n", find->location.filename, find->location.first_line);
-			return 0;
-		}
-		else
-		{
-			engine_parser_error("event init function is already set in %s:%d\n", find->location.filename, find->location.first_line);
-			return -1;
-		}
-	}
-	else
-	{
-		char *name = engine_fzalloc(strlen(init->function)+1, ey_parser_fslab(eng));
-		if(!name)
-		{
-			engine_parser_error("alloc function name failed\n");
-			return -1;
-		}
-		strcpy(name, init->function);
-
-		find = ey_alloc_code(eng, &init->location, init->function, NULL, NULL, init->type);
-		if(!find)
-		{
-			engine_parser_error("copy event init function %s failed\n", init->function);
-			engine_fzfree(ey_parser_fslab(eng), name);
-			return -1;
-		}
-		event->event_init_userdefined = find;
-		return 0;
-	}
+	return ey_event_set_init(eng, init->event_name, 1, init->function, NULL, &init->location);
 }
 
 static int ey_output_event_finit_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *finit)
 {
-	ey_event_t *event = ey_find_event(eng, finit->event_name);
-	if(!event)
-	{
-		engine_parser_error("event %s is not defined\n", finit->event_name);
-		return -1;
-	}
-
-	ey_code_t *find = event->event_finit_userdefined;
-	if(find)
-	{
-		if(!strcmp(finit->function, find->function))
-		{
-			engine_parser_debug("event finit function is already called %s:%d\n", find->location.filename, find->location.first_line);
-			return 0;
-		}
-		else
-		{
-			engine_parser_error("event finit function is already set in %s:%d\n", find->location.filename, find->location.first_line);
-			return -1;
-		}
-	}
-	else
-	{
-		char *name = engine_fzalloc(strlen(finit->function)+1, ey_parser_fslab(eng));
-		if(!name)
-		{
-			engine_parser_error("alloc function name failed\n");
-			return -1;
-		}
-		strcpy(name, finit->function);
-
-		find = ey_alloc_code(eng, &finit->location, finit->function, NULL, NULL, finit->type);
-		if(!find)
-		{
-			engine_parser_error("copy event finit function %s failed\n", finit->function);
-			engine_fzfree(ey_parser_fslab(eng), name);
-			return -1;
-		}
-		event->event_finit_userdefined = find;
-		return 0;
-	}
+	return ey_event_set_finit(eng, finit->event_name, 1, finit->function, NULL, &finit->location);
 }
 
 static int ey_output_prologue_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *prologue)

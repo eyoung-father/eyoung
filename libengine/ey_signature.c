@@ -437,3 +437,61 @@ int ey_insert_signature(ey_engine_t *eng, ey_signature_t *signature)
 	engine_parser_debug("signature %lu inserted successfully\n", signature->signature_id);
 	return 0;
 }
+
+int ey_signature_add_init(ey_engine_t *eng, const char *function, 
+	file_init_handle address, ey_location_t *location)
+{
+	if(!eng || !function || !location)
+	{
+		engine_init_error("%s bad parameter\b", __FUNCTION__);
+		return -1;
+	}
+
+	ey_code_t *find = NULL;
+	TAILQ_FOREACH(find, &ey_file_init_list(eng), link)
+	{
+		if(!strcmp(function, find->function))
+		{
+			engine_init_debug("file init function is already called %s:%d\n", find->location.filename, find->location.first_line);
+			return 0;
+		}
+	}
+
+	find = ey_alloc_code(eng, location, (char*)function, address, NULL, EY_CODE_FILE_INIT);
+	if(!find)
+	{
+		engine_init_error("copy file init function %s failed\n", function);
+		return -1;
+	}
+	TAILQ_INSERT_TAIL(&ey_file_init_list(eng), find, link);
+	return 0;
+}
+
+int ey_signature_add_finit(ey_engine_t *eng, const char *function, 
+	file_finit_handle address, ey_location_t *location)
+{
+	if(!eng || !function || !location)
+	{
+		engine_init_error("%s bad parameter\b", __FUNCTION__);
+		return -1;
+	}
+
+	ey_code_t *find = NULL;
+	TAILQ_FOREACH(find, &ey_file_finit_list(eng), link)
+	{
+		if(!strcmp(function, find->function))
+		{
+			engine_init_debug("file finit function is already called %s:%d\n", find->location.filename, find->location.first_line);
+			return 0;
+		}
+	}
+
+	find = ey_alloc_code(eng, location, (char*)function, address, NULL, EY_CODE_FILE_FINIT);
+	if(!find)
+	{
+		engine_init_error("copy file finit function %s failed\n", function);
+		return -1;
+	}
+	TAILQ_INSERT_TAIL(&ey_file_finit_list(eng), find, link);
+	return 0;
+}

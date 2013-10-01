@@ -20,6 +20,7 @@
 #include "ey_import.h"
 #include "ey_elf.h"
 #include "libmatch.h"
+#include "ey_work.h"
 
 typedef struct ey_engine
 {

@@ -3,6 +3,7 @@
 
 #include "ey_queue.h"
 #include "ey_loc.h"
+#include "libengine_type.h"
 
 struct ey_engine;
 #define MAX_CONDITION_FUNC_NAME_LEN	128
@@ -127,4 +128,9 @@ extern int ey_signature_init(struct ey_engine *eng);
 extern void ey_signature_finit(struct ey_engine *eng);
 extern ey_signature_t *ey_find_signature(struct ey_engine *eng, unsigned int id);
 extern int ey_insert_signature(struct ey_engine *eng, ey_signature_t *signature);
+
+extern int ey_signature_add_init(struct ey_engine *eng, const char *function, 
+	file_init_handle address, ey_location_t *location);
+extern int ey_signature_add_finit(struct ey_engine *eng, const char *function, 
+	file_finit_handle address, ey_location_t *location);
 #endif

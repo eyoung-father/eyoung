@@ -5,6 +5,7 @@
 #include "ey_signature.h"
 #include "ey_loc.h"
 #include "libmatch.h"
+#include "libengine_type.h"
 
 typedef struct ey_event
 {
@@ -28,7 +29,12 @@ struct ey_engine;
 
 extern ey_event_t *ey_alloc_event(struct ey_engine *eng, ey_location_t *location, char *name, char *define);
 extern void ey_free_event(struct ey_engine *eng, ey_event_t *event);
-extern ey_event_t *ey_find_event(struct ey_engine *eng, char *name);
+extern ey_event_t *ey_find_event(struct ey_engine *eng, const char *name);
 extern int ey_event_init(struct ey_engine *eng);
 extern void ey_event_finit(struct ey_engine *eng);
+
+extern int ey_event_set_init(struct ey_engine *eng, const char *event_name, int user_define,
+	const char *function, event_init_handle address, ey_location_t *location);
+extern int ey_event_set_finit(struct ey_engine *eng, const char *event_name, int user_define,
+	const char *function, event_finit_handle address, ey_location_t *location);
 #endif
