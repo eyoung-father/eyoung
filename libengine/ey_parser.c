@@ -132,46 +132,62 @@ static int ey_output_file_finit_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *fin
 
 static int ey_output_work_init_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *init)
 {
-	ey_code_t *find = NULL;
-	TAILQ_FOREACH(find, &ey_work_init_list(eng), link)
+	ey_code_t *find = ey_work_init_userdefined(eng);
+	if(find)
 	{
 		if(!strcmp(init->function, find->function))
 		{
 			engine_parser_debug("work init function is already called %s:%d\n", find->location.filename, find->location.first_line);
 			return 0;
 		}
+		else
+		{
+			engine_parser_error("user-defined work init function is already set in %s:%d\n", 
+				find->location.filename, find->location.first_line);
+			return -1;
+		}
 	}
-
-	find = ey_alloc_code(eng, &init->location, init->function, NULL, NULL, init->type);
-	if(!find)
+	else
 	{
-		engine_parser_error("copy work init function %s failed\n", init->function);
-		return -1;
+		find = ey_alloc_code(eng, &init->location, init->function, NULL, NULL, init->type);
+		if(!find)
+		{
+			engine_parser_error("copy work init function %s failed\n", init->function);
+			return -1;
+		}
+		ey_work_init_userdefined(eng) = find;
+		return 0;
 	}
-	TAILQ_INSERT_TAIL(&ey_work_init_list(eng), find, link);
-	return 0;
 }
 
 static int ey_output_work_finit_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *finit)
 {
-	ey_code_t *find = NULL;
-	TAILQ_FOREACH(find, &ey_work_finit_list(eng), link)
+	ey_code_t *find = ey_work_finit_userdefined(eng);
+	if(find)
 	{
 		if(!strcmp(finit->function, find->function))
 		{
 			engine_parser_debug("work finit function is already called %s:%d\n", find->location.filename, find->location.first_line);
 			return 0;
 		}
+		else
+		{
+			engine_parser_error("user-defined work finit function is already set in %s:%d\n", 
+				find->location.filename, find->location.first_line);
+			return -1;
+		}
 	}
-
-	find = ey_alloc_code(eng, &finit->location, finit->function, NULL, NULL, finit->type);
-	if(!find)
+	else
 	{
-		engine_parser_error("copy work finit function %s failed\n", finit->function);
-		return -1;
+		find = ey_alloc_code(eng, &finit->location, finit->function, NULL, NULL, finit->type);
+		if(!find)
+		{
+			engine_parser_error("copy work finit function %s failed\n", finit->function);
+			return -1;
+		}
+		ey_work_finit_userdefined(eng) = find;
+		return 0;
 	}
-	TAILQ_INSERT_TAIL(&ey_work_finit_list(eng), find, link);
-	return 0;
 }
 
 static int ey_output_event_init_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *init)
@@ -183,24 +199,31 @@ static int ey_output_event_init_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *ini
 		return -1;
 	}
 
-	ey_code_t *find = NULL;
-	TAILQ_FOREACH(find, &event->event_init_list, link)
+	ey_code_t *find = event->event_init_userdefined;
+	if(find)
 	{
 		if(!strcmp(init->function, find->function))
 		{
 			engine_parser_debug("event init function is already called %s:%d\n", find->location.filename, find->location.first_line);
 			return 0;
 		}
+		else
+		{
+			engine_parser_error("event init function is already set in %s:%d\n", find->location.filename, find->location.first_line);
+			return -1;
+		}
 	}
-
-	find = ey_alloc_code(eng, &init->location, init->function, NULL, NULL, init->type);
-	if(!find)
+	else
 	{
-		engine_parser_error("copy event init function %s failed\n", init->function);
-		return -1;
+		find = ey_alloc_code(eng, &init->location, init->function, NULL, NULL, init->type);
+		if(!find)
+		{
+			engine_parser_error("copy event init function %s failed\n", init->function);
+			return -1;
+		}
+		event->event_init_userdefined = find;
+		return 0;
 	}
-	TAILQ_INSERT_TAIL(&event->event_init_list, find, link);
-	return 0;
 }
 
 static int ey_output_event_finit_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *finit)
@@ -212,24 +235,31 @@ static int ey_output_event_finit_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *fi
 		return -1;
 	}
 
-	ey_code_t *find = NULL;
-	TAILQ_FOREACH(find, &event->event_finit_list, link)
+	ey_code_t *find = event->event_finit_userdefined;
+	if(find)
 	{
 		if(!strcmp(finit->function, find->function))
 		{
 			engine_parser_debug("event finit function is already called %s:%d\n", find->location.filename, find->location.first_line);
 			return 0;
 		}
+		else
+		{
+			engine_parser_error("event finit function is already set in %s:%d\n", find->location.filename, find->location.first_line);
+			return -1;
+		}
 	}
-
-	find = ey_alloc_code(eng, &finit->location, finit->function, NULL, NULL, finit->type);
-	if(!find)
+	else
 	{
-		engine_parser_error("copy event finit function %s failed\n", finit->function);
-		return -1;
+		find = ey_alloc_code(eng, &finit->location, finit->function, NULL, NULL, finit->type);
+		if(!find)
+		{
+			engine_parser_error("copy event finit function %s failed\n", finit->function);
+			return -1;
+		}
+		event->event_finit_userdefined = find;
+		return 0;
 	}
-	TAILQ_INSERT_TAIL(&event->event_finit_list, find, link);
-	return 0;
 }
 
 static int ey_output_prologue_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *prologue)

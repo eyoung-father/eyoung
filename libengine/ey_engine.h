@@ -35,8 +35,11 @@ typedef struct ey_engine
 	ey_signature_list_t signature_list;
 	ey_code_list_t file_init_list;
 	ey_code_list_t file_finit_list;
-	ey_code_list_t work_init_list;
-	ey_code_list_t work_finit_list;
+
+	ey_code_t *work_init_predefined;
+	ey_code_t *work_finit_predefined;
+	ey_code_t *work_init_userdefined;
+	ey_code_t *work_finit_userdefined;
 
 	#define EVENT_ARRAY_STEP	32
 	ey_event_t *event_array;
@@ -66,8 +69,10 @@ typedef struct ey_engine
 #define ey_signature_list(eng) (((ey_engine_t*)(eng))->signature_list)
 #define ey_file_init_list(eng) (((ey_engine_t*)(eng))->file_init_list)
 #define ey_file_finit_list(eng) (((ey_engine_t*)(eng))->file_finit_list)
-#define ey_work_init_list(eng) (((ey_engine_t*)(eng))->work_init_list)
-#define ey_work_finit_list(eng) (((ey_engine_t*)(eng))->work_finit_list)
+#define ey_work_init_predefined(eng) (((ey_engine_t*)(eng))->work_init_predefined)
+#define ey_work_finit_predefined(eng) (((ey_engine_t*)(eng))->work_finit_predefined)
+#define ey_work_init_userdefined(eng) (((ey_engine_t*)(eng))->work_init_userdefined)
+#define ey_work_finit_userdefined(eng) (((ey_engine_t*)(eng))->work_finit_userdefined)
 
 extern int ey_load_post_action(ey_engine_t *eng);
 #endif

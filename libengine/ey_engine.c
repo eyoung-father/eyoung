@@ -85,10 +85,9 @@ static int do_link(ey_engine_t *eng)
 	}
 
 	/*set work init/finit function*/
-	TAILQ_FOREACH(function, &ey_work_init_list(eng), link)
+	function = ey_work_init_userdefined(eng);
+	if(function && !function->handle)
 	{
-		if(function->handle)
-			continue;
 		function->handle = ey_jit_get_symbol(ey_jit(eng), function->function);
 		if(!function->handle)
 		{
@@ -99,10 +98,9 @@ static int do_link(ey_engine_t *eng)
 		engine_compiler_debug("compile %s, address: %p\n", function->function, function->handle);
 	}
 
-	TAILQ_FOREACH(function, &ey_work_finit_list(eng), link)
+	function = ey_work_finit_userdefined(eng);
+	if(function && !function->handle)
 	{
-		if(function->handle)
-			continue;
 		function->handle = ey_jit_get_symbol(ey_jit(eng), function->function);
 		if(!function->handle)
 		{
@@ -119,7 +117,8 @@ static int do_link(ey_engine_t *eng)
 	for(index=0, event=ey_event_array(eng); index<ey_event_count(eng); index++, event++)
 	{
 		engine_compiler_debug("compile functions for event %s\n", event->name);
-		TAILQ_FOREACH(function, &event->event_init_list, link)
+		function = event->event_init_userdefined;
+		if(function)
 		{
 			if(function->handle)
 				continue;
@@ -133,7 +132,8 @@ static int do_link(ey_engine_t *eng)
 			engine_compiler_debug("compile %s, address: %p\n", function->function, function->handle);
 		}
 
-		TAILQ_FOREACH(function, &event->event_finit_list, link)
+		function = event->event_finit_userdefined;
+		if(function)
 		{
 			if(function->handle)
 				continue;
