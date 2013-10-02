@@ -73,7 +73,6 @@ static int do_link(ey_engine_t *eng)
 
 	TAILQ_FOREACH(function, &ey_file_finit_list(eng), link)
 	{
-		assert(function->handle == NULL);
 		function->handle = ey_jit_get_symbol(ey_jit(eng), function->function);
 		if(!function->handle)
 		{

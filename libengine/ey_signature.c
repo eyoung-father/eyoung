@@ -456,8 +456,16 @@ int ey_signature_add_init(ey_engine_t *eng, const char *function,
 			return 0;
 		}
 	}
+	
+	char *name = (char*)engine_fzalloc(strlen((char*)function)+1, ey_parser_fslab(eng));
+	if(!name)
+	{
+		engine_init_error("malloc init function name failed\n");
+		return -1;
+	}
+	strcpy(name, function);
 
-	find = ey_alloc_code(eng, location, (char*)function, address, NULL, EY_CODE_FILE_INIT);
+	find = ey_alloc_code(eng, location, name, address, NULL, EY_CODE_FILE_INIT);
 	if(!find)
 	{
 		engine_init_error("copy file init function %s failed\n", function);
@@ -486,7 +494,15 @@ int ey_signature_add_finit(ey_engine_t *eng, const char *function,
 		}
 	}
 
-	find = ey_alloc_code(eng, location, (char*)function, address, NULL, EY_CODE_FILE_FINIT);
+	char *name = (char*)engine_fzalloc(strlen((char*)function)+1, ey_parser_fslab(eng));
+	if(!name)
+	{
+		engine_init_error("malloc init function name failed\n");
+		return -1;
+	}
+	strcpy(name, function);
+
+	find = ey_alloc_code(eng, location, name, address, NULL, EY_CODE_FILE_FINIT);
 	if(!find)
 	{
 		engine_init_error("copy file finit function %s failed\n", function);

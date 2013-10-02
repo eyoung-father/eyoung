@@ -8,6 +8,7 @@
 		printf("test:%d\n", (eng)); \
 	}while(0)
 static int my_printf(const char *fmt, ...);
+extern int ac_finit(engine_t eng);
 %}
 
 %import "libtest.so"
@@ -16,7 +17,9 @@ static int my_printf(const char *fmt, ...);
 %event "http_referer" "void"
 %event "http_uri" "void"
 %file-init "ac_init"
+/*
 %file-finit "ac_finit"
+*/
 
 %%
 1:http_uri(foo(_WORK_, _THIS_))/"testest"
@@ -55,6 +58,7 @@ static int my_printf(const char *fmt, ...)
 int ac_init(engine_t eng)
 {
 	fprintf(stderr, "ac_init return 0\n");
+	ey_add_file_finit(eng, ac_finit);
 	return 0;
 }
 
