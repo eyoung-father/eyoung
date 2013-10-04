@@ -14,5 +14,7 @@ extern int ey_engine_work_detect(engine_work_event_t *event, engine_action_t *ac
 extern int debug_engine_parser;
 extern int debug_engine_lexier;
 extern int debug_engine_init;
+extern int debug_engine_compiler;
+extern int debug_engine_runtime;
 
 #endif
