@@ -111,3 +111,13 @@ int ey_work_set_runtime_finit(ey_engine_t *eng, int user_define,
 		return 0;
 	}
 }
+
+int ey_work_init(ey_engine_t *eng)
+{
+	return 0;
+}
+
+void ey_work_finit(struct ey_engine *eng)
+{
+
+}

@@ -32,6 +32,7 @@ typedef struct ey_engine
 	ey_hash_t signature_hash;
 	ey_hash_t library_hash;
 	ey_hash_t rhs_item_hash;
+	ey_hash_t work_hash;
 
 	ey_signature_list_t signature_list;
 	ey_code_list_t file_init_list;
@@ -74,6 +75,7 @@ typedef struct ey_engine
 #define ey_work_finit_predefined(eng) (((ey_engine_t*)(eng))->work_finit_predefined)
 #define ey_work_init_userdefined(eng) (((ey_engine_t*)(eng))->work_init_userdefined)
 #define ey_work_finit_userdefined(eng) (((ey_engine_t*)(eng))->work_finit_userdefined)
+#define ey_work_hash(eng) (((ey_engine_t*)(eng))->work_hash)
 
 extern int ey_load_post_action(ey_engine_t *eng);
 #endif

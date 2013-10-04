@@ -41,6 +41,10 @@ engine_t ey_engine_create(const char *name)
 	/*init import*/
 	if(ey_import_init(ret))
 		goto failed;
+	
+	/*init runtime*/
+	if(ey_work_init(ret))
+		goto failed;
 
 	return (engine_t)ret;
 
@@ -55,6 +59,7 @@ void ey_engine_destroy(engine_t engine)
 	if(!eng)
 		return;
 	
+	ey_work_finit(eng);
 	ey_signature_finit(eng);
 	ey_import_finit(eng);
 	ey_compiler_finit(eng);
@@ -101,7 +106,7 @@ void ey_engine_work_destroy(engine_work_t *work)
 	return;
 }
 
-int ey_engine_work_detect(engine_work_event_t *event, engine_action_t *action)
+int ey_engine_work_detect(engine_work_event_t *event)
 {
 	/*TODO*/
 	return 0;

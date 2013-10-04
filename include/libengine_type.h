@@ -16,19 +16,20 @@ typedef struct engine_work
 typedef int (*work_init_handle)(engine_work_t *work);
 typedef int (*work_finit_handle)(engine_work_t *work);
 
+typedef struct engine_action
+{
+	unsigned int action;
+}engine_action_t;
+
 typedef struct engine_work_event
 {
 	unsigned long event_id;
 	engine_work_t *work;
 	void *predefined;	/*for protocol parser*/
 	void *user_defined;	/*for signature writer*/
+	engine_action_t *action;	/*OUTPUT*/
 }engine_work_event_t;
 typedef int (*event_init_handle)(engine_work_event_t *work_event);
 typedef int (*event_finit_handle)(engine_work_event_t *work_event);
-
-typedef struct engine_action
-{
-	unsigned int action;
-}engine_action_t;
 
 #endif
