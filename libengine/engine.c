@@ -111,26 +111,26 @@ int _ey_set_event_init(engine_t engine, const char *event, int type,
 	const char *function, event_init_handle address, const char *filename, int line)
 {
 	ey_location_t location = {line,0,line,0,filename};
-	return ey_event_set_init((ey_engine_t*)engine, event, type, function, address, &location);
+	return ey_event_set_runtime_init((ey_engine_t*)engine, event, type, function, address, &location);
 }
 
 int _ey_set_event_finit(engine_t engine, const char *event, int type,
 	const char *function, event_finit_handle address, const char *filename, int line)
 {
 	ey_location_t location = {line,0,line,0,filename};
-	return ey_event_set_finit((ey_engine_t*)engine, event, type, function, address, &location);
+	return ey_event_set_runtime_finit((ey_engine_t*)engine, event, type, function, address, &location);
 }
 
 int _ey_set_work_init(engine_t engine, int type, const char *function, work_init_handle address, const char *filename, int line)
 {
 	ey_location_t location = {line,0,line,0,filename};
-	return ey_work_set_init((ey_engine_t*)engine, type, function, address, &location);
+	return ey_work_set_runtime_init((ey_engine_t*)engine, type, function, address, &location);
 }
 
 int _ey_set_work_finit(engine_t engine, int type, const char *function, work_finit_handle address, const char *filename, int line)
 {
 	ey_location_t location = {line,0,line,0,filename};
-	return ey_work_set_finit((ey_engine_t*)engine, type, function, address, &location);
+	return ey_work_set_runtime_finit((ey_engine_t*)engine, type, function, address, &location);
 }
 
 int _ey_add_file_init(engine_t engine, const char *function, file_init_handle address, const char *filename, int line)

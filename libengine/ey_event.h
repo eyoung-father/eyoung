@@ -33,8 +33,8 @@ extern ey_event_t *ey_find_event(struct ey_engine *eng, const char *name);
 extern int ey_event_init(struct ey_engine *eng);
 extern void ey_event_finit(struct ey_engine *eng);
 
-extern int ey_event_set_init(struct ey_engine *eng, const char *event_name, int user_define,
+extern int ey_event_set_runtime_init(struct ey_engine *eng, const char *event_name, int user_define,
 	const char *function, event_init_handle address, ey_location_t *location);
-extern int ey_event_set_finit(struct ey_engine *eng, const char *event_name, int user_define,
+extern int ey_event_set_runtime_finit(struct ey_engine *eng, const char *event_name, int user_define,
 	const char *function, event_finit_handle address, ey_location_t *location);
 #endif

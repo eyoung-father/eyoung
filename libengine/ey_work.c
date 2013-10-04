@@ -6,7 +6,7 @@
 #include "ey_engine.h"
 #include "ey_work.h"
 
-int ey_work_set_init(ey_engine_t *eng, int user_define, 
+int ey_work_set_runtime_init(ey_engine_t *eng, int user_define, 
 	const char *function, work_init_handle address, ey_location_t *location)
 {
 	if(!eng || !function || !location)
@@ -59,7 +59,7 @@ int ey_work_set_init(ey_engine_t *eng, int user_define,
 	}
 }
 
-int ey_work_set_finit(ey_engine_t *eng, int user_define, 
+int ey_work_set_runtime_finit(ey_engine_t *eng, int user_define, 
 	const char *function, work_finit_handle address, ey_location_t *location)
 {
 	if(!eng || !function || !location)

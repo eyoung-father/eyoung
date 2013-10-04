@@ -127,7 +127,7 @@ void ey_free_event(ey_engine_t *eng, ey_event_t *event)
 		ey_acsm_destroy(event->cluster_pattern);
 }
 
-int ey_event_set_init(ey_engine_t *eng, const char *event_name, int user_define,
+int ey_event_set_runtime_init(ey_engine_t *eng, const char *event_name, int user_define,
 	const char *function, event_init_handle address, ey_location_t *location)
 {
 	if(!eng || !event_name || !function || !location)
@@ -186,7 +186,7 @@ int ey_event_set_init(ey_engine_t *eng, const char *event_name, int user_define,
 	}
 }
 
-int ey_event_set_finit(ey_engine_t *eng, const char *event_name, int user_define,
+int ey_event_set_runtime_finit(ey_engine_t *eng, const char *event_name, int user_define,
 	const char *function, event_finit_handle address, ey_location_t *location)
 {
 	if(!eng || !event_name || !function || !location)

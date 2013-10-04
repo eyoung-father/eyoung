@@ -98,22 +98,22 @@ static int ey_output_file_finit_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *fin
 
 static int ey_output_work_init_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *init)
 {
-	return ey_work_set_init(eng, 1, init->function, NULL, &init->location);
+	return ey_work_set_runtime_init(eng, 1, init->function, NULL, &init->location);
 }
 
 static int ey_output_work_finit_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *finit)
 {
-	return ey_work_set_finit(eng, 1, finit->function, NULL, &finit->location);
+	return ey_work_set_runtime_finit(eng, 1, finit->function, NULL, &finit->location);
 }
 
 static int ey_output_event_init_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *init)
 {
-	return ey_event_set_init(eng, init->event_name, 1, init->function, NULL, &init->location);
+	return ey_event_set_runtime_init(eng, init->event_name, 1, init->function, NULL, &init->location);
 }
 
 static int ey_output_event_finit_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *finit)
 {
-	return ey_event_set_finit(eng, finit->event_name, 1, finit->function, NULL, &finit->location);
+	return ey_event_set_runtime_finit(eng, finit->event_name, 1, finit->function, NULL, &finit->location);
 }
 
 static int ey_output_prologue_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *prologue)
