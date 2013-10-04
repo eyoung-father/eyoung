@@ -110,3 +110,29 @@ int engine_compiler_debug(const char *format, ...)
 	va_end(ap);
 	return ret;
 }
+
+int engine_runtime_error(const char *format, ...)
+{
+	if(!debug_engine_runtime)
+		return 0;
+	
+	va_list ap;
+	int ret = 0;
+	va_start(ap, format);
+	ret = vfprintf(stderr, format, ap);
+	va_end(ap);
+	return ret;
+}
+
+int engine_runtime_debug(const char *format, ...)
+{
+	if(!debug_engine_runtime)
+		return 0;
+	
+	va_list ap;
+	int ret = 0;
+	va_start(ap, format);
+	ret = vfprintf(stderr, format, ap);
+	va_end(ap);
+	return ret;
+}

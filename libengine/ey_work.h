@@ -3,7 +3,13 @@
 
 #include "ey_loc.h"
 #include "libengine_type.h"
+#include "ey_bitmap.h"
 struct ey_engine;
+
+typedef struct ey_work
+{
+	ey_bitmap_t *state_bitmap;
+}ey_work_t;
 
 extern int ey_work_set_init(struct ey_engine *eng, int user_define, 
 	const char *function, work_init_handle address, ey_location_t *loc);
