@@ -21,6 +21,7 @@
 #include "ey_elf.h"
 #include "libmatch.h"
 #include "ey_work.h"
+#include "ey_runtime.h"
 
 typedef struct ey_engine
 {
