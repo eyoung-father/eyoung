@@ -128,7 +128,7 @@ void ey_free_rhs_signature(ey_engine_t *eng, ey_rhs_signature_t *rhs_signature)
 	}
 }
 
-ey_signature_t *ey_alloc_signature(ey_engine_t *eng, unsigned int id,
+ey_signature_t *ey_alloc_signature(ey_engine_t *eng, unsigned long id,
 	ey_location_t *location, ey_rhs_signature_list_t *signature_list)
 {
 	assert(location != NULL);
@@ -142,7 +142,7 @@ ey_signature_t *ey_alloc_signature(ey_engine_t *eng, unsigned int id,
 	TAILQ_INIT(&ret->rhs_signature_list);
 	TAILQ_CONCAT(&ret->rhs_signature_list, signature_list, link);
 
-	unsigned int rhs_pos = 0;
+	unsigned long rhs_pos = 0;
 	ey_rhs_signature_t *rhs = NULL;
 	TAILQ_FOREACH(rhs, &ret->rhs_signature_list, link)
 	{
@@ -150,7 +150,7 @@ ey_signature_t *ey_alloc_signature(ey_engine_t *eng, unsigned int id,
 		rhs->rhs_signature_position = rhs_pos++;
 
 		ey_rhs_item_t *item = NULL;
-		unsigned int item_pos = 0;
+		unsigned long item_pos = 0;
 		TAILQ_FOREACH(item, &rhs->rhs_item_list, link)
 		{
 			item->signature_id = id;
@@ -284,9 +284,9 @@ void ey_free_signature_file(ey_engine_t *eng, ey_signature_file_t *file)
 	engine_fzfree(ey_parser_fslab(eng), file);
 }
 
-static unsigned int hash_signature(void *signature)
+static unsigned long hash_signature(void *signature)
 {
-	return (unsigned int)signature;
+	return (unsigned long)signature;
 }
 
 static int compare_signature(void *k, void *v)
@@ -294,12 +294,12 @@ static int compare_signature(void *k, void *v)
 	if(!k || !v)
 		return 1;
 	
-	return *(unsigned int*)k != ((ey_signature_t*)v)->signature_id;
+	return *(unsigned long*)k != ((ey_signature_t*)v)->signature_id;
 }
 
-static unsigned int hash_rhs_item(void *rhs_item)
+static unsigned long hash_rhs_item(void *rhs_item)
 {
-	return (unsigned int)rhs_item;
+	return (unsigned long)rhs_item;
 }
 
 static int compare_rhs_item(void *k, void *v)
@@ -307,7 +307,7 @@ static int compare_rhs_item(void *k, void *v)
 	if(!k || !v)
 		return 1;
 	
-	return *(unsigned int*)k != ((ey_rhs_item_t*)v)->rhs_id;
+	return *(unsigned long*)k != ((ey_rhs_item_t*)v)->rhs_id;
 }
 
 int ey_signature_init(struct ey_engine *eng)
@@ -376,7 +376,7 @@ void ey_signature_finit(struct ey_engine *eng)
 	}
 }
 
-ey_signature_t *ey_find_signature(ey_engine_t *eng, unsigned int id)
+ey_signature_t *ey_find_signature(ey_engine_t *eng, unsigned long id)
 {
 	if(!eng|| !ey_signature_hash(eng))
 	{

@@ -134,7 +134,7 @@ void* ey_hash_find(ey_hash_t hash, void *key)
 	
 	ey_hash *tbl = (ey_hash*)hash;
 	ey_hash_entry_t *entry = NULL;
-	unsigned int index = tbl->mask & tbl->gen_fn(key);
+	unsigned long index = tbl->mask & tbl->gen_fn(key);
 	ey_hash_line_t *line = tbl->hash_lines + index;
 	ey_rwlock_rdlock(&line->line_lock);
 	TAILQ_FOREACH(entry, &line->entry_head, link)
@@ -156,7 +156,7 @@ void* ey_hash_find_ex(ey_hash_t hash, void *key, hash_compare compare)
 	
 	ey_hash *tbl = (ey_hash*)hash;
 	ey_hash_entry_t *entry = NULL;
-	unsigned int index = tbl->mask & tbl->gen_fn(key);
+	unsigned long index = tbl->mask & tbl->gen_fn(key);
 	ey_hash_line_t *line = tbl->hash_lines + index;
 	ey_rwlock_rdlock(&line->line_lock);
 	TAILQ_FOREACH(entry, &line->entry_head, link)
@@ -177,7 +177,7 @@ int ey_hash_insert(ey_hash_t hash, void *key, void *value)
 		return EY_HASH_BAD_PARAM;
 	
 	ey_hash *tbl = (ey_hash*)hash;
-	unsigned int index = tbl->mask & tbl->gen_fn(key);
+	unsigned long index = tbl->mask & tbl->gen_fn(key);
 	ey_hash_line_t *line = tbl->hash_lines + index;
 	ey_hash_entry_t *entry = (ey_hash_entry_t*)ey_zalloc(tbl->slab);
 	if(!entry)
@@ -219,7 +219,7 @@ int ey_hash_remove(ey_hash_t hash, void *key, void **value)
 		*value = NULL;
 
 	ey_hash *tbl = (ey_hash*)hash;
-	unsigned int index = tbl->mask & tbl->gen_fn(key);
+	unsigned long index = tbl->mask & tbl->gen_fn(key);
 	ey_hash_line_t *line = tbl->hash_lines + index;
 	ey_hash_entry_t *tmp = NULL;
 	ey_rwlock_wtlock(&line->line_lock);
@@ -252,7 +252,7 @@ int ey_hash_remove_all(ey_hash_t hash, void *key, hash_compare compare)
 		return EY_HASH_BAD_PARAM;
 	
 	ey_hash *tbl = (ey_hash*)hash;
-	unsigned int index = 0, lines=tbl->mask+1;
+	unsigned long index = 0, lines=tbl->mask+1;
 	ey_hash_line_t *line = NULL;
 
 	for(index=0, line=tbl->hash_lines; index<lines; index++, line++)
@@ -285,7 +285,7 @@ int ey_hash_foreach(ey_hash_t hash, void *key, hash_compare compare, hash_foreac
 		return EY_HASH_BAD_PARAM;
 	
 	ey_hash *tbl = (ey_hash*)hash;
-	unsigned int index = 0, lines=tbl->mask+1;
+	unsigned long index = 0, lines=tbl->mask+1;
 	ey_hash_line_t *line = NULL;
 
 	for(index=0, line=tbl->hash_lines; index<lines; index++, line++)

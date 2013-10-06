@@ -32,7 +32,7 @@ typedef struct ey_engine
 	ey_hash_t signature_hash;
 	ey_hash_t library_hash;
 	ey_hash_t rhs_item_hash;
-	ey_hash_t work_hash;
+	ey_hash_t engine_work_hash;
 
 	ey_signature_list_t signature_list;
 	ey_code_list_t file_init_list;
@@ -43,6 +43,10 @@ typedef struct ey_engine
 	ey_code_t *work_init_userdefined;
 	ey_code_t *work_finit_userdefined;
 
+	ey_slab_t private_work_slab;
+	ey_slab_t engine_work_slab;
+	ey_slab_t engine_work_event_slab;
+
 	#define EVENT_ARRAY_STEP	32
 	ey_event_t *event_array;
 	int event_size;
@@ -51,9 +55,9 @@ typedef struct ey_engine
 	ey_parser_t *parser;
 	ey_jit_t jit;
 
-	unsigned int rhs_id;
-	unsigned int *prefix_array;
-	unsigned int *postfix_array;
+	unsigned long rhs_id;
+	unsigned long *prefix_array;
+	unsigned long *postfix_array;
 }ey_engine_t;
 
 #define ey_parser_fslab(eng) (((ey_engine_t*)(eng))->parser_fslab)
@@ -75,7 +79,10 @@ typedef struct ey_engine
 #define ey_work_finit_predefined(eng) (((ey_engine_t*)(eng))->work_finit_predefined)
 #define ey_work_init_userdefined(eng) (((ey_engine_t*)(eng))->work_init_userdefined)
 #define ey_work_finit_userdefined(eng) (((ey_engine_t*)(eng))->work_finit_userdefined)
-#define ey_work_hash(eng) (((ey_engine_t*)(eng))->work_hash)
+#define ey_engine_work_hash(eng) (((ey_engine_t*)(eng))->engine_work_hash)
+#define ey_work_slab(eng) (((ey_engine_t*)(eng))->private_work_slab)
+#define ey_engine_work_slab(eng) (((ey_engine_t*)(eng))->engine_work_slab)
+#define ey_engine_work_event_slab(eng) (((ey_engine_t*)(eng))->engine_work_event_slab)
 
 extern int ey_load_post_action(ey_engine_t *eng);
 #endif

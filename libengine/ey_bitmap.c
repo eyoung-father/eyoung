@@ -35,12 +35,12 @@ void ey_bitmap_finit()
 	engine_zfinit(bitmap_slab);
 }
 
-ey_bitmap_t *ey_bitmap_create(unsigned int count)
+ey_bitmap_t *ey_bitmap_create(unsigned long count)
 {
 	assert(bitmap_buffer_fslab != NULL);
 	assert(bitmap_slab != NULL);
 
-	unsigned int nbytes = (count>>3);
+	unsigned long nbytes = (count>>3);
 	if(count & 7)
 		nbytes++;
 	
@@ -82,35 +82,35 @@ static unsigned char set_mask[8] =
 {
 	0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80
 };
-void ey_bitmap_set(ey_bitmap_t *bitmap, unsigned int nbit)
+void ey_bitmap_set(ey_bitmap_t *bitmap, unsigned long nbit)
 {
 	assert(bitmap != NULL);
 	assert(bitmap->count >= nbit);
 
-	unsigned int byte_index = (nbit >> 3);
-	unsigned int bit_index = (nbit & 7);
+	unsigned long byte_index = (nbit >> 3);
+	unsigned long bit_index = (nbit & 7);
 	unsigned char bit_mask = set_mask[bit_index];
 	bitmap->bitmap[byte_index] |= bit_mask;
 }
 
-void ey_bitmap_clear(ey_bitmap_t *bitmap, unsigned int nbit)
+void ey_bitmap_clear(ey_bitmap_t *bitmap, unsigned long nbit)
 {
 	assert(bitmap != NULL);
 	assert(bitmap->count >= nbit);
 
-	unsigned int byte_index = (nbit >> 3);
-	unsigned int bit_index = (nbit & 7);
+	unsigned long byte_index = (nbit >> 3);
+	unsigned long bit_index = (nbit & 7);
 	unsigned char bit_mask = ~set_mask[bit_index];
 	bitmap->bitmap[byte_index] &= bit_mask;
 }
 
-int ey_bitmap_isset(ey_bitmap_t *bitmap, unsigned int nbit)
+int ey_bitmap_isset(ey_bitmap_t *bitmap, unsigned long nbit)
 {
 	assert(bitmap != NULL);
 	assert(bitmap->count >= nbit);
 
-	unsigned int byte_index = (nbit >> 3);
-	unsigned int bit_index = (nbit & 7);
+	unsigned long byte_index = (nbit >> 3);
+	unsigned long bit_index = (nbit & 7);
 	unsigned char bit_mask = set_mask[bit_index];
 	return (bitmap->bitmap[byte_index] & bit_mask);
 }

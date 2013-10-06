@@ -7,9 +7,9 @@
 #include "ey_import.h"
 #include "ey_export.h"
 
-static unsigned int hash_filename(void *filename)
+static unsigned long hash_filename(void *filename)
 {
-	return ((unsigned int)filename)>>3;
+	return ((unsigned long)filename)>>3;
 }
 
 static int compare_filename(void *k, void *v)

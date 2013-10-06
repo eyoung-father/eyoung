@@ -10,7 +10,7 @@
 typedef struct ey_event
 {
 	ey_location_t location;
-	unsigned int event_id;
+	unsigned long event_id;
 	char *name;
 	char *define;
 

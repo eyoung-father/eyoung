@@ -4,9 +4,9 @@
 #include "gram_parser.h"
 #include "gram_lexer.h"
 
-static unsigned int hash_filename(void *filename)
+static unsigned long hash_filename(void *filename)
 {
-	return ((unsigned int)filename)>>3;
+	return ((unsigned long)filename)>>3;
 }
 
 static int compare_filename(void *k, void *v)
@@ -189,7 +189,7 @@ static int ey_output_rules_cfile(ey_engine_t *eng, FILE *fp, ey_signature_list_t
 				ey_event_t *event = ey_find_event(eng, rhs_item->event_name);
 				if(!event)
 				{
-					engine_parser_error("cannot find event %s in line %d(%u, %d, %d)\n", 
+					engine_parser_error("cannot find event %s in line %d(%lu, %d, %d)\n", 
 						rhs_item->event_name, 
 						rhs_item->location.first_line,
 						signature->signature_id, line, column);
@@ -202,12 +202,12 @@ static int ey_output_rules_cfile(ey_engine_t *eng, FILE *fp, ey_signature_list_t
 					condition->func_name = (char*)engine_fzalloc(MAX_CONDITION_FUNC_NAME_LEN, ey_parser_fslab(eng));
 					if(!condition->func_name)
 					{
-						engine_parser_error("failed to alloc func name in line %d(%u, %d, %d)\n",
+						engine_parser_error("failed to alloc func name in line %d(%lu, %d, %d)\n",
 							rhs_item->location.first_line,
 							signature->signature_id, line, column);
 						return -1;
 					}
-					snprintf(condition->func_name, MAX_CONDITION_FUNC_NAME_LEN, "__condition_%u_%d_%d",
+					snprintf(condition->func_name, MAX_CONDITION_FUNC_NAME_LEN, "__condition_%lu_%d_%d",
 						signature->signature_id, line, column);
 
 					fprintf(fp, "int %s(void* _WORK_, void* _THIS_)\n", condition->func_name);
@@ -223,12 +223,12 @@ static int ey_output_rules_cfile(ey_engine_t *eng, FILE *fp, ey_signature_list_t
 					action->func_name = (char*)engine_fzalloc(MAX_ACTION_FUNC_NAME_LEN, ey_parser_fslab(eng));
 					if(!action->func_name)
 					{
-						engine_parser_error("failed to alloc func name in line %d(%u, %d, %d)\n",
+						engine_parser_error("failed to alloc func name in line %d(%lu, %lu, %d)\n",
 							rhs_item->location.first_line,
 							signature->signature_id, line, column);
 						return -1;
 					}
-					snprintf(action->func_name, MAX_ACTION_FUNC_NAME_LEN, "__action_%u_%d_%d",
+					snprintf(action->func_name, MAX_ACTION_FUNC_NAME_LEN, "__action_%lu_%d_%d",
 						signature->signature_id, line, column);
 
 					fprintf(fp, "int %s(void* _WORK_, void* _THIS_)\n", action->func_name);

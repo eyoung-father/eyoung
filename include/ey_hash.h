@@ -4,7 +4,7 @@
 struct memory_handler;
 typedef void* ey_hash_t;
 
-typedef unsigned int (*hash_line)(void* key);
+typedef unsigned long (*hash_line)(void* key);
 typedef int (*hash_compare)(void *key, void *value);
 typedef void (*hash_destroy)(void *value);
 typedef int (*hash_foreach)(void *value, void *arg);
