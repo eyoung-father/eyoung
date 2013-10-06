@@ -44,9 +44,12 @@ typedef struct ey_engine
 	ey_code_t *work_init_userdefined;
 	ey_code_t *work_finit_userdefined;
 
+	unsigned long work_id;
 	ey_slab_t private_work_slab;
 	ey_slab_t engine_work_slab;
 	ey_slab_t engine_work_event_slab;
+	ey_slab_t bitmap_slab;
+	ey_fslab_t bitmap_buffer_fslab;
 
 	#define EVENT_ARRAY_STEP	32
 	ey_event_t *event_array;
@@ -81,9 +84,12 @@ typedef struct ey_engine
 #define ey_work_init_userdefined(eng) (((ey_engine_t*)(eng))->work_init_userdefined)
 #define ey_work_finit_userdefined(eng) (((ey_engine_t*)(eng))->work_finit_userdefined)
 #define ey_engine_work_hash(eng) (((ey_engine_t*)(eng))->engine_work_hash)
+#define ey_bitmap_slab(eng) (((ey_engine_t*)(eng))->bitmap_slab)
+#define ey_bitmap_buffer_fslab(eng) (((ey_engine_t*)(eng))->bitmap_buffer_fslab)
 #define ey_work_slab(eng) (((ey_engine_t*)(eng))->private_work_slab)
 #define ey_engine_work_slab(eng) (((ey_engine_t*)(eng))->engine_work_slab)
 #define ey_engine_work_event_slab(eng) (((ey_engine_t*)(eng))->engine_work_event_slab)
+#define ey_work_id(eng) (((ey_engine_t*)(eng))->work_id)
 
 extern int ey_load_post_action(ey_engine_t *eng);
 #endif

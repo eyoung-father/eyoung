@@ -43,7 +43,7 @@ engine_t ey_engine_create(const char *name)
 		goto failed;
 	
 	/*init runtime*/
-	if(ey_work_init(ret))
+	if(ey_runtime_init(ret))
 		goto failed;
 
 	return (engine_t)ret;
@@ -59,7 +59,7 @@ void ey_engine_destroy(engine_t engine)
 	if(!eng)
 		return;
 	
-	ey_work_finit(eng);
+	ey_runtime_finit(eng);
 	ey_signature_finit(eng);
 	ey_import_finit(eng);
 	ey_compiler_finit(eng);
@@ -96,20 +96,18 @@ int ey_engine_load(engine_t engine, char *files[], int files_num)
 
 engine_work_t *ey_engine_work_create(engine_t engine)
 {
-	/*TODO*/
-	return NULL;
+	ey_engine_t *eng = (ey_engine_t *)engine;
+	return ey_runtime_create(eng);
 }
 
 void ey_engine_work_destroy(engine_work_t *work)
 {
-	/*TODO*/
-	return;
+	ey_runtime_destroy(work);
 }
 
 int ey_engine_work_detect(engine_work_event_t *event)
 {
-	/*TODO*/
-	return 0;
+	return ey_runtime_detect(event);
 }
 
 int _ey_set_event_init(engine_t engine, const char *event, int type,
