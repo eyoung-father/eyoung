@@ -1,6 +1,8 @@
 #ifndef LIBENGINE_TYPE_H
 #define LIBENGINE_TYPE_H 1
 
+#include "ey_queue.h"
+
 typedef void* engine_t;
 typedef int (*file_init_handle)(engine_t eng);
 typedef int (*file_finit_handle)(engine_t eng);
@@ -24,11 +26,13 @@ typedef struct engine_action
 typedef struct engine_work_event
 {
 	unsigned long event_id;
+	TAILQ_ENTRY(engine_work_event) link;
 	engine_work_t *work;
 	void *predefined;	/*for protocol parser*/
 	void *user_defined;	/*for signature writer*/
 	engine_action_t *action;	/*OUTPUT*/
 }engine_work_event_t;
+typedef TAILQ_HEAD(engine_work_event_list, engine_work_event) engine_work_event_list_t;
 typedef int (*event_init_handle)(engine_work_event_t *work_event);
 typedef int (*event_finit_handle)(engine_work_event_t *work_event);
 
