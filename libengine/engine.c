@@ -105,9 +105,19 @@ void ey_engine_work_destroy(engine_work_t *work)
 	ey_runtime_destroy(work);
 }
 
-int ey_engine_work_detect(engine_work_event_t *event)
+engine_work_event_t *ey_engine_work_create_event(engine_work_t *work, unsigned long event_id, engine_action_t *action)
 {
-	return ey_runtime_detect(event);
+	return ey_runtime_create_event(work, event_id, action);
+}
+
+int ey_engine_work_detect_event(engine_work_event_t *event)
+{
+	return ey_runtime_detect_event(event);
+}
+
+void ey_engine_work_destroy_event(engine_work_event_t *event)
+{
+	ey_runtime_destroy_event(event);
 }
 
 int _ey_set_event_init(engine_t engine, const char *event, int type,

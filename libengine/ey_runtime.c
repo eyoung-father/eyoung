@@ -39,7 +39,17 @@ void ey_runtime_destroy(engine_work_t *work)
 	return;
 }
 
-int ey_runtime_detect(engine_work_event_t *event)
+engine_work_event_t *ey_runtime_create_event(engine_work_t *work, unsigned long event_id, engine_action_t *action)
+{
+	return NULL;
+}
+
+int ey_runtime_detect_event(engine_work_event_t *event)
 {
 	return 0;
+}
+
+void ey_runtime_destroy_event(engine_work_event_t *event)
+{
+	return;
 }

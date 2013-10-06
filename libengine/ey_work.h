@@ -4,11 +4,13 @@
 #include "ey_loc.h"
 #include "libengine_type.h"
 #include "ey_bitmap.h"
+#include "ey_memory.h"
 struct ey_engine;
 
 typedef struct ey_work
 {
 	ey_bitmap_t *state_bitmap;
+	ey_fslab_t local_allocator;
 }ey_work_t;
 
 extern int ey_work_init(struct ey_engine *eng);
