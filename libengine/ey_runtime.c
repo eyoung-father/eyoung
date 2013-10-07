@@ -198,7 +198,7 @@ void ey_runtime_destroy(engine_work_t *work)
 engine_work_event_t *ey_runtime_create_event(engine_work_t *work, unsigned long event_id, engine_action_t *action)
 {
 	assert(action!=NULL);
-	action->action = 0;
+	action->action = ENGINE_ACTION_PASS;
 
 	assert(work!=NULL && work->engine!=NULL && work->priv_data!=NULL);
 	ey_engine_t *eng = (ey_engine_t*)(work->engine);
@@ -302,7 +302,56 @@ void ey_runtime_destroy_event(engine_work_event_t *work_event)
 	return;
 }
 
-int ey_runtime_detect_event(engine_work_event_t *event)
+/*
+ * DETECTING :)
+ * */
+static int do_top_half_detect(engine_work_event_t *work_event)
 {
+	return 0;
+}
+
+static int do_bottom_half_detect(engine_work_event_t *work_event)
+{
+	return 0;
+}
+
+int ey_runtime_detect_event(engine_work_event_t *work_event)
+{
+	assert(work_event != NULL);
+
+	engine_work_t *engine_work = work_event->work;
+	assert(engine_work != NULL);
+
+	ey_engine_t *eng = (ey_engine_t*)(engine_work->engine);
+	ey_work_t *work = (ey_work_t*)(engine_work->priv_data);
+	assert(eng != NULL && work != NULL);
+
+	ey_event_t *event = (ey_event_t*)(work_event->event);
+	engine_action_t *action = work_event->action;
+	assert(event != NULL && action != NULL);
+	action->action = ENGINE_ACTION_PASS;
+
+	/*
+	 * work event detecting is divided into two parts:
+	 * 1, top-half will do cluster matching and event enqueue,
+	 * 2, bottom-half will do event dequeue and further checking.
+	 *
+	 * Top-half could be done in other computing unit
+	 * such as other core/cpu/gpu/chip, in an async arch
+	 * */
+	engine_runtime_debug("start to do top half check\n");
+	if(do_top_half_detect(work_event))
+	{
+		engine_runtime_debug("no need to bottom half check, return 0\n");
+		return 0;
+	}
+
+	engine_runtime_debug("start to do bottom half check\n");
+	if(do_bottom_half_detect(work_event))
+	{
+		engine_runtime_debug("event is clean, return 0\n");
+		return 0;
+	}
+	engine_runtime_debug("event detect return %d\n", action->action==ENGINE_ACTION_PASS?0:-1);
 	return 0;
 }

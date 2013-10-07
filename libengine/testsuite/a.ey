@@ -5,7 +5,7 @@
 #define MY_MACRO(eng)               \
 	do                              \
 	{                               \
-		printf("test:%d\n", (eng)); \
+		printf("test:%p\n", (eng)); \
 	}while(0)
 static int my_printf(const char *fmt, ...);
 extern int ac_finit(engine_t eng);
@@ -57,6 +57,7 @@ static int my_printf(const char *fmt, ...)
 
 int ac_init(engine_t eng)
 {
+	MY_MACRO(ac_init);
 	fprintf(stderr, "ac_init return 0\n");
 	ey_add_file_finit(eng, ac_finit);
 	return 0;
@@ -64,6 +65,7 @@ int ac_init(engine_t eng)
 
 int ac_finit(engine_t eng)
 {
+	MY_MACRO(ac_finit);
 	fprintf(stderr, "ac_finit return 0\n");
 	return 0;
 }

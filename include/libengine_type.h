@@ -21,13 +21,15 @@ typedef int (*work_finit_handle)(engine_work_t *work);
 
 typedef struct engine_action
 {
+	#define ENGINE_ACTION_PASS	0
+	#define ENGINE_ACTION_DROP	1
 	unsigned int action;
 }engine_action_t;
 
 typedef struct engine_work_event
 {
-	unsigned char *data;
-	size_t data_len;
+	char *data;
+	int data_len;
 
 	TAILQ_ENTRY(engine_work_event) link;
 	engine_work_t *work;
