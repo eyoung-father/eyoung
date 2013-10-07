@@ -9,12 +9,13 @@ typedef int (*file_finit_handle)(engine_t eng);
 
 typedef struct engine_work
 {
-	unsigned long work_id;
+	TAILQ_ENTRY(engine_work) link;
 	engine_t engine;
 	void *priv_data;	/*for libengine itself*/
 	void *predefined;	/*for protocol parser*/
 	void *user_defined;	/*for signature writer*/
 }engine_work_t;
+typedef TAILQ_HEAD(engine_work_list, engine_work) engine_work_list_t;
 typedef int (*work_init_handle)(engine_work_t *work);
 typedef int (*work_finit_handle)(engine_work_t *work);
 

@@ -112,19 +112,6 @@ int ey_work_set_runtime_finit(ey_engine_t *eng, int user_define,
 	}
 }
 
-static unsigned long hash_engine_work(void *work)
-{
-	return (unsigned long)work;
-}
-
-static int compare_engine_work(void *k, void *v)
-{
-	if(!k || !v)
-		return 1;
-	
-	return *(unsigned long*)k != ((engine_work_t*)v)->work_id;
-}
-
 int ey_work_init(ey_engine_t *eng)
 {
 	ey_work_slab(eng) = engine_zinit("private work slab", sizeof(ey_work_t));
@@ -148,18 +135,7 @@ int ey_work_init(ey_engine_t *eng)
 		return -1;
 	}
 	
-	char name[64];
-	if(!ey_engine_work_hash(eng))
-	{
-		snprintf(name, sizeof(name), "%s engine work hash\n", eng->name);
-		name[63] = '\0';
-		ey_engine_work_hash(eng) = ey_hash_create(name, 20, 2^20, hash_engine_work, compare_engine_work, NULL, NULL);
-		if(!ey_engine_work_hash(eng))
-		{
-			engine_init_error("create engine work hash failed\n");
-			return -1;
-		}
-	}
+	TAILQ_INIT(&ey_engine_work_list(eng));
 	return 0;
 }
 
@@ -168,11 +144,10 @@ void ey_work_finit(struct ey_engine *eng)
 	if(!eng)
 		return;
 	
-	if(ey_engine_work_hash(eng))
+	engine_work_t *work = NULL, *tmp = NULL;
+	TAILQ_FOREACH_SAFE(work, &ey_engine_work_list(eng), link, tmp)
 	{
-		/*TODO: call destroy function for each item*/
-		ey_hash_destroy(ey_engine_work_hash(eng));
-		ey_engine_work_hash(eng) = NULL;
+		ey_runtime_destroy(work);
 	}
 
 	if(ey_engine_work_event_slab(eng))

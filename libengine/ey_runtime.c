@@ -32,18 +32,10 @@ void ey_runtime_finit(ey_engine_t *eng)
 engine_work_t* ey_runtime_create(ey_engine_t *eng)
 {
 	assert(eng!=NULL);
-	unsigned long id;
 	ey_bitmap_t *bitmap = NULL;
 	ey_work_t *ey_work = NULL;
 	engine_work_t *engine_work = NULL;
 
-	/*alloc id*/
-	ey_spinlock_lock(&ey_engine_lock(eng));
-	id = ey_work_id(eng)++;
-	if(!id)
-		id = ey_work_id(eng)++;
-	ey_spinlock_unlock(&ey_engine_lock(eng));
-	
 	/*alloc bitmap*/
 	bitmap = ey_bitmap_create(eng, ey_rhs_id(eng));
 	if(!bitmap)
@@ -82,7 +74,6 @@ engine_work_t* ey_runtime_create(ey_engine_t *eng)
 	memset(engine_work, 0, sizeof(*engine_work));
 
 	/*init engine work*/
-	engine_work->work_id = id;
 	engine_work->engine = (void*)eng;
 	engine_work->priv_data = (void*)ey_work;
 
@@ -109,6 +100,11 @@ engine_work_t* ey_runtime_create(ey_engine_t *eng)
 			goto userdefined_failed;
 		}
 	}
+
+	/*insert into work list*/
+	ey_spinlock_lock(&ey_engine_lock(eng));
+	TAILQ_INSERT_TAIL(&ey_engine_work_list(eng), engine_work, link);
+	ey_spinlock_unlock(&ey_engine_lock(eng));
 	return engine_work;
 
 userdefined_failed:
@@ -149,6 +145,53 @@ common_failed:
 
 void ey_runtime_destroy(engine_work_t *work)
 {
+	assert(work!=NULL && work->engine!=NULL && work->priv_data);
+	ey_engine_t *eng = (ey_engine_t*)(work->engine);
+
+	/*remove from work list*/
+	ey_spinlock_lock(&ey_engine_lock(eng));
+	TAILQ_REMOVE(&ey_engine_work_list(eng), work, link);
+	ey_spinlock_unlock(&ey_engine_lock(eng));
+
+	ey_work_t *priv_work = (ey_work_t*)(work->priv_data);
+	assert(priv_work!=NULL);
+
+	/*release work event list*/
+	engine_work_event_t *event = NULL, *tmp = NULL;
+	ey_spinlock_lock(&priv_work->work_lock);
+	TAILQ_FOREACH_SAFE(event, &priv_work->event_list, link, tmp)
+	{
+		ey_runtime_destroy_event(event);
+	}
+	ey_spinlock_unlock(&priv_work->work_lock);
+
+	/*call userdefined engine work finit function*/
+	if(ey_work_finit_userdefined(eng))
+	{
+		work_finit_handle userdefined_finit = (work_finit_handle)(ey_work_finit_userdefined(eng)->handle);
+		assert(userdefined_finit != NULL);
+		if(userdefined_finit(work))
+			engine_runtime_error("call userdefined work finalializer failed");
+	}
+
+	/*call predefined engine work finit function*/
+	if(ey_work_finit_predefined(eng))
+	{
+		work_finit_handle predefined_finit = (work_finit_handle)(ey_work_finit_predefined(eng)->handle);
+		assert(predefined_finit != NULL);
+		if(predefined_finit(work))
+			engine_runtime_error("call predefined work finalializer failed");
+	}
+	
+	/*common finit*/
+	if(priv_work->local_allocator)
+		engine_fzfinit(priv_work->local_allocator);
+	
+	if(priv_work->state_bitmap)
+		ey_bitmap_destroy(eng, priv_work->state_bitmap);
+	
+	engine_zfree(ey_work_slab(eng), priv_work);
+	engine_zfree(ey_engine_work_slab(eng), work);
 	return;
 }
 
@@ -157,12 +200,12 @@ engine_work_event_t *ey_runtime_create_event(engine_work_t *work, unsigned long 
 	return NULL;
 }
 
-int ey_runtime_detect_event(engine_work_event_t *event)
-{
-	return 0;
-}
-
 void ey_runtime_destroy_event(engine_work_event_t *event)
 {
 	return;
+}
+
+int ey_runtime_detect_event(engine_work_event_t *event)
+{
+	return 0;
 }

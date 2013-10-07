@@ -35,7 +35,8 @@ typedef struct ey_engine
 	ey_hash_t signature_hash;
 	ey_hash_t library_hash;
 	ey_hash_t rhs_item_hash;
-	ey_hash_t engine_work_hash;
+
+	engine_work_list_t engine_work_list;
 
 	ey_signature_list_t signature_list;
 	ey_code_list_t file_init_list;
@@ -46,7 +47,6 @@ typedef struct ey_engine
 	ey_code_t *work_init_userdefined;
 	ey_code_t *work_finit_userdefined;
 
-	unsigned long work_id;
 	ey_slab_t private_work_slab;
 	ey_slab_t engine_work_slab;
 	ey_slab_t engine_work_event_slab;
@@ -85,13 +85,12 @@ typedef struct ey_engine
 #define ey_work_finit_predefined(eng) (((ey_engine_t*)(eng))->work_finit_predefined)
 #define ey_work_init_userdefined(eng) (((ey_engine_t*)(eng))->work_init_userdefined)
 #define ey_work_finit_userdefined(eng) (((ey_engine_t*)(eng))->work_finit_userdefined)
-#define ey_engine_work_hash(eng) (((ey_engine_t*)(eng))->engine_work_hash)
+#define ey_engine_work_list(eng) (((ey_engine_t*)(eng))->engine_work_list)
 #define ey_bitmap_slab(eng) (((ey_engine_t*)(eng))->bitmap_slab)
 #define ey_bitmap_buffer_fslab(eng) (((ey_engine_t*)(eng))->bitmap_buffer_fslab)
 #define ey_work_slab(eng) (((ey_engine_t*)(eng))->private_work_slab)
 #define ey_engine_work_slab(eng) (((ey_engine_t*)(eng))->engine_work_slab)
 #define ey_engine_work_event_slab(eng) (((ey_engine_t*)(eng))->engine_work_event_slab)
-#define ey_work_id(eng) (((ey_engine_t*)(eng))->work_id)
 #define ey_engine_lock(eng) (((ey_engine_t*)(eng))->engine_lock)
 
 extern int ey_load_post_action(ey_engine_t *eng);
