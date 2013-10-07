@@ -26,9 +26,9 @@ typedef struct engine_action
 
 typedef struct engine_work_event
 {
-	unsigned long event_id;
 	TAILQ_ENTRY(engine_work_event) link;
 	engine_work_t *work;
+	void *event;
 	void *predefined;	/*for protocol parser*/
 	void *user_defined;	/*for signature writer*/
 	engine_action_t *action;	/*OUTPUT*/
