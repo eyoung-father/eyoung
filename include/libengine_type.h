@@ -26,6 +26,9 @@ typedef struct engine_action
 
 typedef struct engine_work_event
 {
+	unsigned char *data;
+	size_t data_len;
+
 	TAILQ_ENTRY(engine_work_event) link;
 	engine_work_t *work;
 	void *event;
