@@ -21,6 +21,7 @@ engine_t ey_engine_create(const char *name)
 	/*init engine name*/
 	snprintf(ret->name, sizeof(ret->name), name);
 	ret->name[sizeof(ret->name)-1] = '\0';
+	ey_spinlock_init(&ey_engine_lock(ret));
 	
 	/*init parser*/
 	if(ey_parser_init(ret))

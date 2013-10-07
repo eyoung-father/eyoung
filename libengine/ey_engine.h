@@ -22,11 +22,13 @@
 #include "libmatch.h"
 #include "ey_work.h"
 #include "ey_runtime.h"
+#include "ey_lock.h"
 
 typedef struct ey_engine
 {
 	char name[64];
 
+	ey_spinlock_t engine_lock;
 	ey_fslab_t parser_fslab;
 
 	ey_hash_t filename_hash;
@@ -90,6 +92,7 @@ typedef struct ey_engine
 #define ey_engine_work_slab(eng) (((ey_engine_t*)(eng))->engine_work_slab)
 #define ey_engine_work_event_slab(eng) (((ey_engine_t*)(eng))->engine_work_event_slab)
 #define ey_work_id(eng) (((ey_engine_t*)(eng))->work_id)
+#define ey_engine_lock(eng) (((ey_engine_t*)(eng))->engine_lock)
 
 extern int ey_load_post_action(ey_engine_t *eng);
 #endif

@@ -14,7 +14,7 @@ typedef struct ey_work
 	ey_fslab_t local_allocator;
 
 	engine_work_event_list_t event_list;
-	ey_spinlock_t event_lock;
+	ey_spinlock_t work_lock;
 }ey_work_t;
 
 extern int ey_work_init(struct ey_engine *eng);
