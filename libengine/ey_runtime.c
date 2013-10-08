@@ -6,6 +6,14 @@
 #include "ey_engine.h"
 #include "ey_runtime.h"
 
+typedef struct ey_runtime_item
+{
+	int *results;
+	ey_spinlock_t lock;
+}ey_runtime_item_t;
+static int *result_buffer;
+static ey_runtime_item_t runtime_item[MAX_RUNTIME_ITEM];
+
 int ey_runtime_init(ey_engine_t *eng)
 {
 	if(ey_bitmap_init(eng))
@@ -19,11 +27,30 @@ int ey_runtime_init(ey_engine_t *eng)
 		engine_init_error("init work failed\n");
 		return -1;
 	}
+
+	result_buffer = (int*)engine_malloc(sizeof(int) * ey_rhs_id(eng) * MAX_RUNTIME_ITEM);
+	if(!result_buffer)
+	{
+		engine_init_error("malloc result buffer failed\n");
+		return -1;
+	}
+	memset(result_buffer, 0, sizeof(int) * ey_rhs_id(eng) * MAX_RUNTIME_ITEM);
+
+	int index;
+	for(index=0; index<MAX_RUNTIME_ITEM; index++)
+	{
+		runtime_item[index].results = result_buffer + ey_rhs_id(eng) * index;
+		ey_spinlock_init(&runtime_item[index].lock);
+	}
 	return 0;
 }
 
 void ey_runtime_finit(ey_engine_t *eng)
 {
+	if(result_buffer)
+		engine_free(result_buffer);
+	memset(runtime_item, 0, sizeof(runtime_item));
+
 	ey_work_finit(eng);
 	ey_bitmap_finit(eng);
 	return;

@@ -1,8 +1,6 @@
 #ifndef EY_MEMORY_H
 #define EY_MEMORY_H 1
 
-#define LOCAL_MEMORY __thread
-
 #define	MEM_ROUNDING (sizeof(unsigned long))
 #define REAL_SIZE(_size)   ((_size + MEM_ROUNDING - 1) & ~(MEM_ROUNDING - 1))
 #define MEM_MAGIC (unsigned long)0xdeaddeaddeaddeadUL

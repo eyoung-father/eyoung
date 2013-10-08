@@ -211,6 +211,10 @@ int ey_load_post_action(ey_engine_t *eng)
 		return -1;
 	}
 	
+	/*init runtime*/
+	if(ey_runtime_init(eng))
+		return -1;
+	
 	/*relocate*/
 	if(do_link(eng))
 		return -1;

@@ -43,10 +43,6 @@ engine_t ey_engine_create(const char *name)
 	if(ey_import_init(ret))
 		goto failed;
 	
-	/*init runtime*/
-	if(ey_runtime_init(ret))
-		goto failed;
-
 	return (engine_t)ret;
 
 failed:
