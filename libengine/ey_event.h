@@ -24,7 +24,6 @@ typedef struct ey_event
 	ey_code_t *event_finit_userdefined;
 }ey_event_t;
 
-typedef char* ey_event_key_t;
 struct ey_engine;
 
 extern ey_event_t *ey_alloc_event(struct ey_engine *eng, ey_location_t *location, char *name, char *define);

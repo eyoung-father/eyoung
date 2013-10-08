@@ -424,13 +424,20 @@ int ey_insert_signature(ey_engine_t *eng, ey_signature_t *signature)
 					item->rhs_signature_position, item->rhs_item_position);
 				}
 				if(!item->cluster_condition->negative)
+				{
 					TAILQ_INSERT_TAIL(&event->cluster_item_list, item, event_link);
+					item->clustered = 1;
+				}
 				else
+				{
 					TAILQ_INSERT_TAIL(&event->uncluster_item_list, item, event_link);
+					item->clustered = 0;
+				}
 			}
 			else
 			{
 				TAILQ_INSERT_TAIL(&event->uncluster_item_list, item, event_link);
+				item->clustered = 0;
 			}
 		}
 	}

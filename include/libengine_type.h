@@ -41,5 +41,7 @@ typedef struct engine_work_event
 typedef TAILQ_HEAD(engine_work_event_list, engine_work_event) engine_work_event_list_t;
 typedef int (*event_init_handle)(engine_work_event_t *work_event);
 typedef int (*event_finit_handle)(engine_work_event_t *work_event);
+typedef int (*event_condition_handle)(engine_work_t *engine_work, engine_work_event_t *work_event);
+typedef int (*event_action_handle)(engine_work_t *engine_work, engine_work_event_t *work_event);
 
 #endif

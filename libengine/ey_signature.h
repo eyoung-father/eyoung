@@ -33,6 +33,7 @@ extern void ey_free_rhs_item_action(struct ey_engine *eng, ey_rhs_item_action_t 
 struct ey_acsm_pattern;
 typedef struct ey_rhs_item
 {
+	int clustered;
 	unsigned long signature_id;
 	unsigned long rhs_id;
 
