@@ -46,8 +46,8 @@ void ey_bitmap_finit(ey_engine_t *eng)
 
 ey_bitmap_t *ey_bitmap_create(ey_engine_t *eng, unsigned long count)
 {
-	assert(ey_bitmap_buffer_fslab(eng) != NULL);
-	assert(ey_bitmap_slab(eng) != NULL);
+	ey_assert(ey_bitmap_buffer_fslab(eng) != NULL);
+	ey_assert(ey_bitmap_slab(eng) != NULL);
 
 	unsigned long nbytes = (count>>3);
 	if(count & 7)
@@ -76,8 +76,8 @@ ey_bitmap_t *ey_bitmap_create(ey_engine_t *eng, unsigned long count)
 
 void ey_bitmap_destroy(ey_engine_t *eng, ey_bitmap_t *bitmap)
 {
-	assert(ey_bitmap_buffer_fslab(eng) != NULL);
-	assert(ey_bitmap_slab(eng) != NULL);
+	ey_assert(ey_bitmap_buffer_fslab(eng) != NULL);
+	ey_assert(ey_bitmap_slab(eng) != NULL);
 
 	if(!bitmap)
 		return;
@@ -94,8 +94,8 @@ static unsigned char set_mask[8] =
 
 void ey_bitmap_set(ey_engine_t *eng, ey_bitmap_t *bitmap, unsigned long nbit)
 {
-	assert(bitmap != NULL);
-	assert(bitmap->count >= nbit);
+	ey_assert(bitmap != NULL);
+	ey_assert(bitmap->count >= nbit);
 
 	unsigned long byte_index = (nbit >> 3);
 	unsigned long bit_index = (nbit & 7);
@@ -105,8 +105,8 @@ void ey_bitmap_set(ey_engine_t *eng, ey_bitmap_t *bitmap, unsigned long nbit)
 
 void ey_bitmap_clear(ey_engine_t *eng, ey_bitmap_t *bitmap, unsigned long nbit)
 {
-	assert(bitmap != NULL);
-	assert(bitmap->count >= nbit);
+	ey_assert(bitmap != NULL);
+	ey_assert(bitmap->count >= nbit);
 
 	unsigned long byte_index = (nbit >> 3);
 	unsigned long bit_index = (nbit & 7);
@@ -116,8 +116,8 @@ void ey_bitmap_clear(ey_engine_t *eng, ey_bitmap_t *bitmap, unsigned long nbit)
 
 int ey_bitmap_isset(ey_engine_t *eng, ey_bitmap_t *bitmap, unsigned long nbit)
 {
-	assert(bitmap != NULL);
-	assert(bitmap->count >= nbit);
+	ey_assert(bitmap != NULL);
+	ey_assert(bitmap->count >= nbit);
 
 	unsigned long byte_index = (nbit >> 3);
 	unsigned long bit_index = (nbit & 7);

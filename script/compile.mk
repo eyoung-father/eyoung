@@ -31,7 +31,7 @@ CFLAGS_GLOBAL += -fno-strict-aliasing 		\
 				 -Wno-address
 CFLAGS_GLOBAL += -fPIC -g -W -Wall -Werror
 ifeq ($(OPTIMIZE), 1)
-CFLAGS_GLOBAL += -O2
+CFLAGS_GLOBAL += -O2 -DRELEASE=1
 endif
 
 CPPFLAGS_GLOBAL = -I/usr/include -I$(TOP_DIR)/include

@@ -63,7 +63,7 @@ void ey_parser_finit(ey_engine_t *eng)
 		engine_fzfinit(ey_parser_fslab(eng));
 		ey_parser_fslab(eng) = NULL;
 	}
-	assert(eng->parser==NULL);
+	ey_assert(eng->parser==NULL);
 }
 
 static int ey_output_code_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *code)
@@ -118,9 +118,9 @@ static int ey_output_event_finit_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *fi
 
 static int ey_output_prologue_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *prologue)
 {
-	assert(eng!=NULL);
-	assert(fp!=NULL);
-	assert(prologue!=NULL);
+	ey_assert(eng!=NULL);
+	ey_assert(fp!=NULL);
+	ey_assert(prologue!=NULL);
 
 	switch(prologue->type)
 	{
@@ -171,9 +171,9 @@ static int ey_output_prologue_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *prolo
 
 static int ey_output_rules_cfile(ey_engine_t *eng, FILE *fp, ey_signature_list_t *signature_list)
 {
-	assert(eng!=NULL);
-	assert(fp!=NULL);
-	assert(signature_list!=NULL);
+	ey_assert(eng!=NULL);
+	ey_assert(fp!=NULL);
+	ey_assert(signature_list!=NULL);
 
 	ey_signature_t *signature=NULL;
 	TAILQ_FOREACH(signature, signature_list, link)
@@ -245,8 +245,8 @@ static int ey_output_rules_cfile(ey_engine_t *eng, FILE *fp, ey_signature_list_t
 
 static int ey_output_include_cfile(ey_engine_t *eng, FILE *fp)
 {
-	assert(eng!=NULL);
-	assert(fp!=NULL);
+	ey_assert(eng!=NULL);
+	ey_assert(fp!=NULL);
 
 	fprintf(fp, "#include \"libengine_type.h\"\n");
 	fprintf(fp, "#include \"libengine_export.h\"\n");

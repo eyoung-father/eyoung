@@ -13,7 +13,7 @@
 ey_rhs_item_condition_t *ey_alloc_rhs_item_condition(ey_engine_t *eng, ey_location_t *location, 
 	char *code, char *func_name, void *addr)
 {
-	assert(location != NULL);
+	ey_assert(location != NULL);
 
 	ey_rhs_item_condition_t *ret = (ey_rhs_item_condition_t*)engine_fzalloc(sizeof(*ret), ey_parser_fslab(eng));
 	if(!ret)
@@ -38,7 +38,7 @@ void ey_free_rhs_item_condition(ey_engine_t *eng, ey_rhs_item_condition_t *condi
 ey_rhs_item_action_t *ey_alloc_rhs_item_action(ey_engine_t *eng, ey_location_t *location, 
 	char *code, char *func_name, void *addr)
 {
-	assert(location != NULL);
+	ey_assert(location != NULL);
 
 	ey_rhs_item_action_t *ret = (ey_rhs_item_action_t*)engine_fzalloc(sizeof(*ret), ey_parser_fslab(eng));
 	if(!ret)
@@ -66,8 +66,8 @@ ey_rhs_item_t *ey_alloc_rhs_item(ey_engine_t *eng, ey_location_t *location,
 	ey_rhs_item_condition_t *condition, 
 	ey_rhs_item_action_t *action)
 {
-	assert(location != NULL);
-	assert(event_name != NULL && event_name[0] != 0);
+	ey_assert(location != NULL);
+	ey_assert(event_name != NULL && event_name[0] != 0);
 	ey_rhs_item_t *ret = (ey_rhs_item_t*)engine_fzalloc(sizeof(*ret), ey_parser_fslab(eng));
 	if(!ret)
 		return NULL;
@@ -105,7 +105,7 @@ void ey_free_rhs_item(ey_engine_t *eng, ey_rhs_item_t *item)
 ey_rhs_signature_t *ey_alloc_rhs_signature(ey_engine_t *eng, ey_location_t *location, 
 	ey_rhs_item_list_t *rhs_list)
 {
-	assert(location != NULL);
+	ey_assert(location != NULL);
 	ey_rhs_signature_t *ret = (ey_rhs_signature_t*)engine_fzalloc(sizeof(*ret), ey_parser_fslab(eng));
 	if(!ret)
 		return NULL;
@@ -131,8 +131,8 @@ void ey_free_rhs_signature(ey_engine_t *eng, ey_rhs_signature_t *rhs_signature)
 ey_signature_t *ey_alloc_signature(ey_engine_t *eng, unsigned long id,
 	ey_location_t *location, ey_rhs_signature_list_t *signature_list)
 {
-	assert(location != NULL);
-	assert(signature_list != NULL);
+	ey_assert(location != NULL);
+	ey_assert(signature_list != NULL);
 	ey_signature_t *ret = (ey_signature_t*)engine_fzalloc(sizeof(*ret), ey_parser_fslab(eng));
 	if(!ret)
 		return NULL;
@@ -174,7 +174,7 @@ void ey_free_signature(ey_engine_t *eng, ey_signature_t *signature)
 
 ey_code_t *ey_alloc_code(ey_engine_t *eng, ey_location_t *location, void *code, void *addr, void *event, int type)
 {
-	assert(location != NULL);
+	ey_assert(location != NULL);
 	ey_code_t *ret = (ey_code_t*)engine_fzalloc(sizeof(*ret), ey_parser_fslab(eng));
 	if(!ret)
 		return NULL;
@@ -415,7 +415,7 @@ int ey_insert_signature(ey_engine_t *eng, ey_signature_t *signature)
 		TAILQ_FOREACH(item, &rhs->rhs_item_list, link)
 		{
 			ey_event_t *event = ey_find_event(eng, item->event_name);
-			assert(event!=NULL);
+			ey_assert(event!=NULL);
 			if(item->cluster_condition)
 			{
 				if(ey_acsm_add_pattern(event->cluster_pattern, item->cluster_condition))

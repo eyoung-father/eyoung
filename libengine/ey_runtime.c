@@ -59,7 +59,7 @@ void ey_runtime_finit(ey_engine_t *eng)
 
 engine_work_t* ey_runtime_create(ey_engine_t *eng)
 {
-	assert(eng!=NULL);
+	ey_assert(eng!=NULL);
 	ey_bitmap_t *bitmap = NULL;
 	ey_work_t *ey_work = NULL;
 	engine_work_t *engine_work = NULL;
@@ -110,7 +110,7 @@ engine_work_t* ey_runtime_create(ey_engine_t *eng)
 	if(ey_work_init_predefined(eng))
 	{
 		work_init_handle predefined_init = (work_init_handle)(ey_work_init_predefined(eng)->handle);
-		assert(predefined_init != NULL);
+		ey_assert(predefined_init != NULL);
 		if(predefined_init(engine_work))
 		{
 			engine_runtime_error("call predefined work initializer failed\n");
@@ -122,7 +122,7 @@ engine_work_t* ey_runtime_create(ey_engine_t *eng)
 	if(ey_work_init_userdefined(eng))
 	{
 		work_init_handle userdefined_init = (work_init_handle)(ey_work_init_userdefined(eng)->handle);
-		assert(userdefined_init != NULL);
+		ey_assert(userdefined_init != NULL);
 		if(userdefined_init(engine_work))
 		{
 			engine_runtime_error("call userdefined work initializer failed");
@@ -145,7 +145,7 @@ userdefined_failed:
 	if(ey_work_finit_userdefined(eng))
 	{
 		work_finit_handle userdefined_finit = (work_finit_handle)(ey_work_finit_userdefined(eng)->handle);
-		assert(userdefined_finit != NULL);
+		ey_assert(userdefined_finit != NULL);
 		if(userdefined_finit(engine_work))
 			engine_runtime_error("call userdefined work finalializer failed");
 	}
@@ -155,7 +155,7 @@ predefined_failed:
 	if(ey_work_finit_predefined(eng))
 	{
 		work_finit_handle predefined_finit = (work_finit_handle)(ey_work_finit_predefined(eng)->handle);
-		assert(predefined_finit != NULL);
+		ey_assert(predefined_finit != NULL);
 		if(predefined_finit(engine_work))
 			engine_runtime_error("call predefined work finalializer failed");
 	}
@@ -178,7 +178,7 @@ common_failed:
 
 void ey_runtime_destroy(engine_work_t *work)
 {
-	assert(work!=NULL && work->engine!=NULL && work->priv_data);
+	ey_assert(work!=NULL && work->engine!=NULL && work->priv_data);
 	ey_engine_t *eng = (ey_engine_t*)(work->engine);
 
 	/*remove from work list*/
@@ -187,7 +187,7 @@ void ey_runtime_destroy(engine_work_t *work)
 	ey_spinlock_unlock(&ey_engine_lock(eng));
 
 	ey_work_t *priv_work = (ey_work_t*)(work->priv_data);
-	assert(priv_work!=NULL);
+	ey_assert(priv_work!=NULL);
 
 	/*release work event list*/
 	engine_work_event_t *event = NULL, *tmp = NULL;
@@ -202,7 +202,7 @@ void ey_runtime_destroy(engine_work_t *work)
 	if(ey_work_finit_userdefined(eng))
 	{
 		work_finit_handle userdefined_finit = (work_finit_handle)(ey_work_finit_userdefined(eng)->handle);
-		assert(userdefined_finit != NULL);
+		ey_assert(userdefined_finit != NULL);
 		if(userdefined_finit(work))
 			engine_runtime_error("call userdefined work finalializer failed");
 	}
@@ -211,7 +211,7 @@ void ey_runtime_destroy(engine_work_t *work)
 	if(ey_work_finit_predefined(eng))
 	{
 		work_finit_handle predefined_finit = (work_finit_handle)(ey_work_finit_predefined(eng)->handle);
-		assert(predefined_finit != NULL);
+		ey_assert(predefined_finit != NULL);
 		if(predefined_finit(work))
 			engine_runtime_error("call predefined work finalializer failed");
 	}
@@ -230,13 +230,13 @@ void ey_runtime_destroy(engine_work_t *work)
 
 engine_work_event_t *ey_runtime_create_event(engine_work_t *work, unsigned long event_id, engine_action_t *action)
 {
-	assert(action!=NULL);
+	ey_assert(action!=NULL);
 	action->action = ENGINE_ACTION_PASS;
 
-	assert(work!=NULL && work->engine!=NULL && work->priv_data!=NULL);
+	ey_assert(work!=NULL && work->engine!=NULL && work->priv_data!=NULL);
 	ey_engine_t *eng = (ey_engine_t*)(work->engine);
 
-	assert(event_id <= ey_event_count(eng));
+	ey_assert(event_id <= ey_event_count(eng));
 	ey_event_t *event = ey_event_array(eng) + event_id;
 
 	engine_work_event_t *work_event = (engine_work_event_t*)engine_zalloc(ey_engine_work_event_slab(eng));
@@ -254,7 +254,7 @@ engine_work_event_t *ey_runtime_create_event(engine_work_t *work, unsigned long 
 	if(event->event_init_predefined)
 	{
 		event_init_handle predefined_init = (event_init_handle)(event->event_init_predefined->handle);
-		assert(predefined_init != NULL);
+		ey_assert(predefined_init != NULL);
 		if(predefined_init(work_event))
 		{
 			engine_runtime_error("call predefined work event initializer failed\n");
@@ -266,7 +266,7 @@ engine_work_event_t *ey_runtime_create_event(engine_work_t *work, unsigned long 
 	if(event->event_init_userdefined)
 	{
 		event_init_handle userdefined_init = (event_init_handle)(event->event_init_userdefined->handle);
-		assert(userdefined_init != NULL);
+		ey_assert(userdefined_init != NULL);
 		if(userdefined_init(work_event))
 		{
 			engine_runtime_error("call userdefined work event initializer failed\n");
@@ -279,7 +279,7 @@ userdefined_failed:
 	if(event->event_finit_userdefined)
 	{
 		event_finit_handle userdefined_finit = (event_finit_handle)(event->event_finit_userdefined->handle);
-		assert(userdefined_finit != NULL);
+		ey_assert(userdefined_finit != NULL);
 		if(userdefined_finit(work_event))
 			engine_runtime_error("call userdefined work event finitializer failed\n");
 	}
@@ -288,7 +288,7 @@ predefined_failed:
 	if(event->event_finit_predefined)
 	{
 		event_finit_handle predefined_finit = (event_finit_handle)(event->event_finit_predefined->handle);
-		assert(predefined_finit != NULL);
+		ey_assert(predefined_finit != NULL);
 		if(predefined_finit(work_event))
 			engine_runtime_error("call predefined work event finitializer failed\n");
 	}
@@ -302,22 +302,22 @@ common_failed:
 
 void ey_runtime_destroy_event(engine_work_event_t *work_event)
 {
-	assert(work_event != NULL);
+	ey_assert(work_event != NULL);
 
 	engine_work_t *work = work_event->work;
-	assert(work != NULL);
+	ey_assert(work != NULL);
 
 	ey_engine_t *eng = (ey_engine_t*)(work->engine);
-	assert(eng != NULL);
+	ey_assert(eng != NULL);
 
 	ey_event_t *event = (ey_event_t*)(work_event->event);
-	assert(event != NULL);
+	ey_assert(event != NULL);
 
 	/*call userdefined finit function*/
 	if(event->event_finit_userdefined)
 	{
 		event_finit_handle userdefined_finit = (event_finit_handle)(event->event_finit_userdefined->handle);
-		assert(userdefined_finit != NULL);
+		ey_assert(userdefined_finit != NULL);
 		if(userdefined_finit(work_event))
 			engine_runtime_error("call userdefined work event finitializer failed\n");
 	}
@@ -326,7 +326,7 @@ void ey_runtime_destroy_event(engine_work_event_t *work_event)
 	if(event->event_finit_predefined)
 	{
 		event_finit_handle predefined_finit = (event_finit_handle)(event->event_finit_predefined->handle);
-		assert(predefined_finit != NULL);
+		ey_assert(predefined_finit != NULL);
 		if(predefined_finit(work_event))
 			engine_runtime_error("call predefined work event finitializer failed\n");
 	}
@@ -350,7 +350,7 @@ static int acsm_match_cb(void *id, void *tree, int index, void *data, void *neg_
 	{
 		ey_engine_t *eng = (ey_engine_t*)(engine_work->engine);
 		ey_rhs_item_t *rhs_item = ey_hash_find(ey_rhs_item_hash(eng), id);
-		assert(rhs_item!=NULL);
+		ey_assert(rhs_item!=NULL);
 		engine_runtime_debug("find rhs item %lu:%lu:%lu\n",
 			rhs_item->signature_id, rhs_item->rhs_signature_position, rhs_item->rhs_item_position);
 	}
@@ -465,7 +465,7 @@ static int do_bottom_half_detect(engine_work_event_t *work_event)
 	while(item->head != (unsigned long)-1)
 	{
 		rhs_item = ey_hash_find(ey_rhs_item_hash(eng), (void*)&item->head);
-		assert(rhs_item!=NULL);
+		ey_assert(rhs_item!=NULL);
 
 		if(!rhs_item->clustered)
 		{
@@ -548,23 +548,27 @@ find_something:
 
 int ey_runtime_detect_event(engine_work_event_t *work_event)
 {
-	assert(work_event != NULL);
+	ey_assert(work_event != NULL);
 
 	engine_work_t *engine_work = work_event->work;
-	assert(engine_work != NULL);
+	ey_assert(engine_work != NULL);
 
+#ifndef RELEASE
 	ey_engine_t *eng = (ey_engine_t*)(engine_work->engine);
+#endif
 	ey_work_t *work = (ey_work_t*)(engine_work->priv_data);
-	assert(eng != NULL && work != NULL);
+	ey_assert(eng != NULL && work != NULL);
 
+#ifndef RELEASE
 	ey_event_t *event = (ey_event_t*)(work_event->event);
+#endif
 	engine_action_t *action = work_event->action;
-	assert(event != NULL && action != NULL);
+	ey_assert(event != NULL && action != NULL);
 	action->action = ENGINE_ACTION_PASS;
 
 	int lock_index = work->lock_index;
 	ey_runtime_item_t *item = runtime_item + lock_index;
-	assert(lock_index>=0 && lock_index<MAX_RUNTIME_ITEM);
+	ey_assert(lock_index>=0 && lock_index<MAX_RUNTIME_ITEM);
 	/*
 	 * work event detecting is divided into two parts:
 	 * 1, top-half will do cluster matching and event enqueue,
