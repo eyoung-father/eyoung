@@ -62,6 +62,7 @@ engine_work_t* ey_runtime_create(ey_engine_t *eng)
 	ey_bitmap_t *bitmap = NULL;
 	ey_work_t *ey_work = NULL;
 	engine_work_t *engine_work = NULL;
+	static int lock_index;
 
 	/*alloc bitmap*/
 	bitmap = ey_bitmap_create(eng, ey_rhs_id(eng));
@@ -131,7 +132,11 @@ engine_work_t* ey_runtime_create(ey_engine_t *eng)
 	/*insert into work list*/
 	ey_spinlock_lock(&ey_engine_lock(eng));
 	TAILQ_INSERT_TAIL(&ey_engine_work_list(eng), engine_work, link);
+	lock_index++;
+	if(lock_index >= MAX_RUNTIME_ITEM)
+		lock_index = 0;
 	ey_spinlock_unlock(&ey_engine_lock(eng));
+	ey_work->lock_index = lock_index;
 	return engine_work;
 
 userdefined_failed:

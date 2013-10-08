@@ -3,7 +3,7 @@
 
 #include "libengine_type.h"
 
-#define MAX_RUNTIME_ITEM	1024
+#define MAX_RUNTIME_ITEM	(1<<10)
 
 struct ey_engine;
 extern int ey_runtime_init(struct ey_engine *eng);

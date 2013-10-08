@@ -15,6 +15,7 @@ typedef struct ey_work
 
 	engine_work_event_list_t event_list;
 	ey_spinlock_t work_lock;
+	int lock_index;
 }ey_work_t;
 
 extern int ey_work_init(struct ey_engine *eng);
