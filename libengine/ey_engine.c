@@ -153,7 +153,7 @@ static int do_link(ey_engine_t *eng)
 static int do_prefix_postfix(ey_engine_t *eng)
 {
 	/*alloc prefix and postfix array*/
-	unsigned long *ptr = (unsigned long*)engine_fzalloc(sizeof(unsigned long)*ey_rhs_id(eng)*2, ey_parser_fslab(eng));
+	unsigned long *ptr = (unsigned long*)engine_fzalloc(sizeof(unsigned long)*(1+ey_rhs_id(eng))*2, ey_parser_fslab(eng));
 	if(!ptr)
 	{
 		engine_init_error("alloc prefix and postfix array failed\n");
