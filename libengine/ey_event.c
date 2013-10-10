@@ -33,6 +33,10 @@ void ey_event_finit(ey_engine_t *eng)
 
 	if(ey_event_array(eng))
 	{
+		int index = 0;
+		ey_event_t *event = NULL;
+		for(index=0, event=ey_event_array(eng); index<ey_event_count(eng); index++, event++)
+			ey_free_event(eng, event);
 		engine_free(ey_event_array(eng));
 		ey_event_array(eng) = NULL;
 		ey_event_size(eng) = 0;
