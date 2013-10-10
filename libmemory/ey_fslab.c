@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 #include "ey_queue.h"
 #include "ey_lock.h"
 #include "ey_memory.h"
@@ -98,6 +99,23 @@ void *ey_fzalloc(size_t size, struct ey_fslab *z)
 	}
 
 	return NULL;
+}
+
+void *ey_fzrealloc(void *old_item, size_t new_size, struct ey_fslab *z)
+{
+	if(!old_item)
+		return ey_fzalloc(new_size, z);
+	
+	void *new_item = ey_fzalloc(new_size, z);
+	if(!new_item)
+		return NULL;
+	
+	size_t old_size = PTR2HEAD(old_item)->user_size;
+	assert(old_size < new_size);
+
+	memcpy(new_item, old_item, old_size);
+	ey_fzfree(z, old_item);
+	return new_item;
 }
 
 void ey_fzfree(struct ey_fslab *z, void *item)
