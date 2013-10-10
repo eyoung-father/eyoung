@@ -1,11 +1,15 @@
 #ifndef EY_COMPILER_H
 #define EY_COMPILER_H 1
 
-#define SYSTEM_INCLUDE_PATH		"/usr/include/"
-#define SYSTEM_LIBRARY_PATH		"/usr/lib/"
+#define SYSTEM_INCLUDE_PATH		"/usr/include"
+#ifdef ARCH_X86_64
+#define SYSTEM_LIBRARY_PATH		"/usr/lib64"
+#else
+#define SYSTEM_LIBRARY_PATH		"/usr/lib"
+#endif
 
-#define LOCAL_INCLUDE_PATH		"./include/"
-#define LOCAL_LIBRARY_PATH		"./lib/"
+#define LOCAL_INCLUDE_PATH		"./include"
+#define LOCAL_LIBRARY_PATH		"./lib"
 
 struct ey_engine;
 struct ey_signature_file;

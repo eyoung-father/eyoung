@@ -159,7 +159,11 @@
 # define CONFIG_TCCDIR "."
 #endif
 #ifndef CONFIG_LDDIR
-# define CONFIG_LDDIR "lib"
+# ifndef TCC_TARGET_X86_64
+#  define CONFIG_LDDIR "lib"
+# else
+#  define CONFIG_LDDIR "lib64"
+# endif
 #endif
 
 /* path to find crt1.o, crti.o and crtn.o */

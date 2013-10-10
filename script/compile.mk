@@ -12,6 +12,7 @@ BISON = bison
 RM = rm -rf
 MK_FILE = $(TOP_DIR)/script/compile.mk
 FREPLACE = $(TOP_DIR)/script/freplace
+ARCH ?= x86-64
 
 
 #
@@ -30,6 +31,19 @@ CFLAGS_GLOBAL += -fno-strict-aliasing 		\
 				 -Wno-write-strings 		\
 				 -Wno-address
 CFLAGS_GLOBAL += -fPIC -g -W -Wall -Werror
+
+ifeq ($(ARCH), i386)
+CFLAGS_GLOBAL += -DARCH_I386 -DTCC_TARGET_I386
+endif
+
+ifeq ($(ARCH), x86-64)
+CFLAGS_GLOBAL += -DARCH_X86_64 -DTCC_TARGET_X86_64
+endif
+
+ifeq ($(ARCH), arm)
+CFLAGS_GLOBAL += -DARCH_ARM -DTCC_TARGET_ARM
+endif
+
 ifeq ($(OPTIMIZE), 1)
 CFLAGS_GLOBAL += -O2 -DRELEASE=1
 endif
