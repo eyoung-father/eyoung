@@ -82,6 +82,7 @@ static int parse_pop3_file(const char *filename)
 
 	ret = 0;
 	/*pass through*/
+	fprintf(stderr, "parser OK!\n");
 
 failed:
 	if(priv_data)

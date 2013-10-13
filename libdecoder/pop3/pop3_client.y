@@ -563,6 +563,7 @@ int parse_pop3_client_stream(pop3_data_t *priv, const char *buf, size_t buf_len,
 
 	while(1)
 	{
+		memset(&value, 0, sizeof(value));
 		token = pop3_client_lex(&value, lexier);
 		if(token == TOKEN_CLIENT_CONTINUE)
 			break;

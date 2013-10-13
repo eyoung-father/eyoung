@@ -63,6 +63,7 @@ static void pop3_do_state_transfer(pop3_data_t *priv_data);
 
 %type <string>		positive_response_line
 					negative_response_line
+					TOKEN_SERVER_STRING
 %type <content>		positive_response_lines
 					positive_response_message
 %type <response>	positive_response
@@ -148,7 +149,7 @@ positive_response: TOKEN_SERVER_OK positive_response_line positive_response_mess
 positive_response_line: TOKEN_SERVER_STRING TOKEN_SERVER_NEWLINE
 	{
 		char *data = NULL;
-		int data_len = yylval.string.str_len;
+		int data_len = $1.str_len;
 
 		if(data_len)
 		{
@@ -158,11 +159,16 @@ positive_response_line: TOKEN_SERVER_STRING TOKEN_SERVER_NEWLINE
 				pop3_debug(debug_pop3_server, "failed to alloc positive response line data\n");
 				YYABORT;
 			}
-			memcpy(data, yylval.string.str, data_len);
+			memcpy(data, $1.str, data_len);
 			data[data_len] = '\0';
 		}
 		$$.str = data;
 		$$.str_len = data_len;
+	}
+	| TOKEN_SERVER_NEWLINE
+	{
+		$$.str = NULL;
+		$$.str_len = 0;
 	}
 	;
 
@@ -176,14 +182,14 @@ positive_response_message:
 	}
 	| positive_response_lines TOKEN_SERVER_EOB
 	{
-		STAILQ_CONCAT(&$$, &$1);
+		$$ = $1;
 	}
 	;
 
 positive_response_lines: TOKEN_SERVER_STRING TOKEN_SERVER_NEWLINE
 	{
 		char *data = NULL;
-		int data_len = yylval.string.str_len;
+		int data_len = $1.str_len;
 
 		if(data_len)
 		{
@@ -193,7 +199,7 @@ positive_response_lines: TOKEN_SERVER_STRING TOKEN_SERVER_NEWLINE
 				pop3_debug(debug_pop3_server, "failed to alloc positive response line data\n");
 				YYABORT;
 			}
-			memcpy(data, yylval.string.str, data_len);
+			memcpy(data, $1.str, data_len);
 			data[data_len] = '\0';
 		}
 		
@@ -204,12 +210,13 @@ positive_response_lines: TOKEN_SERVER_STRING TOKEN_SERVER_NEWLINE
 			pop3_free(data);
 			YYABORT;
 		}
+		STAILQ_INIT(&$$);
 		STAILQ_INSERT_TAIL(&$$, line, next);
 	}
 	| positive_response_lines TOKEN_SERVER_STRING TOKEN_SERVER_NEWLINE
 	{
 		char *data = NULL;
-		int data_len = yylval.string.str_len;
+		int data_len = $2.str_len;
 
 		if(data_len)
 		{
@@ -219,7 +226,7 @@ positive_response_lines: TOKEN_SERVER_STRING TOKEN_SERVER_NEWLINE
 				pop3_debug(debug_pop3_server, "failed to alloc positive response line data\n");
 				YYABORT;
 			}
-			memcpy(data, yylval.string.str, data_len);
+			memcpy(data, $2.str, data_len);
 			data[data_len] = '\0';
 		}
 		
@@ -231,7 +238,7 @@ positive_response_lines: TOKEN_SERVER_STRING TOKEN_SERVER_NEWLINE
 			YYABORT;
 		}
 		STAILQ_INSERT_TAIL(&$1, line, next);
-		STAILQ_CONCAT(&$$, &$1);
+		$$ = $1;
 	}
 	;
 
@@ -250,7 +257,7 @@ negative_response: TOKEN_SERVER_ERROR negative_response_line negative_response_m
 negative_response_line: TOKEN_SERVER_STRING TOKEN_SERVER_NEWLINE
 	{
 		char *data = NULL;
-		int data_len = yylval.string.str_len;
+		int data_len = $1.str_len;
 
 		if(data_len)
 		{
@@ -260,11 +267,16 @@ negative_response_line: TOKEN_SERVER_STRING TOKEN_SERVER_NEWLINE
 				pop3_debug(debug_pop3_server, "failed to alloc negative response line data\n");
 				YYABORT;
 			}
-			memcpy(data, yylval.string.str, data_len);
+			memcpy(data, $1.str, data_len);
 			data[data_len] = '\0';
 		}
 		$$.str = data;
 		$$.str_len = data_len;
+	}
+	| TOKEN_SERVER_NEWLINE
+	{
+		$$.str = NULL;
+		$$.str_len = 0;
 	}
 	;
 
@@ -380,6 +392,7 @@ int parse_pop3_server_stream(pop3_data_t *priv, const char *buf, size_t buf_len,
 
 	while(1)
 	{
+		memset(&value, 0, sizeof(value));
 		token = pop3_server_lex(&value, lexier);
 		if(token == TOKEN_SERVER_CONTINUE)
 			break;
