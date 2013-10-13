@@ -28,7 +28,7 @@ static int save_client_stream_context(yyscan_t yyscanner, int from_default);
 		yyout = stderr;								\
 	}
 
-#define ret(val)									\
+#define RETURN(val)									\
 	do												\
 	{												\
 		pop3_debug(debug_pop3_client,				\
@@ -38,6 +38,15 @@ static int save_client_stream_context(yyscan_t yyscanner, int from_default);
 			pop3_debug(debug_pop3_client,			\
 			"get text: %s\n",yytext);				\
 		return (val);								\
+	}while(0)
+
+#define GOTO(s)										\
+	do												\
+	{												\
+		pop3_debug(debug_pop3_client, 				\
+			"line %d goto state %s(%d)\n",			\
+			__LINE__, #s, s);						\
+		BEGIN s;									\
 	}while(0)
 %}
 
@@ -50,6 +59,7 @@ static int save_client_stream_context(yyscan_t yyscanner, int from_default);
 %option case-insensitive
 %option ansi-definitions
 %option noinput
+%option nounput
 %option noyyalloc
 %option noyyfree
 %option noyyrealloc
@@ -68,106 +78,93 @@ static int save_client_stream_context(yyscan_t yyscanner, int from_default);
 %x POP3_CLIENT_UIDL
 %x POP3_CLIENT_UNKNOWN
 
-SPACE	[ \t]+
+SPACE	[ \t]*
 NEWLINE	(\r)?\n
-BLANK	[ \r\n\t]
 WORD	[^ \r\n\t]+
+STRING	[^\r\n]+
 
 %%
 <INITIAL>{
 {SPACE}			{/*eat blank and tab in the front*/}
-"USER"{BLANK}	{unput(yytext[yyleng-1]); BEGIN POP3_CLIENT_USER; ret(TOKEN_CLIENT_USER);}
-"PASS"{BLANK}	{unput(yytext[yyleng-1]); BEGIN POP3_CLIENT_PASS; ret(TOKEN_CLIENT_PASS);}
-"APOP"{BLANK}	{unput(yytext[yyleng-1]); BEGIN POP3_CLIENT_APOP; ret(TOKEN_CLIENT_APOP);}
-"QUIT"{BLANK}	{unput(yytext[yyleng-1]); BEGIN POP3_CLIENT_QUIT; ret(TOKEN_CLIENT_QUIT);}
-"NOOP"{BLANK}	{unput(yytext[yyleng-1]); BEGIN POP3_CLIENT_NOOP; ret(TOKEN_CLIENT_NOOP);}
-"STAT"{BLANK}	{unput(yytext[yyleng-1]); BEGIN POP3_CLIENT_STAT; ret(TOKEN_CLIENT_STAT);}
-"LIST"{BLANK}	{unput(yytext[yyleng-1]); BEGIN POP3_CLIENT_LIST; ret(TOKEN_CLIENT_LIST);}
-"RETR"{BLANK}	{unput(yytext[yyleng-1]); BEGIN POP3_CLIENT_RETR; ret(TOKEN_CLIENT_RETR);}
-"DELE"{BLANK}	{unput(yytext[yyleng-1]); BEGIN POP3_CLIENT_DELE; ret(TOKEN_CLIENT_DELE);}
-"RSET"{BLANK}	{unput(yytext[yyleng-1]); BEGIN POP3_CLIENT_RSET; ret(TOKEN_CLIENT_RSET);}
-"TOP"{BLANK}	{unput(yytext[yyleng-1]); BEGIN POP3_CLIENT_TOP; ret(TOKEN_CLIENT_TOP);}
-"UIDL"{BLANK}	{unput(yytext[yyleng-1]); BEGIN POP3_CLIENT_UIDL; ret(TOKEN_CLIENT_UIDL);}
-{WORD}{BLANK}	{unput(yytext[yyleng-1]); BEGIN POP3_CLIENT_UNKNOWN; yylval->str=yytext; yylval->str_len=yyleng-1; ret(TOKEN_CLIENT_UNKNOWN);}
-{NEWLINE}		{yylval->str="null-line", yylval->str_len=sizeof("null-line")-1; ret(TOKEN_CLIENT_UNKNOWN);}
+{NEWLINE}		{/*eat newline*/}
+"USER"{SPACE}	{GOTO(POP3_CLIENT_USER); RETURN(TOKEN_CLIENT_USER);}
+"PASS"{SPACE}	{GOTO(POP3_CLIENT_PASS); RETURN(TOKEN_CLIENT_PASS);}
+"APOP"{SPACE}	{GOTO(POP3_CLIENT_APOP); RETURN(TOKEN_CLIENT_APOP);}
+"QUIT"{SPACE}	{GOTO(POP3_CLIENT_QUIT); RETURN(TOKEN_CLIENT_QUIT);}
+"NOOP"{SPACE}	{GOTO(POP3_CLIENT_NOOP); RETURN(TOKEN_CLIENT_NOOP);}
+"STAT"{SPACE}	{GOTO(POP3_CLIENT_STAT); RETURN(TOKEN_CLIENT_STAT);}
+"LIST"{SPACE}	{GOTO(POP3_CLIENT_LIST); RETURN(TOKEN_CLIENT_LIST);}
+"RETR"{SPACE}	{GOTO(POP3_CLIENT_RETR); RETURN(TOKEN_CLIENT_RETR);}
+"DELE"{SPACE}	{GOTO(POP3_CLIENT_DELE); RETURN(TOKEN_CLIENT_DELE);}
+"RSET"{SPACE}	{GOTO(POP3_CLIENT_RSET); RETURN(TOKEN_CLIENT_RSET);}
+"TOP"{SPACE}	{GOTO(POP3_CLIENT_TOP); RETURN(TOKEN_CLIENT_TOP);}
+"UIDL"{SPACE}	{GOTO(POP3_CLIENT_UIDL); RETURN(TOKEN_CLIENT_UIDL);}
+{WORD}{SPACE}	{GOTO(POP3_CLIENT_UNKNOWN); yylval->str=yytext; yylval->str_len=yyleng-1; RETURN(TOKEN_CLIENT_UNKNOWN);}
 }
 
 <POP3_CLIENT_USER>{
-{SPACE}			{/*eat all blank and tab*/}
-{WORD}			{yylval->str=yytext; yylval->str_len=yyleng; ret(TOKEN_CLIENT_STRING);}
-{NEWLINE}		{BEGIN INITIAL;}
+{STRING}		{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
+{NEWLINE}		{GOTO(INITIAL); RETURN(TOKEN_CLIENT_NEWLINE);}
 }
 
 <POP3_CLIENT_PASS>{
-{SPACE}			{/*eat all blank and tab*/}
-{WORD}			{yylval->str=yytext; yylval->str_len=yyleng; ret(TOKEN_CLIENT_STRING);}
-{NEWLINE}		{BEGIN INITIAL;}
+{STRING}		{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
+{NEWLINE}		{GOTO(INITIAL); RETURN(TOKEN_CLIENT_NEWLINE);}
 }
 
 <POP3_CLIENT_APOP>{
-{SPACE}			{/*eat all blank and tab*/}
-{WORD}			{yylval->str=yytext; yylval->str_len=yyleng; ret(TOKEN_CLIENT_STRING);}
-{NEWLINE}		{BEGIN INITIAL;}
+{STRING}		{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
+{NEWLINE}		{GOTO(INITIAL); RETURN(TOKEN_CLIENT_NEWLINE);}
 }
 
 <POP3_CLIENT_QUIT>{
-{SPACE}			{/*eat all blank and tab*/}
-{WORD}			{yylval->str=yytext; yylval->str_len=yyleng; ret(TOKEN_CLIENT_STRING);}
-{NEWLINE}		{BEGIN INITIAL;}
+{STRING}		{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
+{NEWLINE}		{GOTO(INITIAL); RETURN(TOKEN_CLIENT_NEWLINE);}
 }
 
 <POP3_CLIENT_NOOP>{
-{SPACE}			{/*eat all blank and tab*/}
-{WORD}			{yylval->str=yytext; yylval->str_len=yyleng; ret(TOKEN_CLIENT_STRING);}
-{NEWLINE}		{BEGIN INITIAL;}
+{STRING}		{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
+{NEWLINE}		{GOTO(INITIAL); RETURN(TOKEN_CLIENT_NEWLINE);}
 }
 
 <POP3_CLIENT_STAT>{
-{SPACE}			{/*eat all blank and tab*/}
-{WORD}			{yylval->str=yytext; yylval->str_len=yyleng; ret(TOKEN_CLIENT_STRING);}
-{NEWLINE}		{BEGIN INITIAL;}
+{STRING}		{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
+{NEWLINE}		{GOTO(INITIAL); RETURN(TOKEN_CLIENT_NEWLINE);}
 }
 
 <POP3_CLIENT_LIST>{
-{SPACE}			{/*eat all blank and tab*/}
-{WORD}			{yylval->str=yytext; yylval->str_len=yyleng; ret(TOKEN_CLIENT_STRING);}
-{NEWLINE}		{BEGIN INITIAL;}
+{STRING}		{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
+{NEWLINE}		{GOTO(INITIAL); RETURN(TOKEN_CLIENT_NEWLINE);}
 }
 
 <POP3_CLIENT_RETR>{
-{SPACE}			{/*eat all blank and tab*/}
-{WORD}			{yylval->str=yytext; yylval->str_len=yyleng; ret(TOKEN_CLIENT_STRING);}
-{NEWLINE}		{BEGIN INITIAL;}
+{STRING}		{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
+{NEWLINE}		{GOTO(INITIAL); RETURN(TOKEN_CLIENT_NEWLINE);}
 }
 
 <POP3_CLIENT_DELE>{
-{SPACE}			{/*eat all blank and tab*/}
-{WORD}			{yylval->str=yytext; yylval->str_len=yyleng; ret(TOKEN_CLIENT_STRING);}
-{NEWLINE}		{BEGIN INITIAL;}
+{STRING}		{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
+{NEWLINE}		{GOTO(INITIAL); RETURN(TOKEN_CLIENT_NEWLINE);}
 }
 
 <POP3_CLIENT_RSET>{
-{SPACE}			{/*eat all blank and tab*/}
-{WORD}			{yylval->str=yytext; yylval->str_len=yyleng; ret(TOKEN_CLIENT_STRING);}
-{NEWLINE}		{BEGIN INITIAL;}
+{STRING}		{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
+{NEWLINE}		{GOTO(INITIAL); RETURN(TOKEN_CLIENT_NEWLINE);}
 }
 
 <POP3_CLIENT_TOP>{
-{SPACE}			{/*eat all blank and tab*/}
-{WORD}			{yylval->str=yytext; yylval->str_len=yyleng; ret(TOKEN_CLIENT_STRING);}
-{NEWLINE}		{BEGIN INITIAL;}
+{STRING}		{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
+{NEWLINE}		{GOTO(INITIAL); RETURN(TOKEN_CLIENT_NEWLINE);}
 }
 
 <POP3_CLIENT_UIDL>{
-{SPACE}			{/*eat all blank and tab*/}
-{WORD}			{yylval->str=yytext; yylval->str_len=yyleng; ret(TOKEN_CLIENT_STRING);}
-{NEWLINE}		{BEGIN INITIAL;}
+{STRING}		{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
+{NEWLINE}		{GOTO(INITIAL); RETURN(TOKEN_CLIENT_NEWLINE);}
 }
 
 <POP3_CLIENT_UNKNOWN>{
-{SPACE}			{/*eat all blank and tab*/}
-{WORD}			{yylval->str=yytext; yylval->str_len=yyleng; ret(TOKEN_CLIENT_STRING);}
-{NEWLINE}		{BEGIN INITIAL;}
+{STRING}		{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
+{NEWLINE}		{GOTO(INITIAL); RETURN(TOKEN_CLIENT_NEWLINE);}
 }
 
 %%

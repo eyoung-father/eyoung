@@ -27,24 +27,25 @@
 		}																		\
 	}while(0)
 %}
-%token TOKEN_CLIENT_USER
-%token TOKEN_CLIENT_PASS
-%token TOKEN_CLIENT_APOP
+%token TOKEN_CLIENT_USER		"USER"
+%token TOKEN_CLIENT_PASS		"PASS"
+%token TOKEN_CLIENT_APOP		"APOP"
 
-%token TOKEN_CLIENT_QUIT
-%token TOKEN_CLIENT_NOOP
+%token TOKEN_CLIENT_QUIT		"QUIT"
+%token TOKEN_CLIENT_NOOP		"NOOP"
 
-%token TOKEN_CLIENT_STAT
-%token TOKEN_CLIENT_LIST
-%token TOKEN_CLIENT_RETR
-%token TOKEN_CLIENT_DELE
-%token TOKEN_CLIENT_RSET
-%token TOKEN_CLIENT_TOP
-%token TOKEN_CLIENT_UIDL
-%token TOKEN_CLIENT_UNKNOWN
-%token TOKEN_CLIENT_STRING
+%token TOKEN_CLIENT_STAT		"STAT"
+%token TOKEN_CLIENT_LIST		"LIST"
+%token TOKEN_CLIENT_RETR		"RETR"
+%token TOKEN_CLIENT_DELE		"DELE"
+%token TOKEN_CLIENT_RSET		"RSET"
+%token TOKEN_CLIENT_TOP			"TOP"
+%token TOKEN_CLIENT_UIDL		"UIDL"
+%token TOKEN_CLIENT_UNKNOWN		"-unknown-"
+%token TOKEN_CLIENT_STRING		"-string-"
 
-%token TOKEN_CLIENT_CONTINUE
+%token TOKEN_CLIENT_NEWLINE		"-newline-"
+%token TOKEN_CLIENT_CONTINUE	"-continue-"
 
 %union
 {
@@ -94,7 +95,7 @@ request_list:
 		pop3_data_t *data = (pop3_data_t*)priv_data;
 		STAILQ_INIT(&data->request_list);
 	}
-	| request_list request
+	| request_list request TOKEN_CLIENT_NEWLINE
 	{
 		pop3_data_t *data = (pop3_data_t*)priv_data;
 		STAILQ_INSERT_TAIL(&data->request_list, $2, next);

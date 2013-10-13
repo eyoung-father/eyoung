@@ -30,7 +30,7 @@ static int save_server_stream_context(yyscan_t yyscanner, int from_default);
 		yyout = stderr;								\
 	}
 
-#define ret(val)									\
+#define RETURN(val)									\
 	do												\
 	{												\
 		pop3_debug(debug_pop3_server,				\
@@ -42,6 +42,14 @@ static int save_server_stream_context(yyscan_t yyscanner, int from_default);
 		return (val);								\
 	}while(0)
 
+#define GOTO(s)										\
+	do												\
+	{												\
+		pop3_debug(debug_pop3_server, 				\
+			"line %d goto state %s(%d)\n",			\
+			__LINE__, #s, s);						\
+		BEGIN s;									\
+	}while(0)
 %}
 %option header-file="pop3_server_lex.h"
 %option outfile="pop3_server_lex.c"
@@ -52,6 +60,7 @@ static int save_server_stream_context(yyscan_t yyscanner, int from_default);
 %option case-insensitive
 %option ansi-definitions
 %option noinput
+%option nounput
 %option noyyalloc
 %option noyyfree
 %option noyyrealloc
@@ -62,50 +71,59 @@ static int save_server_stream_context(yyscan_t yyscanner, int from_default);
 
 SPACE	[ \t]*
 NEWLINE	(\r)?\n
-BLANK	[ \r\n\t]
 LINE	[^\r\n]*
 OK		\+OK
 ERR		\-ERR
+EOB		{SPACE}\.{SPACE}{NEWLINE}
 %%
 <INITIAL>{
-{SPACE}			{/*eat blank and tab in the front*/}
-{OK}{BLANK}		{unput(yytext[yyleng-1]); BEGIN POP3_SERVER_POSITIVE_LINE; ret(TOKEN_SERVER_OK);}
-{ERR}{BLANK}	{unput(yytext[yyleng-1]); BEGIN POP3_SERVER_NEGATIVE_LINE; ret(TOKEN_SERVER_ERROR);}
+{SPACE}			{
+					/*eat blank and tab in the front*/
+				}
+{NEWLINE}		{
+					/*eat newline in the front*/
+				}
+{OK}{SPACE}		{
+					GOTO(POP3_SERVER_POSITIVE_LINE); 
+					RETURN(TOKEN_SERVER_OK);
+				}
+{ERR}{SPACE}	{
+					GOTO(POP3_SERVER_NEGATIVE_LINE); 
+					RETURN(TOKEN_SERVER_ERROR);
+				}
+.				{
+					RETURN(-1);
+				}
 }
 
 <POP3_SERVER_NEGATIVE_LINE>{
-{LINE}{NEWLINE}	{
-					char *ptr = yytext;
-					int len = yyleng;
-					for(; isblank(*ptr); ptr++, len--);
-					yylval->string.str = ptr;
-
-					for(; len>0 && isspace(ptr[len-1]); len--);
-					yylval->string.str_len = len;
-					BEGIN INITIAL;
-					ret(TOKEN_SERVER_STRING);
+{LINE}			{
+					yylval->string.str = yytext;
+					yylval->string.str_len = yyleng;
+					RETURN(TOKEN_SERVER_STRING);
+				}
+{NEWLINE}		{
+					GOTO(INITIAL);
+					RETURN(TOKEN_SERVER_NEWLINE);
+				}
+.				{
+					RETURN(-1);
 				}
 }
 
 <POP3_SERVER_POSITIVE_LINE>{
-{LINE}{NEWLINE}	{
-					char *ptr = yytext;
-					int len = yyleng;
-					for(; isblank(*ptr); ptr++, len--);
-					yylval->string.str = ptr;
-
-					for(; len>0 && isspace(ptr[len-1]); len--);
-					yylval->string.str_len = len;
-
+{LINE}			{
+					yylval->string.str = yytext;
+					yylval->string.str_len = yyleng;
+					RETURN(TOKEN_SERVER_STRING);
+				}
+{NEWLINE}		{
 					pop3_data_t *priv_data = (pop3_data_t*)pop3_server_get_extra(yyscanner);
 					assert(priv_data != NULL);
 
 					pop3_request_t *req = STAILQ_FIRST(&priv_data->request_list);
 					if(!req)
-					{
-						BEGIN INITIAL;
-						ret(TOKEN_SERVER_STRING);
-					}
+						GOTO(INITIAL);
 					else
 					{
 						if( (req->req_code==POP3_COMMAND_LIST && !req->list.mail) ||
@@ -113,30 +131,32 @@ ERR		\-ERR
 							(req->req_code==POP3_COMMAND_TOP)					  ||
 							(req->req_code==POP3_COMMAND_RETR) 
 						  )
-						{
-							BEGIN POP3_SERVER_POSITIVE_BODY;
-							ret(TOKEN_SERVER_STRING);
-						}
+							GOTO(POP3_SERVER_POSITIVE_BODY);
 						else
-						{
-							BEGIN INITIAL;
-							ret(TOKEN_SERVER_STRING);
-						}
+							GOTO(INITIAL);
 					}
+					RETURN(TOKEN_SERVER_NEWLINE);
+				}
+.				{
+					RETURN(-1);
 				}
 }
 
 <POP3_SERVER_POSITIVE_BODY>{
-{SPACE}\.{SPACE}{NEWLINE}	{BEGIN INITIAL; ret(TOKEN_SERVER_DOT);}
-{LINE}{NEWLINE}	{
-					char *ptr = yytext;
-					int len = yyleng;
-					for(; isblank(*ptr); ptr++, len--);
-					yylval->string.str = ptr;
-
-					for(; len>0 && isspace(ptr[len-1]); len--);
-					yylval->string.str_len = len;
-					ret(TOKEN_SERVER_STRING);
+{EOB}			{
+					GOTO(INITIAL); 
+					RETURN(TOKEN_SERVER_EOB);
+				}
+{LINE}			{
+					yylval->string.str = yytext;
+					yylval->string.str_len = yyleng;
+					RETURN(TOKEN_SERVER_STRING);
+				}
+{NEWLINE}		{
+					RETURN(TOKEN_SERVER_NEWLINE);
+				}
+.				{
+					RETURN(-1);
 				}
 }
 %%

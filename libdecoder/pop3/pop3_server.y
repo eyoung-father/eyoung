@@ -33,12 +33,13 @@ static void pop3_do_state_transfer(pop3_data_t *priv_data);
 	}while(0)
 %}
 
-%token TOKEN_SERVER_DOT
-%token TOKEN_SERVER_OK
-%token TOKEN_SERVER_ERROR
-%token TOKEN_SERVER_STRING
+%token TOKEN_SERVER_EOB			"."
+%token TOKEN_SERVER_OK			"+OK"
+%token TOKEN_SERVER_ERROR		"-ERR"
+%token TOKEN_SERVER_STRING		"-string-"
 
-%token TOKEN_SERVER_CONTINUE
+%token TOKEN_SERVER_NEWLINE		"-newline-"
+%token TOKEN_SERVER_CONTINUE	"-continue-"
 
 %debug
 %verbose
@@ -144,7 +145,7 @@ positive_response: TOKEN_SERVER_OK positive_response_line positive_response_mess
 	}
 	;
 
-positive_response_line: TOKEN_SERVER_STRING
+positive_response_line: TOKEN_SERVER_STRING TOKEN_SERVER_NEWLINE
 	{
 		char *data = NULL;
 		int data_len = yylval.string.str_len;
@@ -169,17 +170,17 @@ positive_response_message:
 	{
 		STAILQ_INIT(&$$);
 	}
-	| TOKEN_SERVER_DOT
+	| TOKEN_SERVER_EOB
 	{
 		STAILQ_INIT(&$$);
 	}
-	| positive_response_lines TOKEN_SERVER_DOT
+	| positive_response_lines TOKEN_SERVER_EOB
 	{
 		STAILQ_CONCAT(&$$, &$1);
 	}
 	;
 
-positive_response_lines: TOKEN_SERVER_STRING
+positive_response_lines: TOKEN_SERVER_STRING TOKEN_SERVER_NEWLINE
 	{
 		char *data = NULL;
 		int data_len = yylval.string.str_len;
@@ -205,7 +206,7 @@ positive_response_lines: TOKEN_SERVER_STRING
 		}
 		STAILQ_INSERT_TAIL(&$$, line, next);
 	}
-	| positive_response_lines TOKEN_SERVER_STRING
+	| positive_response_lines TOKEN_SERVER_STRING TOKEN_SERVER_NEWLINE
 	{
 		char *data = NULL;
 		int data_len = yylval.string.str_len;
@@ -246,7 +247,7 @@ negative_response: TOKEN_SERVER_ERROR negative_response_line negative_response_m
 	}
 	;
 
-negative_response_line: TOKEN_SERVER_STRING
+negative_response_line: TOKEN_SERVER_STRING TOKEN_SERVER_NEWLINE
 	{
 		char *data = NULL;
 		int data_len = yylval.string.str_len;
@@ -271,8 +272,8 @@ negative_response_message:
 	| negative_response_lines
 	;
 
-negative_response_lines: TOKEN_SERVER_STRING
-	| negative_response_lines TOKEN_SERVER_STRING
+negative_response_lines: TOKEN_SERVER_STRING TOKEN_SERVER_NEWLINE
+	| negative_response_lines TOKEN_SERVER_STRING TOKEN_SERVER_NEWLINE
 	;
 %%
 static int pop3_session_add_command(pop3_data_t *priv_data)
