@@ -169,8 +169,10 @@ make_sub:
 	@for sub in $(SUB_DIR) ; do make -C $$sub ; done
 
 copy_target:
+ifneq ($(TARGET), obj/)
 	@if [ ! -d $(INSTALL_DIR) ]	; then /bin/rm -rf $(INSTALL_DIR) ; mkdir $(INSTALL_DIR) ; fi
 	/bin/cp -rf -p $(TARGET) $(INSTALL_DIR)
+endif
 
 ifeq ($(BUILD_TYPE), obj)
 $(TARGET): $(OBJS) $(CPPOBJS) $(SUB_MOD_OBJS)
