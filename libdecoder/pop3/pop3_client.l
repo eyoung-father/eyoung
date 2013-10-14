@@ -81,7 +81,6 @@ static int save_client_stream_context(yyscan_t yyscanner, int from_default);
 SPACE	[ \t]*
 NEWLINE	(\r)?\n
 WORD	[^ \r\n\t]+
-STRING	[^\r\n]+
 
 %%
 <INITIAL>{
@@ -103,67 +102,67 @@ STRING	[^\r\n]+
 }
 
 <POP3_CLIENT_USER>{
-{STRING}		{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
+{WORD}			{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
 {NEWLINE}		{GOTO(INITIAL); RETURN(TOKEN_CLIENT_NEWLINE);}
 }
 
 <POP3_CLIENT_PASS>{
-{STRING}		{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
+{WORD}			{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
 {NEWLINE}		{GOTO(INITIAL); RETURN(TOKEN_CLIENT_NEWLINE);}
 }
 
 <POP3_CLIENT_APOP>{
-{STRING}		{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
+{WORD}			{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
 {NEWLINE}		{GOTO(INITIAL); RETURN(TOKEN_CLIENT_NEWLINE);}
 }
 
 <POP3_CLIENT_QUIT>{
-{STRING}		{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
+{WORD}			{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
 {NEWLINE}		{GOTO(INITIAL); RETURN(TOKEN_CLIENT_NEWLINE);}
 }
 
 <POP3_CLIENT_NOOP>{
-{STRING}		{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
+{WORD}			{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
 {NEWLINE}		{GOTO(INITIAL); RETURN(TOKEN_CLIENT_NEWLINE);}
 }
 
 <POP3_CLIENT_STAT>{
-{STRING}		{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
+{WORD}			{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
 {NEWLINE}		{GOTO(INITIAL); RETURN(TOKEN_CLIENT_NEWLINE);}
 }
 
 <POP3_CLIENT_LIST>{
-{STRING}		{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
+{WORD}			{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
 {NEWLINE}		{GOTO(INITIAL); RETURN(TOKEN_CLIENT_NEWLINE);}
 }
 
 <POP3_CLIENT_RETR>{
-{STRING}		{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
+{WORD}			{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
 {NEWLINE}		{GOTO(INITIAL); RETURN(TOKEN_CLIENT_NEWLINE);}
 }
 
 <POP3_CLIENT_DELE>{
-{STRING}		{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
+{WORD}			{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
 {NEWLINE}		{GOTO(INITIAL); RETURN(TOKEN_CLIENT_NEWLINE);}
 }
 
 <POP3_CLIENT_RSET>{
-{STRING}		{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
+{WORD}			{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
 {NEWLINE}		{GOTO(INITIAL); RETURN(TOKEN_CLIENT_NEWLINE);}
 }
 
 <POP3_CLIENT_TOP>{
-{STRING}		{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
+{WORD}			{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
 {NEWLINE}		{GOTO(INITIAL); RETURN(TOKEN_CLIENT_NEWLINE);}
 }
 
 <POP3_CLIENT_UIDL>{
-{STRING}		{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
+{WORD}			{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
 {NEWLINE}		{GOTO(INITIAL); RETURN(TOKEN_CLIENT_NEWLINE);}
 }
 
 <POP3_CLIENT_UNKNOWN>{
-{STRING}		{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
+{WORD}			{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
 {NEWLINE}		{GOTO(INITIAL); RETURN(TOKEN_CLIENT_NEWLINE);}
 }
 
