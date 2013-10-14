@@ -57,7 +57,7 @@ void ey_free(void* ptr)
 	
 	if(PTR2TAIL(ptr)->magic != MEM_MAGIC)
 	{
-		fprintf(stderr, "memory overwrite, magic %lu\n", PTR2TAIL(ptr)->magic);
+		fprintf(stderr, "memory overwrite, magic %p %lu\n", &PTR2TAIL(ptr)->magic, PTR2TAIL(ptr)->magic);
 		*(int*)0 = 0;
 	}
 	free(PTR2HEAD(ptr));
