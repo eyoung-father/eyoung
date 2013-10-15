@@ -157,7 +157,9 @@ COMPILE_CPP = $(CPP) $(CPPFLAGS_GLOBAL) $(CPPFLAGS_LOCAL) -MD -c -o $@ $<
 all: $(OBJ_DIR) make_sub $(TARGET) copy_target
 
 $(OBJ_DIR):
+ifneq ($(TARGET), obj/)
 	mkdir $(OBJ_DIR)
+endif
 
 $(OBJ_DIR)/%.o: %.c
 	$(COMPILE)
@@ -194,7 +196,8 @@ $(TARGET): $(OBJS) $(CPPOBJS) $(SUB_MOD_OBJS)
 	$(CC) -shared -o $(TARGET) $(OBJS) $(CPPOBJS) $(SUB_MOD_OBJS)
 endif
 
-ifeq ($(BUILD_TYPE), obj)
+ifeq ($(BUILD_TYPE), pesudo)
+$(TARGET): $(SUB_MOD_OBJS)
 endif
 
 #
