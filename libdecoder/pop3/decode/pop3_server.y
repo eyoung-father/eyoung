@@ -123,16 +123,6 @@ positive_response: TOKEN_SERVER_OK positive_response_line positive_response_mess
 		}
 		$$ = res;
 	}
-	| TOKEN_SERVER_OK positive_response_line
-	{
-		pop3_response_t *res = pop3_alloc_response(POP3_RESPONSE_OK, $2.str, $2.str_len, NULL);
-		if(!res)
-		{
-			pop3_debug(debug_pop3_server, "failed to alloc positive response\n");
-			YYABORT;
-		}
-		$$ = res;
-	}
 	;
 
 positive_response_line: TOKEN_SERVER_STRING TOKEN_SERVER_NEWLINE
@@ -162,7 +152,10 @@ positive_response_line: TOKEN_SERVER_STRING TOKEN_SERVER_NEWLINE
 	;
 
 positive_response_message: 
-	TOKEN_SERVER_EOB
+	{
+		STAILQ_INIT(&$$);
+	}
+	| TOKEN_SERVER_EOB
 	{
 		STAILQ_INIT(&$$);
 	}
