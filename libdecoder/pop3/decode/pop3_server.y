@@ -228,7 +228,7 @@ positive_response_lines: TOKEN_SERVER_STRING TOKEN_SERVER_NEWLINE
 	}
 	;
 
-negative_response: TOKEN_SERVER_ERROR negative_response_line negative_response_message
+negative_response: TOKEN_SERVER_ERROR negative_response_line
 	{
 		pop3_response_t *res = pop3_alloc_response(POP3_RESPONSE_ERROR, $2.str, $2.str_len, NULL);
 		if(!res)
@@ -264,14 +264,6 @@ negative_response_line: TOKEN_SERVER_STRING TOKEN_SERVER_NEWLINE
 		$$.str = NULL;
 		$$.str_len = 0;
 	}
-	;
-
-negative_response_message:
-	| negative_response_lines
-	;
-
-negative_response_lines: TOKEN_SERVER_STRING TOKEN_SERVER_NEWLINE
-	| negative_response_lines TOKEN_SERVER_STRING TOKEN_SERVER_NEWLINE
 	;
 %%
 int parse_pop3_server_stream(pop3_data_t *priv, const char *buf, size_t buf_len, int last_frag)
