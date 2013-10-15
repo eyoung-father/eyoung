@@ -24,30 +24,6 @@ int pop3_do_rule_detect(struct pop3_data *priv_data, const char* element_name, v
 	return 0;
 }
 
-int pop3_add_command(pop3_data_t *priv_data)
-{
-	pop3_response_t *res = STAILQ_FIRST(&priv_data->response_list);
-	pop3_request_t *req = STAILQ_FIRST(&priv_data->request_list);
-	assert(res != NULL);
-
-	pop3_cmd_t *cmd = pop3_alloc_cmd(req, res);
-	if(!cmd)
-	{
-		pop3_debug(debug_pop3_server, "failed to alloc command\n");
-		return 1;
-	}
-
-	if(res)
-		STAILQ_REMOVE_HEAD(&priv_data->response_list, next);
-	if(req)
-	{
-		STAILQ_REMOVE_HEAD(&priv_data->request_list, next);
-		pop3_debug(debug_pop3_server, "<==========dequeue pop3 request\n");
-	}
-	STAILQ_INSERT_TAIL(&priv_data->cmd_list, cmd, next);
-	return 0;
-}
-
 int pop3_state_check(pop3_data_t *priv_data)
 {
 	static int check_table[POP3_STATE_MAX][POP3_COMMAND_MAX] = 

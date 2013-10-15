@@ -31,6 +31,7 @@ struct pop3_cmd;
 struct pop3_cmd_list;
 extern struct pop3_cmd* pop3_alloc_cmd(struct pop3_request *req, struct pop3_response *res);
 extern void pop3_free_cmd_list(struct pop3_cmd_list *head);
+extern int pop3_add_command(struct pop3_data *priv_data);
 
 #include <stdlib.h>
 #include "ey_memory.h"
