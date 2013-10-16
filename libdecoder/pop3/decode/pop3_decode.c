@@ -20,7 +20,7 @@ pop3_decode_t pop3_decode_create(int greedy)
 	priv_data = pop3_alloc_priv_data(greedy);
 	if(!priv_data)
 	{
-		pop3_debug(debug_pop3_client||debug_pop3_server, "failed to alloc pop3 private data\n");
+		pop3_debug(debug_pop3_mem, "failed to alloc pop3 private data\n");
 		return NULL;
 	}
 	

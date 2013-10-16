@@ -31,11 +31,11 @@ static int save_client_stream_context(yyscan_t yyscanner, int from_default);
 #define RETURN(val)									\
 	do												\
 	{												\
-		pop3_debug(debug_pop3_client,				\
+		pop3_debug(debug_pop3_client_lexer,			\
 			"line %d get token %s\n",				\
 			__LINE__, #val);						\
 		if(val==TOKEN_CLIENT_STRING)				\
-			pop3_debug(debug_pop3_client,			\
+			pop3_debug(debug_pop3_client_lexer,		\
 			"get text: %s\n",yytext);				\
 		return (val);								\
 	}while(0)
@@ -43,7 +43,7 @@ static int save_client_stream_context(yyscan_t yyscanner, int from_default);
 #define GOTO(s)										\
 	do												\
 	{												\
-		pop3_debug(debug_pop3_client, 				\
+		pop3_debug(debug_pop3_client_lexer, 		\
 			"line %d goto state %s(%d)\n",			\
 			__LINE__, #s, s);						\
 		BEGIN s;									\
@@ -197,7 +197,7 @@ struct yy_buffer_state* pop3_client_scan_stream(const char *new_buf, size_t new_
 	buf = (char *)pop3_client_alloc(n, scanner);
 	if (!buf)
 	{
-		pop3_debug(debug_pop3_client, "out of dynamic memory in pop3_client_scan_stream()\n");
+		pop3_debug(debug_pop3_client_lexer, "out of dynamic memory in pop3_client_scan_stream()\n");
 		return NULL;
 	}
 
@@ -208,12 +208,12 @@ struct yy_buffer_state* pop3_client_scan_stream(const char *new_buf, size_t new_
 		memcpy(buf+last_buf_len, new_buf, new_buf_len);
 
 	buf[_yybytes_len] = buf[_yybytes_len+1] = YY_END_OF_BUFFER_CHAR;
-	pop3_debug(debug_pop3_client, "[POP3 CLIENT]: %s\n", buf);
+	pop3_debug(debug_pop3_client_lexer, "[POP3 CLIENT]: %s\n", buf);
 
 	b = pop3_client__scan_buffer(buf, n, scanner);
 	if ( ! b )
 	{
-		pop3_debug(debug_pop3_client, "bad buffer in pop3_client__scan_bytes()\n");
+		pop3_debug(debug_pop3_client_lexer, "bad buffer in pop3_client__scan_bytes()\n");
 		pop3_client_free(buf, scanner);
 		return NULL;
 	}
@@ -244,7 +244,7 @@ static int save_client_stream_context(yyscan_t yyscanner, int from_default)
 
 	if(!priv || priv->request_parser.last_frag || (!from_default && !priv->request_parser.greedy))
 	{
-		pop3_debug(debug_pop3_client, "No need to save stream context, priv: %p, last_frag: %d, from_default: %d\n",
+		pop3_debug(debug_pop3_client_lexer, "No need to save stream context, priv: %p, last_frag: %d, from_default: %d\n",
 			priv, priv?priv->request_parser.last_frag:0, from_default);
 		return 0;
 	}
@@ -252,18 +252,18 @@ static int save_client_stream_context(yyscan_t yyscanner, int from_default)
 	len = from_default?yyleng-1:yyleng;
 	if(!len)
 	{
-		pop3_debug(debug_pop3_client, "Exit save stream context for ZERO length yytext\n");
+		pop3_debug(debug_pop3_client_lexer, "Exit save stream context for ZERO length yytext\n");
 		return 1;
 	}
 
 	priv->request_parser.saved = pop3_client_alloc(len, yyg);
 	if(!priv->request_parser.saved)
 	{
-		pop3_debug(debug_pop3_client, "out of memory while saving context\n");
+		pop3_debug(debug_pop3_client_lexer, "out of memory while saving context\n");
 		return 0;
 	}
 	memcpy(priv->request_parser.saved, yytext, len);
 	priv->request_parser.saved_len = len;
-	pop3_debug(debug_pop3_client, "Save stream context, string: %s, len: %d\n", yytext, len);
+	pop3_debug(debug_pop3_client_lexer, "Save stream context, string: %s, len: %d\n", yytext, len);
 	return 1;
 }

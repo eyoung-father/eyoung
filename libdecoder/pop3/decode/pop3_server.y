@@ -23,7 +23,7 @@
 	{																			\
 		if(pop3_do_rule_detect((pop3_data_t*)priv_data, name, (void*)val) < 0)	\
 		{																		\
-			pop3_attack(debug_pop3_ips, "find attack by signature\n");			\
+			pop3_attack(debug_pop3_detect, "find attack by signature\n");		\
 			YYABORT;															\
 		}																		\
 	}while(0)
@@ -111,7 +111,7 @@ positive_response: TOKEN_SERVER_OK positive_response_line
 		pop3_response_t *res = pop3_alloc_response(POP3_RESPONSE_OK, $2.str, $2.str_len, NULL);
 		if(!res)
 		{
-			pop3_debug(debug_pop3_server, "failed to alloc positive response\n");
+			pop3_debug(debug_pop3_server_parser, "failed to alloc positive response\n");
 			YYABORT;
 		}
 		STAILQ_INSERT_TAIL(&data->response_list, res, next);
@@ -119,7 +119,7 @@ positive_response: TOKEN_SERVER_OK positive_response_line
 		/*DO make pop3 command pair*/
 		if(pop3_add_command(data))
 		{
-			pop3_debug(debug_pop3_server, "add pop3 command failed\n");
+			pop3_debug(debug_pop3_server_parser, "add pop3 command failed\n");
 			YYABORT;
 		}
 		$<response>$ = res;
@@ -141,7 +141,7 @@ positive_response_line: TOKEN_SERVER_STRING
 			data = (char*)pop3_malloc(data_len + 1);
 			if(!data)
 			{
-				pop3_debug(debug_pop3_server, "failed to alloc positive response line data\n");
+				pop3_debug(debug_pop3_server_parser, "failed to alloc positive response line data\n");
 				YYABORT;
 			}
 			memcpy(data, $1.str, data_len);
@@ -181,7 +181,7 @@ positive_response_lines: TOKEN_SERVER_STRING TOKEN_SERVER_NEWLINE
 			data = (char*)pop3_malloc(data_len + 1);
 			if(!data)
 			{
-				pop3_debug(debug_pop3_server, "failed to alloc positive response line data\n");
+				pop3_debug(debug_pop3_server_parser, "failed to alloc positive response line data\n");
 				YYABORT;
 			}
 			memcpy(data, $1.str, data_len);
@@ -191,7 +191,7 @@ positive_response_lines: TOKEN_SERVER_STRING TOKEN_SERVER_NEWLINE
 		pop3_line_t *line = pop3_alloc_response_line(data, data_len);
 		if(!line)
 		{
-			pop3_debug(debug_pop3_server, "failed to alloc positive response line\n");
+			pop3_debug(debug_pop3_server_parser, "failed to alloc positive response line\n");
 			pop3_free(data);
 			YYABORT;
 		}
@@ -208,7 +208,7 @@ positive_response_lines: TOKEN_SERVER_STRING TOKEN_SERVER_NEWLINE
 			data = (char*)pop3_malloc(data_len + 1);
 			if(!data)
 			{
-				pop3_debug(debug_pop3_server, "failed to alloc positive response line data\n");
+				pop3_debug(debug_pop3_server_parser, "failed to alloc positive response line data\n");
 				YYABORT;
 			}
 			memcpy(data, $2.str, data_len);
@@ -218,7 +218,7 @@ positive_response_lines: TOKEN_SERVER_STRING TOKEN_SERVER_NEWLINE
 		pop3_line_t *line = pop3_alloc_response_line(data, data_len);
 		if(!line)
 		{
-			pop3_debug(debug_pop3_server, "failed to alloc positive response line\n");
+			pop3_debug(debug_pop3_server_parser, "failed to alloc positive response line\n");
 			pop3_free(data);
 			YYABORT;
 		}
@@ -233,7 +233,7 @@ negative_response: TOKEN_SERVER_ERROR negative_response_line
 		pop3_response_t *res = pop3_alloc_response(POP3_RESPONSE_ERROR, $2.str, $2.str_len, NULL);
 		if(!res)
 		{
-			pop3_debug(debug_pop3_server, "failed to alloc negative response\n");
+			pop3_debug(debug_pop3_server_parser, "failed to alloc negative response\n");
 			YYABORT;
 		}
 		STAILQ_INSERT_TAIL(&data->response_list, res, next);
@@ -241,7 +241,7 @@ negative_response: TOKEN_SERVER_ERROR negative_response_line
 		/*DO make pop3 command pair*/
 		if(pop3_add_command(data))
 		{
-			pop3_debug(debug_pop3_server, "add pop3 command failed\n");
+			pop3_debug(debug_pop3_server_parser, "add pop3 command failed\n");
 			YYABORT;
 		}
 		$<response>$ = res;
@@ -262,7 +262,7 @@ negative_response_line: TOKEN_SERVER_STRING
 			data = (char*)pop3_malloc(data_len + 1);
 			if(!data)
 			{
-				pop3_debug(debug_pop3_server, "failed to alloc negative response line data\n");
+				pop3_debug(debug_pop3_server_parser, "failed to alloc negative response line data\n");
 				YYABORT;
 			}
 			memcpy(data, $1.str, data_len);
@@ -286,12 +286,12 @@ int parse_pop3_server_stream(pop3_data_t *priv, const char *buf, size_t buf_len,
 	int token = 0, parser_ret = 0;
 	POP3_SERVER_STYPE value;
 
-	yydebug = debug_pop3_server;
+	yydebug = debug_pop3_server_parser;
 	priv->response_parser.last_frag = last_frag;
 	input = pop3_server_scan_stream(buf, buf_len, priv);
 	if(!input)
 	{
-		pop3_debug(debug_pop3_server, "create pop3 server stream buffer failed\n");
+		pop3_debug(debug_pop3_server_parser, "create pop3 server stream buffer failed\n");
 		return 1;
 	}
 
@@ -309,7 +309,7 @@ int parse_pop3_server_stream(pop3_data_t *priv, const char *buf, size_t buf_len,
 
 	if(parser_ret != YYPUSH_MORE && parser_ret != 0)
 	{
-		pop3_debug(debug_pop3_server, "find error while parsing pop3 server stream\n");
+		pop3_debug(debug_pop3_server_parser, "find error while parsing pop3 server stream\n");
 		return 2;
 	}
 	return 0;

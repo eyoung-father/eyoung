@@ -8,19 +8,19 @@
 
 int pop3_do_weak_password_check(struct pop3_data *priv_data)
 {
-	pop3_debug(debug_pop3_ips, "do weak password check\n");
+	pop3_debug(debug_pop3_detect, "do weak password check\n");
 	return 0;
 }
 
 int pop3_do_brute_force_check(struct pop3_data *priv_data)
 {
-	pop3_debug(debug_pop3_ips, "do auth brute force check\n");
+	pop3_debug(debug_pop3_detect, "do auth brute force check\n");
 	return 0;
 }
 
 int pop3_do_rule_detect(struct pop3_data *priv_data, const char* element_name, void *element_data)
 {
-	pop3_debug(debug_pop3_ips, "do signature check for %s\n", element_name);
+	pop3_debug(debug_pop3_detect, "do signature check for %s\n", element_name);
 	return 0;
 }
 
@@ -41,7 +41,7 @@ int pop3_state_check(pop3_data_t *priv_data)
 	if(req)
 	{
 		assert((unsigned int)req->req_code < (unsigned int)POP3_COMMAND_MAX);
-		pop3_debug(debug_pop3_client, "current state: %s, current req: %s, check result: %s\n",
+		pop3_debug(debug_pop3_detect, "current state: %s, current req: %s, check result: %s\n",
 			pop3_state_name(priv_data->state),
 			pop3_req_type_name(req->req_code),
 			check_table[priv_data->state][req->req_code]?"TRUE":"FALSE");
@@ -82,12 +82,12 @@ void pop3_state_transfer(pop3_data_t *priv_data)
 	{
 		assert((unsigned int)req->req_code < (unsigned int)POP3_COMMAND_MAX);
 		int new_state = transfer_table[req->req_code][priv_data->state];
-		pop3_debug(debug_pop3_server, "transfer state from %s to %s\n", pop3_state_name(priv_data->state), pop3_state_name(new_state));
+		pop3_debug(debug_pop3_detect, "transfer state from %s to %s\n", pop3_state_name(priv_data->state), pop3_state_name(new_state));
 		priv_data->state = new_state;
 	}
 	else if(priv_data->state == POP3_STATE_INIT)
 	{
-		pop3_debug(debug_pop3_server, "transfer state from %s to %s\n", pop3_state_name(POP3_STATE_INIT), pop3_state_name(POP3_STATE_AUTHORIZATION));
+		pop3_debug(debug_pop3_detect, "transfer state from %s to %s\n", pop3_state_name(POP3_STATE_INIT), pop3_state_name(POP3_STATE_AUTHORIZATION));
 		priv_data->state = POP3_STATE_AUTHORIZATION;
 	}
 }

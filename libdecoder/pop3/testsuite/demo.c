@@ -96,9 +96,12 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 	pop3_decode_init();
-	debug_pop3_server = 1;
-	debug_pop3_client = 1;
+	debug_pop3_server_lexer = 1;
+	debug_pop3_server_parser = 1;
+	debug_pop3_client_lexer = 1;
+	debug_pop3_client_parser = 1;
 	debug_pop3_mem = 1;
+	debug_pop3_detect = 1;
 	ret = parse_pop3_file(argv[1]);
 	pop3_decode_finit();
 
