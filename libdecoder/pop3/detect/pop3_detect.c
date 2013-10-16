@@ -6,26 +6,27 @@
 #include "pop3_util.h"
 #include "pop3_mem.h"
 
-int pop3_do_weak_password_check(struct pop3_data *priv_data)
+int pop3_do_weak_password_check(void *priv_data)
 {
 	pop3_debug(debug_pop3_detect, "do weak password check\n");
 	return 0;
 }
 
-int pop3_do_brute_force_check(struct pop3_data *priv_data)
+int pop3_do_brute_force_check(void *priv_data)
 {
 	pop3_debug(debug_pop3_detect, "do auth brute force check\n");
 	return 0;
 }
 
-int pop3_do_rule_detect(struct pop3_data *priv_data, const char* element_name, void *element_data)
+int pop3_do_rule_detect(void *priv_data, const char* element_name, void *element_data)
 {
 	pop3_debug(debug_pop3_detect, "do signature check for %s\n", element_name);
 	return 0;
 }
 
-int pop3_state_check(pop3_data_t *priv_data)
+int pop3_state_check(void *link)
 {
+	pop3_data_t *priv_data = (pop3_data_t*)link;
 	static int check_table[POP3_STATE_MAX][POP3_COMMAND_MAX] = 
 	{
 				/*USER, PASS, APOP, LIST, RETR, DELE, UIDL, TOP, STAT, QUIT, NOOP, RSET, UNKNOWN*/
@@ -54,8 +55,9 @@ int pop3_state_check(pop3_data_t *priv_data)
 	return 1;
 }
 
-void pop3_state_transfer(pop3_data_t *priv_data)
+void pop3_state_transfer(void *link)
 {
+	pop3_data_t *priv_data = (pop3_data_t*)link;
 	static int transfer_table[POP3_COMMAND_MAX][POP3_STATE_MAX] = 
 	{
 				/*POP3_STATE_INIT		POP3_STATE_AUTHORIZATION		POP3_STATE_TRANSACTION		POP3_STATE_UPDATE*/
