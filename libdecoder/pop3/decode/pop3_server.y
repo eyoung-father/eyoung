@@ -29,13 +29,13 @@
 	}while(0)
 %}
 
-%token TOKEN_SERVER_EOB			"."
-%token TOKEN_SERVER_OK			"+OK"
-%token TOKEN_SERVER_ERROR		"-ERR"
-%token TOKEN_SERVER_STRING		"-string-"
+%token TOKEN_SERVER_EOB
+%token TOKEN_SERVER_OK
+%token TOKEN_SERVER_ERROR
+%token TOKEN_SERVER_STRING
 
-%token TOKEN_SERVER_NEWLINE		"-newline-"
-%token TOKEN_SERVER_CONTINUE	"-continue-"
+%token TOKEN_SERVER_NEWLINE
+%token TOKEN_SERVER_CONTINUE
 
 %debug
 %verbose
