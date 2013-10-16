@@ -41,6 +41,10 @@ int pop3_state_check(pop3_data_t *priv_data)
 	if(req)
 	{
 		assert((unsigned int)req->req_code < (unsigned int)POP3_COMMAND_MAX);
+		pop3_debug(debug_pop3_client, "current state: %s, current req: %s, check result: %s\n",
+			pop3_state_name(priv_data->state),
+			pop3_req_type_name(req->req_code),
+			check_table[priv_data->state][req->req_code]?"TRUE":"FALSE");
 		return check_table[priv_data->state][req->req_code];
 	}
 	else if(priv_data->state == POP3_STATE_INIT)
@@ -78,12 +82,12 @@ void pop3_state_transfer(pop3_data_t *priv_data)
 	{
 		assert((unsigned int)req->req_code < (unsigned int)POP3_COMMAND_MAX);
 		int new_state = transfer_table[req->req_code][priv_data->state];
-		pop3_debug(debug_pop3_server, "transfer state from %d to %d\n", priv_data->state, new_state);
+		pop3_debug(debug_pop3_server, "transfer state from %s to %s\n", pop3_state_name(priv_data->state), pop3_state_name(new_state));
 		priv_data->state = new_state;
 	}
 	else if(priv_data->state == POP3_STATE_INIT)
 	{
-		pop3_debug(debug_pop3_server, "transfer state from %d to %d\n", POP3_STATE_INIT, POP3_STATE_AUTHORIZATION);
+		pop3_debug(debug_pop3_server, "transfer state from %s to %s\n", pop3_state_name(POP3_STATE_INIT), pop3_state_name(POP3_STATE_AUTHORIZATION));
 		priv_data->state = POP3_STATE_AUTHORIZATION;
 	}
 }

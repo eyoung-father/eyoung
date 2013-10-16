@@ -25,6 +25,41 @@ typedef enum pop3_req_type
 	POP3_COMMAND_MAX
 }pop3_req_type_t;
 
+static inline const char* pop3_req_type_name(pop3_req_type_t type)
+{
+	switch(type)
+	{
+		case POP3_COMMAND_USER:
+			return "USER";
+		case POP3_COMMAND_PASS:
+			return "PASS";
+		case POP3_COMMAND_APOP:
+			return "APOP";
+		case POP3_COMMAND_LIST:
+			return "LIST";
+		case POP3_COMMAND_RETR:
+			return "RETR";
+		case POP3_COMMAND_DELE:
+			return "DELE";
+		case POP3_COMMAND_UIDL:
+			return "UIDL";
+		case POP3_COMMAND_TOP:
+			return "TOP";
+		case POP3_COMMAND_STAT:
+			return "STAT";
+		case POP3_COMMAND_QUIT:
+			return "QUIT";
+		case POP3_COMMAND_NOOP:
+			return "NOOP";
+		case POP3_COMMAND_RSET:
+			return "RSET";
+		case POP3_COMMAND_UNKNOWN:
+		case POP3_COMMAND_MAX:
+		default:
+			return "Unknown";
+	}
+}
+
 typedef struct pop3_req_user
 {
 	int len;
@@ -124,6 +159,20 @@ typedef enum pop3_res_type
 	POP3_RESPONSE_MAX
 }pop3_res_type_t;
 
+static inline const char *pop3_res_type_name(pop3_res_type_t type)
+{
+	switch(type)
+	{
+		case POP3_RESPONSE_OK:
+			return "OK";
+		case POP3_RESPONSE_ERROR:
+			return "ERROR";
+		case POP3_RESPONSE_MAX:
+		default:
+			return "Unknown";
+	}
+}
+
 typedef struct pop3_line
 {
 	int line_len;
@@ -182,6 +231,24 @@ typedef enum pop3_state
 
 	POP3_STATE_MAX
 }pop3_state_t;
+
+static inline const char *pop3_state_name(pop3_state_t state)
+{
+	switch(state)
+	{
+		case POP3_STATE_INIT:
+			return "INIT";
+		case POP3_STATE_AUTHORIZATION:
+			return "AUTH";
+		case POP3_STATE_TRANSACTION:
+			return "TRANSACTION";
+		case POP3_STATE_UPDATE:
+			return "UPDATE";
+		case POP3_STATE_MAX:
+		default:
+			return "Unknown";
+	}
+}
 
 typedef struct pop3_data
 {

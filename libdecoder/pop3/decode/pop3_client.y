@@ -99,7 +99,6 @@ request_list:
 	{
 		pop3_data_t *data = (pop3_data_t*)priv_data;
 		STAILQ_INSERT_TAIL(&data->request_list, $2, next);
-		pop3_debug(debug_pop3_client, "=====>enqueue pop3 request command\n");
 	}
 	TOKEN_CLIENT_NEWLINE
 	{

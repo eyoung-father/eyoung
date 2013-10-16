@@ -247,7 +247,7 @@ pop3_response_t* pop3_alloc_response(int res_code, char *msg, int msg_len, pop3_
 	res->msg = msg;
 	if(content)
 		STAILQ_CONCAT(&res->content, content);
-	pop3_debug(debug_pop3_mem, "alloc pop3 response: res_code:%d, msg: %s\n", res_code, msg?msg:"(NULL)");
+	pop3_debug(debug_pop3_mem, "alloc pop3 response: res_code:%s, msg: %s\n", pop3_res_type_name(res_code), msg?msg:"(NULL)");
 	return res;
 
 failed:
@@ -367,7 +367,7 @@ pop3_request_t* pop3_alloc_request(int req_code, ...)
 		}
 	}
 	va_end(ap);
-	pop3_debug(debug_pop3_mem, "alloc pop3 request, req_code: %d\n", req_code);
+	pop3_debug(debug_pop3_mem, "alloc pop3 request, req_code: %s\n", pop3_req_type_name(req_code));
 	return req;
 
 failed:
@@ -440,7 +440,7 @@ pop3_cmd_t* pop3_alloc_cmd(pop3_request_t *req, pop3_response_t *res)
 
 	cmd->req = req;
 	cmd->res = res;
-	pop3_debug(debug_pop3_mem, "alloc pop3 command pair(req: %d, res: %d)\n", req?req->req_code:-1, res?res->res_code:-1);
+	pop3_debug(debug_pop3_mem, "alloc pop3 command pair(req: %s, res: %s)\n", pop3_req_type_name(req?req->req_code:-1), pop3_res_type_name(res?res->res_code:-1));
 	return cmd;
 }
 
@@ -475,10 +475,7 @@ int pop3_add_command(pop3_data_t *priv_data)
 	if(res)
 		STAILQ_REMOVE_HEAD(&priv_data->response_list, next);
 	if(req)
-	{
 		STAILQ_REMOVE_HEAD(&priv_data->request_list, next);
-		pop3_debug(debug_pop3_server, "<==========dequeue pop3 request\n");
-	}
 	STAILQ_INSERT_TAIL(&priv_data->cmd_list, cmd, next);
 	return 0;
 }
