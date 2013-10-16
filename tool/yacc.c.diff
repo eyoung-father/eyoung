@@ -14,7 +14,7 @@
 1807a1812,1818
 >   
 >   /*do ips signature check*/
->   if(yyr1[yyn] > 0 && yytname[yyr1[yyn]][0] != '$')
+>   if(yyr1[yyn] > YYNTOKENS && yytname[yyr1[yyn]][0] != '$' && yytname[yyr1[yyn]][0] != '@@')
 >   {
 > 	YY_REDUCTION_CALLBACK(yytname[yyr1[yyn]], &yyval);
 >   }
