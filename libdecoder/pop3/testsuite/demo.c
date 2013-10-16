@@ -6,14 +6,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "pop3_type.h"
-#include "pop3_util.h"
-#include "pop3_mem.h"
-#include "pop3_private.h"
-#include "pop3_client_parser.h"
-#include "pop3_server_parser.h"
-#include "pop3_client_lex.h"
-#include "pop3_server_lex.h"
+#include "pop3.h"
 
 static int parse_pop3_file(const char *filename)
 {
@@ -21,7 +14,7 @@ static int parse_pop3_file(const char *filename)
 	size_t len = 0;
 	ssize_t read = 0;
 	int ret = -1;
-	pop3_data_t *priv_data = NULL;
+	pop3_decode_t *decoder = NULL;
 	int lines = 0;
 	FILE *fp = fopen(filename, "r");
 	if(!fp)
@@ -30,8 +23,8 @@ static int parse_pop3_file(const char *filename)
 		goto failed;
 	}
 
-	priv_data = pop3_alloc_priv_data(0);
-	if(!priv_data)
+	decoder = pop3_decode_create(0);
+	if(!decoder)
 	{
 		fprintf(stderr, "failed to alloc pop3 private data\n");
 		goto failed;
@@ -47,7 +40,7 @@ static int parse_pop3_file(const char *filename)
 		}
 		if(toupper(line[0])=='C' && line[1]==':')
 		{
-			if(parse_pop3_client_stream(priv_data, line+2, read-2, 0))
+			if(pop3_decode_data(decoder, line+2, read-2, 1, 0))
 			{
 				fprintf(stderr, "parse client failed, line(%d): %s\n", lines, line);
 				goto failed;
@@ -55,7 +48,7 @@ static int parse_pop3_file(const char *filename)
 		}
 		else if (toupper(line[0])=='S' && line[1]==':')
 		{
-			if(parse_pop3_server_stream(priv_data, line+2, read-2, 0))
+			if(pop3_decode_data(decoder, line+2, read-2, 0, 0))
 			{
 				fprintf(stderr, "parse server failed, line(%d): %s\n", lines, line);
 				goto failed;
@@ -69,12 +62,12 @@ static int parse_pop3_file(const char *filename)
 	}
 
 	/*give end flag to parser*/
-	if(parse_pop3_client_stream(priv_data, "", 0, 1))
+	if(pop3_decode_data(decoder, "", 0, 1, 1))
 	{
 		fprintf(stderr, "parse client end flag failed");
 		goto failed;
 	}
-	if(parse_pop3_server_stream(priv_data, "", 0, 1))
+	if(pop3_decode_data(decoder, "", 0, 0, 1))
 	{
 		fprintf(stderr, "parse server end flag failed");
 		goto failed;
@@ -85,8 +78,8 @@ static int parse_pop3_file(const char *filename)
 	fprintf(stderr, "parser OK!\n");
 
 failed:
-	if(priv_data)
-		pop3_free_priv_data(priv_data);
+	if(decoder)
+		pop3_decode_destroy(decoder);
 	if(line)
 		free(line);
 	if(fp)
@@ -102,12 +95,12 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "Usage: pop3_parser <file_name>\n");
 		return -1;
 	}
-	pop3_mem_init();
+	pop3_decode_init();
 	debug_pop3_server = 1;
 	debug_pop3_client = 1;
 	debug_pop3_mem = 1;
 	ret = parse_pop3_file(argv[1]);
-	pop3_mem_finit();
+	pop3_decode_finit();
 
 	return ret;
 }
