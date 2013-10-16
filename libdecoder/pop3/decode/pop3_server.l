@@ -92,7 +92,8 @@ EOB		{SPACE}\.{SPACE}{NEWLINE}
 					RETURN(TOKEN_SERVER_ERROR);
 				}
 .				{
-					RETURN(-1);
+					yymore();
+					GOTO(POP3_SERVER_POSITIVE_BODY);
 				}
 }
 
@@ -107,7 +108,7 @@ EOB		{SPACE}\.{SPACE}{NEWLINE}
 					RETURN(TOKEN_SERVER_NEWLINE);
 				}
 .				{
-					RETURN(-1);
+					RETURN(-2);
 				}
 }
 
@@ -118,27 +119,11 @@ EOB		{SPACE}\.{SPACE}{NEWLINE}
 					RETURN(TOKEN_SERVER_STRING);
 				}
 {NEWLINE}		{
-					pop3_data_t *priv_data = (pop3_data_t*)pop3_server_get_extra(yyscanner);
-					assert(priv_data != NULL);
-
-					pop3_request_t *req = STAILQ_FIRST(&priv_data->request_list);
-					if(!req)
-						GOTO(INITIAL);
-					else
-					{
-						if( (req->req_code==POP3_COMMAND_LIST && !req->list.mail) ||
-							(req->req_code==POP3_COMMAND_UIDL && !req->uidl.mail) ||
-							(req->req_code==POP3_COMMAND_TOP)					  ||
-							(req->req_code==POP3_COMMAND_RETR) 
-						  )
-							GOTO(POP3_SERVER_POSITIVE_BODY);
-						else
-							GOTO(INITIAL);
-					}
+					GOTO(INITIAL);
 					RETURN(TOKEN_SERVER_NEWLINE);
 				}
 .				{
-					RETURN(-1);
+					RETURN(-2);
 				}
 }
 
@@ -156,7 +141,7 @@ EOB		{SPACE}\.{SPACE}{NEWLINE}
 					RETURN(TOKEN_SERVER_NEWLINE);
 				}
 .				{
-					RETURN(-1);
+					return (-2);
 				}
 }
 %%

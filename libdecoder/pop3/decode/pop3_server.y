@@ -105,7 +105,7 @@ response: positive_response
 	}
 	;
 
-positive_response: TOKEN_SERVER_OK positive_response_line 
+positive_response: TOKEN_SERVER_OK positive_response_line
 	{
 		pop3_data_t *data = (pop3_data_t*)priv_data;
 		pop3_response_t *res = pop3_alloc_response(POP3_RESPONSE_OK, $2.str, $2.str_len, NULL);
@@ -124,36 +124,14 @@ positive_response: TOKEN_SERVER_OK positive_response_line
 		}
 		$<response>$ = res;
 	}
-	TOKEN_SERVER_NEWLINE
+	TOKEN_SERVER_NEWLINE positive_response_message
 	{
+		STAILQ_CONCAT(&$<response>3->content, &$5);
 		$$ = $<response>3;
-	}
-	| TOKEN_SERVER_OK positive_response_line TOKEN_SERVER_NEWLINE positive_response_message
-	{
-		pop3_data_t *data = (pop3_data_t*)priv_data;
-		pop3_response_t *res = pop3_alloc_response(POP3_RESPONSE_OK, $2.str, $2.str_len, &$4);
-		if(!res)
-		{
-			pop3_debug(debug_pop3_server, "failed to alloc positive response\n");
-			YYABORT;
-		}
-		STAILQ_INSERT_TAIL(&data->response_list, res, next);
-
-		/*DO make pop3 command pair*/
-		if(pop3_add_command(data))
-		{
-			pop3_debug(debug_pop3_server, "add pop3 command failed\n");
-			YYABORT;
-		}
-		$<response>$ = res;
-	}
-	TOKEN_SERVER_EOB
-	{
-		$$ = $<response>5;
 	}
 	;
 
-positive_response_line: TOKEN_SERVER_STRING TOKEN_SERVER_NEWLINE
+positive_response_line: TOKEN_SERVER_STRING 
 	{
 		char *data = NULL;
 		int data_len = $1.str_len;
@@ -172,7 +150,7 @@ positive_response_line: TOKEN_SERVER_STRING TOKEN_SERVER_NEWLINE
 		$$.str = data;
 		$$.str_len = data_len;
 	}
-	| TOKEN_SERVER_NEWLINE
+	| 
 	{
 		$$.str = NULL;
 		$$.str_len = 0;
@@ -183,7 +161,11 @@ positive_response_message:
 	{
 		STAILQ_INIT(&$$);
 	}
-	| positive_response_lines
+	| TOKEN_SERVER_EOB
+	{
+		STAILQ_INIT(&$$);
+	}
+	| positive_response_lines TOKEN_SERVER_EOB
 	{
 		$$ = $1;
 	}
