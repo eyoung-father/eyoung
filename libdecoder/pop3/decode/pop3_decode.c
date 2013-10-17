@@ -8,10 +8,6 @@
 #include "pop3_type.h"
 #include "pop3_decode.h"
 #include "pop3_private.h"
-#include "pop3_client_parser.h"
-#include "pop3_server_parser.h"
-#include "pop3_client_lex.h"
-#include "pop3_server_lex.h"
 
 pop3_decode_t pop3_decode_create(int greedy)
 {
