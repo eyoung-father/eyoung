@@ -91,6 +91,31 @@ int ey_engine_load(engine_t engine, char *files[], int files_num)
 	return 0;
 }
 
+int ey_engine_find_event(engine_t engine, const char *event_name)
+{
+	if(!engine || !event_name || !event_name[0])
+	{
+		engine_init_error("%s bad paramters\n", __FUNCTION__);
+		return -1;
+	}
+
+	if(event_name[0]=='$' || event_name[0]=='@')
+	{
+		engine_init_debug("default event %s don't need registered\n", event_name);
+		return 0;
+	}
+
+	ey_engine_t *eng = (ey_engine_t *)engine;
+	ey_event_t *event = ey_find_event(eng, event_name);
+	if(!event)
+	{
+		engine_init_error("cannot find event %s\n", event_name);
+		return -1;
+	}
+	engine_init_debug("id of event %s is %lu\n", event_name, event->event_id);
+	return event->event_id;
+}
+
 engine_work_t *ey_engine_work_create(engine_t engine)
 {
 	ey_engine_t *eng = (ey_engine_t *)engine;

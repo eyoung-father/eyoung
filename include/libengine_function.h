@@ -6,6 +6,7 @@
 extern engine_t ey_engine_create(const char *name);
 extern void ey_engine_destroy(engine_t engine);
 extern int ey_engine_load(engine_t engine, char *files[], int files_num);
+extern int ey_engine_find_event(engine_t engine, const char *event_name);
 
 extern engine_work_t *ey_engine_work_create(engine_t engine);
 extern void ey_engine_work_destroy(engine_work_t *work);
