@@ -10,15 +10,43 @@
 %%
 1:user_command;
 %%
+int pop3_work_init(engine_work_t *work)
+{
+	fprintf(stderr, ">>>>>>>>>>>>>>>>>pop3_work_init return 0\n");
+	return 0;
+}
+
+int pop3_work_finit(engine_work_t *work)
+{
+	fprintf(stderr, "<<<<<<<<<<<<<<<<<pop3_work_init return 0\n");
+	return 0;
+}
+
+int pop3_work_init_user(engine_work_t *work)
+{
+	fprintf(stderr, ">>>>>>>>>>>>>>>>>pop3_work_init_user return 0\n");
+	return 0;
+}
+
+int pop3_work_finit_user(engine_work_t *work)
+{
+	fprintf(stderr, "<<<<<<<<<<<<<<<<<pop3_work_init_user return 0\n");
+	return 0;
+}
+
 int pop3_finit(engine_t eng)
 {
-	fprintf(stderr, "ac_finit return 0\n");
+	fprintf(stderr, "<<<<<<<<<<<<<<<<<pop3_finit return 0\n");
 	return 0;
 }
 
 int pop3_init(engine_t eng)
 {
-	fprintf(stderr, "pop3_init return 0\n");
+	fprintf(stderr, ">>>>>>>>>>>>>>>>>pop3_init return 0\n");
 	ey_add_file_finit(eng, pop3_finit);
+	ey_set_predefine_work_init(eng, pop3_work_init);
+	ey_set_predefine_work_finit(eng, pop3_work_finit);
+	ey_set_userdefine_work_init(eng, pop3_work_init_user);
+	ey_set_userdefine_work_finit(eng, pop3_work_finit_user);
 	return 0;
 }
