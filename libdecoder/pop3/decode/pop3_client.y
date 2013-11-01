@@ -18,14 +18,10 @@
 #ifdef YY_REDUCTION_CALLBACK
 #undef YY_REDUCTION_CALLBACK
 #endif
-#define YY_REDUCTION_CALLBACK(name,val)											\
+#define YY_REDUCTION_CALLBACK(data,name,id,val)									\
 	do																			\
 	{																			\
-		if(pop3_do_rule_detect((pop3_data_t*)priv_data, name, (void*)val) < 0)	\
-		{																		\
-			pop3_attack(debug_pop3_detect, "find attack by signature\n");		\
-			YYABORT;															\
-		}																		\
+		pop3_debug(debug_pop3_detect, "detect client %s[%d]\n", name, id);		\
 	}while(0)
 
 #define priv_decoder															\
