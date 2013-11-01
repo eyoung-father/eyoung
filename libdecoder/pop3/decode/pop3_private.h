@@ -9,4 +9,17 @@ extern struct yy_buffer_state* pop3_server_scan_stream(const char *new_buf, size
 
 extern int parse_pop3_client_stream(struct pop3_data *priv, const char *buf, size_t buf_len, int last_frag);
 extern int parse_pop3_server_stream(struct pop3_data *priv, const char *buf, size_t buf_len, int last_frag);
+
+#include "ey_memory.h"
+
+typedef struct pop3_decoder
+{
+	ey_slab_t pop3_data_slab;
+	ey_slab_t pop3_request_slab;
+	ey_slab_t pop3_response_slab;
+	ey_slab_t pop3_cmd_slab;
+	ey_slab_t pop3_req_arg_slab;
+	ey_slab_t pop3_res_line_slab;
+}pop3_decoder_t;
+
 #endif

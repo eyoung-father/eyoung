@@ -1,37 +1,38 @@
 #ifndef POP3_MEM_H
 #define POP3_MEM_H 1
 
+#include "pop3_private.h"
 /*memory mgt system init api for system initializing*/
-extern void pop3_mem_init();
-extern void pop3_mem_finit();
+extern int pop3_mem_init(pop3_decoder_t *decoder);
+extern void pop3_mem_finit(pop3_decoder_t *decoder);
 
 /*slab mgt api*/
 struct pop3_data;
-extern struct pop3_data* pop3_alloc_priv_data(int greedy);
-extern void pop3_free_priv_data(struct pop3_data *priv_data);
+extern struct pop3_data* pop3_alloc_priv_data(pop3_decoder_t *decoder, int greedy);
+extern void pop3_free_priv_data(pop3_decoder_t *decoder, struct pop3_data *priv_data);
 
 struct pop3_response;
 struct pop3_line;
 struct pop3_res_content;
-extern struct pop3_response* pop3_alloc_response(int res_code, char *msg, int msg_len, struct pop3_res_content *content);
-extern struct pop3_line* pop3_alloc_response_line(char *data, int data_len);
-extern void pop3_free_response(struct pop3_response *res);
-extern void pop3_free_response_content(struct pop3_res_content *head);
+extern struct pop3_response* pop3_alloc_response(pop3_decoder_t *decoder, int res_code, char *msg, int msg_len, struct pop3_res_content *content);
+extern struct pop3_line* pop3_alloc_response_line(pop3_decoder_t *decoder, char *data, int data_len);
+extern void pop3_free_response(pop3_decoder_t *decoder, struct pop3_response *res);
+extern void pop3_free_response_content(pop3_decoder_t *decoder, struct pop3_res_content *head);
 
 struct pop3_request;
-extern struct pop3_request* pop3_alloc_request(int req_code, ...);
-extern void pop3_free_request(struct pop3_request *req);
+extern struct pop3_request* pop3_alloc_request(pop3_decoder_t *decoder, int req_code, ...);
+extern void pop3_free_request(pop3_decoder_t *decoder, struct pop3_request *req);
 
 struct pop3_req_arg;
 struct pop3_req_arg_list;
-extern struct pop3_req_arg* pop3_alloc_req_arg(char *data, int data_len);
-extern void pop3_free_req_arg_list(struct pop3_req_arg_list *head);
+extern struct pop3_req_arg* pop3_alloc_req_arg(pop3_decoder_t *decoder, char *data, int data_len);
+extern void pop3_free_req_arg_list(pop3_decoder_t *decoder, struct pop3_req_arg_list *head);
 
 struct pop3_cmd;
 struct pop3_cmd_list;
-extern struct pop3_cmd* pop3_alloc_cmd(struct pop3_request *req, struct pop3_response *res);
-extern void pop3_free_cmd_list(struct pop3_cmd_list *head);
-extern int pop3_add_command(struct pop3_data *priv_data);
+extern struct pop3_cmd* pop3_alloc_cmd(pop3_decoder_t *decoder, struct pop3_request *req, struct pop3_response *res);
+extern void pop3_free_cmd_list(pop3_decoder_t *decoder, struct pop3_cmd_list *head);
+extern int pop3_add_command(pop3_decoder_t *decoder, struct pop3_data *priv_data);
 
 #include <stdlib.h>
 #include "ey_memory.h"

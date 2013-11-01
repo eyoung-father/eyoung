@@ -8,7 +8,7 @@
 
 #include "pop3.h"
 
-static int parse_pop3_file(const char *filename)
+static int parse_pop3_file(pop3_handler_t decoder, const char *filename)
 {
 	char *line = NULL;
 	size_t len = 0;
@@ -23,7 +23,7 @@ static int parse_pop3_file(const char *filename)
 		goto failed;
 	}
 
-	work = pop3_work_create(0);
+	work = pop3_work_create(decoder, 0);
 	if(!work)
 	{
 		fprintf(stderr, "failed to alloc pop3 private data\n");
@@ -90,20 +90,25 @@ failed:
 int main(int argc, char *argv[])
 {
 	int ret = 0;
+	pop3_handler_t decoder = NULL;
 	if(argc != 2)
 	{
 		fprintf(stderr, "Usage: pop3_parser <file_name>\n");
 		return -1;
 	}
-	pop3_decoder_init();
 	debug_pop3_server_lexer = 1;
 	debug_pop3_server_parser = 1;
 	debug_pop3_client_lexer = 1;
 	debug_pop3_client_parser = 1;
 	debug_pop3_mem = 1;
 	debug_pop3_detect = 1;
-	ret = parse_pop3_file(argv[1]);
-	pop3_decoder_finit();
+	
+	decoder = pop3_decoder_init();
+	if(decoder)
+	{
+		ret = parse_pop3_file(decoder, argv[1]);
+		pop3_decoder_finit(decoder);
+	}
 
 	return ret;
 }

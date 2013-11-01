@@ -27,6 +27,9 @@
 			YYABORT;															\
 		}																		\
 	}while(0)
+
+#define priv_decoder															\
+	((pop3_decoder_t*)(((pop3_data_t*)priv_data)->decoder))
 %}
 
 %token TOKEN_SERVER_EOB
@@ -74,12 +77,12 @@
 
 %destructor
 {
-	pop3_free_response_content(&$$);
+	pop3_free_response_content(priv_decoder, &$$);
 }positive_response_lines positive_response_message
 
 %destructor
 {
-	pop3_free_response($$);
+	pop3_free_response(priv_decoder, $$);
 }positive_response negative_response
 
 %start response_list
@@ -108,7 +111,7 @@ response: positive_response
 positive_response: TOKEN_SERVER_OK positive_response_line
 	{
 		pop3_data_t *data = (pop3_data_t*)priv_data;
-		pop3_response_t *res = pop3_alloc_response(POP3_RESPONSE_OK, $2.str, $2.str_len, NULL);
+		pop3_response_t *res = pop3_alloc_response(priv_decoder, POP3_RESPONSE_OK, $2.str, $2.str_len, NULL);
 		if(!res)
 		{
 			pop3_debug(debug_pop3_server_parser, "failed to alloc positive response\n");
@@ -117,7 +120,7 @@ positive_response: TOKEN_SERVER_OK positive_response_line
 		STAILQ_INSERT_TAIL(&data->response_list, res, next);
 
 		/*DO make pop3 command pair*/
-		if(pop3_add_command(data))
+		if(pop3_add_command(priv_decoder, data))
 		{
 			pop3_debug(debug_pop3_server_parser, "add pop3 command failed\n");
 			YYABORT;
@@ -188,7 +191,7 @@ positive_response_lines: TOKEN_SERVER_STRING TOKEN_SERVER_NEWLINE
 			data[data_len] = '\0';
 		}
 		
-		pop3_line_t *line = pop3_alloc_response_line(data, data_len);
+		pop3_line_t *line = pop3_alloc_response_line(priv_decoder, data, data_len);
 		if(!line)
 		{
 			pop3_debug(debug_pop3_server_parser, "failed to alloc positive response line\n");
@@ -215,7 +218,7 @@ positive_response_lines: TOKEN_SERVER_STRING TOKEN_SERVER_NEWLINE
 			data[data_len] = '\0';
 		}
 		
-		pop3_line_t *line = pop3_alloc_response_line(data, data_len);
+		pop3_line_t *line = pop3_alloc_response_line(priv_decoder, data, data_len);
 		if(!line)
 		{
 			pop3_debug(debug_pop3_server_parser, "failed to alloc positive response line\n");
@@ -230,7 +233,7 @@ positive_response_lines: TOKEN_SERVER_STRING TOKEN_SERVER_NEWLINE
 negative_response: TOKEN_SERVER_ERROR negative_response_line
 	{
 		pop3_data_t *data = (pop3_data_t*)priv_data;
-		pop3_response_t *res = pop3_alloc_response(POP3_RESPONSE_ERROR, $2.str, $2.str_len, NULL);
+		pop3_response_t *res = pop3_alloc_response(priv_decoder, POP3_RESPONSE_ERROR, $2.str, $2.str_len, NULL);
 		if(!res)
 		{
 			pop3_debug(debug_pop3_server_parser, "failed to alloc negative response\n");
@@ -239,7 +242,7 @@ negative_response: TOKEN_SERVER_ERROR negative_response_line
 		STAILQ_INSERT_TAIL(&data->response_list, res, next);
 
 		/*DO make pop3 command pair*/
-		if(pop3_add_command(data))
+		if(pop3_add_command(priv_decoder, data))
 		{
 			pop3_debug(debug_pop3_server_parser, "add pop3 command failed\n");
 			YYABORT;
@@ -314,3 +317,4 @@ int parse_pop3_server_stream(pop3_data_t *priv, const char *buf, size_t buf_len,
 	}
 	return 0;
 }
+#undef priv_decoder

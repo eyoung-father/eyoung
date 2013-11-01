@@ -6,13 +6,14 @@
 #include "pop3.h"
 #include "pop3_type.h"
 #include "pop3_util.h"
+#include "pop3_decode.h"
 #include "pop3_mem.h"
 #include "pop3_client_parser.h"
 #include "pop3_server_parser.h"
 #include "pop3_client_lex.h"
 #include "pop3_server_lex.h"
 #include "pop3_private.h"
-#include "pop3_detect.h"
+#include "pop3_private.h"
 
 #ifdef YY_REDUCTION_CALLBACK
 #undef YY_REDUCTION_CALLBACK
@@ -26,6 +27,9 @@
 			YYABORT;															\
 		}																		\
 	}while(0)
+
+#define priv_decoder															\
+	((pop3_decoder_t*)(((pop3_data_t*)priv_data)->decoder))
 %}
 %token TOKEN_CLIENT_USER
 %token TOKEN_CLIENT_PASS
@@ -76,7 +80,7 @@
 
 %destructor
 {
-	pop3_free_req_arg_list(&$$);
+	pop3_free_req_arg_list(priv_decoder, &$$);
 }request_args
 
 %debug
@@ -172,18 +176,18 @@ user_command: TOKEN_CLIENT_USER request_args
 		pop3_request_t *req = NULL;
 		if(arg)
 		{
-			req = pop3_alloc_request(POP3_COMMAND_USER, arg->arg, arg->len);
+			req = pop3_alloc_request(priv_decoder, POP3_COMMAND_USER, arg->arg, arg->len);
 			if(!req)
 			{
 				pop3_debug(debug_pop3_client_parser, "failed to alloc USER command\n");
 				YYABORT;
 			}
 			arg->arg = NULL;
-			pop3_free_req_arg_list(&$2);
+			pop3_free_req_arg_list(priv_decoder, &$2);
 		}
 		else
 		{
-			req = pop3_alloc_request(POP3_COMMAND_USER, NULL, 0);
+			req = pop3_alloc_request(priv_decoder, POP3_COMMAND_USER, NULL, 0);
 			if(!req)
 			{
 				pop3_debug(debug_pop3_client_parser, "failed to alloc USER command\n");
@@ -206,18 +210,18 @@ pass_command: TOKEN_CLIENT_PASS request_args
 		pop3_request_t *req = NULL;
 		if(arg)
 		{
-			req = pop3_alloc_request(POP3_COMMAND_PASS, arg->arg, arg->len);
+			req = pop3_alloc_request(priv_decoder, POP3_COMMAND_PASS, arg->arg, arg->len);
 			if(!req)
 			{
 				pop3_debug(debug_pop3_client_parser, "failed to alloc PASS command\n");
 				YYABORT;
 			}
 			arg->arg = NULL;
-			pop3_free_req_arg_list(&$2);
+			pop3_free_req_arg_list(priv_decoder, &$2);
 		}
 		else
 		{
-			req = pop3_alloc_request(POP3_COMMAND_PASS, NULL, 0);
+			req = pop3_alloc_request(priv_decoder, POP3_COMMAND_PASS, NULL, 0);
 			if(!req)
 			{
 				pop3_debug(debug_pop3_client_parser, "failed to alloc PASS command\n");
@@ -240,18 +244,18 @@ apop_command: TOKEN_CLIENT_APOP request_args
 		pop3_request_t *req = NULL;
 		if(arg)
 		{
-			req = pop3_alloc_request(POP3_COMMAND_APOP, arg->arg, arg->len);
+			req = pop3_alloc_request(priv_decoder, POP3_COMMAND_APOP, arg->arg, arg->len);
 			if(!req)
 			{
 				pop3_debug(debug_pop3_client_parser, "failed to alloc APOP command\n");
 				YYABORT;
 			}
 			arg->arg = NULL;
-			pop3_free_req_arg_list(&$2);
+			pop3_free_req_arg_list(priv_decoder, &$2);
 		}
 		else
 		{
-			req = pop3_alloc_request(POP3_COMMAND_APOP, NULL, 0);
+			req = pop3_alloc_request(priv_decoder, POP3_COMMAND_APOP, NULL, 0);
 			if(!req)
 			{
 				pop3_debug(debug_pop3_client_parser, "failed to alloc APOP command\n");
@@ -267,13 +271,13 @@ stat_command: TOKEN_CLIENT_STAT request_args
 		if(!STAILQ_EMPTY(&$2))
 			pop3_abnormal(debug_pop3_client_parser, "Abnormal: STAT command do not follow any parameter\n");
 		
-		pop3_request_t *req = pop3_alloc_request(POP3_COMMAND_STAT);
+		pop3_request_t *req = pop3_alloc_request(priv_decoder, POP3_COMMAND_STAT);
 		if(!req)
 		{
 			pop3_debug(debug_pop3_client_parser, "failed to alloc STAT command\n");
 			YYABORT;
 		}
-		pop3_free_req_arg_list(&$2);
+		pop3_free_req_arg_list(priv_decoder, &$2);
 		$$ = req;
 	}
 	;
@@ -296,7 +300,7 @@ list_command: TOKEN_CLIENT_LIST request_args
 				pop3_abnormal(debug_pop3_client_parser, "Abnormal: LIST command need ONE or ZERO mail index as its parameter\n");
 		}
 		
-		pop3_request_t *req = pop3_alloc_request(POP3_COMMAND_LIST, mail);
+		pop3_request_t *req = pop3_alloc_request(priv_decoder, POP3_COMMAND_LIST, mail);
 		if(!req)
 		{
 			pop3_debug(debug_pop3_client_parser, "failed to alloc LIST command\n");
@@ -304,7 +308,7 @@ list_command: TOKEN_CLIENT_LIST request_args
 		}
 
 		if(arg)
-			pop3_free_req_arg_list(&$2);
+			pop3_free_req_arg_list(priv_decoder, &$2);
 		$$ = req;
 	}
 	;
@@ -330,7 +334,7 @@ retr_command: TOKEN_CLIENT_RETR request_args
 				pop3_abnormal(debug_pop3_client_parser, "Abnormal: RETR command need ONE or ZERO mail index as its parameter\n");
 		}
 		
-		pop3_request_t *req = pop3_alloc_request(POP3_COMMAND_RETR, mail);
+		pop3_request_t *req = pop3_alloc_request(priv_decoder, POP3_COMMAND_RETR, mail);
 		if(!req)
 		{
 			pop3_debug(debug_pop3_client_parser, "failed to alloc RETR command\n");
@@ -338,7 +342,7 @@ retr_command: TOKEN_CLIENT_RETR request_args
 		}
 
 		if(arg)
-			pop3_free_req_arg_list(&$2);
+			pop3_free_req_arg_list(priv_decoder, &$2);
 		$$ = req;
 	}
 	;
@@ -364,7 +368,7 @@ dele_command: TOKEN_CLIENT_DELE request_args
 				pop3_abnormal(debug_pop3_client_parser, "Abnormal: DELE command need ONE or ZERO mail index as its parameter\n");
 		}
 		
-		pop3_request_t *req = pop3_alloc_request(POP3_COMMAND_DELE, mail);
+		pop3_request_t *req = pop3_alloc_request(priv_decoder, POP3_COMMAND_DELE, mail);
 		if(!req)
 		{
 			pop3_debug(debug_pop3_client_parser, "failed to alloc DELE command\n");
@@ -372,7 +376,7 @@ dele_command: TOKEN_CLIENT_DELE request_args
 		}
 
 		if(arg)
-			pop3_free_req_arg_list(&$2);
+			pop3_free_req_arg_list(priv_decoder, &$2);
 		$$ = req;
 	}
 	;
@@ -382,13 +386,13 @@ rset_command: TOKEN_CLIENT_RSET request_args
 		if(!STAILQ_EMPTY(&$2))
 			pop3_abnormal(debug_pop3_client_parser, "Abnormal: RSET command do not follow any parameter\n");
 		
-		pop3_request_t *req = pop3_alloc_request(POP3_COMMAND_RSET);
+		pop3_request_t *req = pop3_alloc_request(priv_decoder, POP3_COMMAND_RSET);
 		if(!req)
 		{
 			pop3_debug(debug_pop3_client_parser, "failed to alloc RSET command\n");
 			YYABORT;
 		}
-		pop3_free_req_arg_list(&$2);
+		pop3_free_req_arg_list(priv_decoder, &$2);
 		$$ = req;
 	}
 	;
@@ -431,7 +435,7 @@ top_command: TOKEN_CLIENT_TOP request_args
 			}
 		}
 		
-		pop3_request_t *req = pop3_alloc_request(POP3_COMMAND_TOP, mail, lines);
+		pop3_request_t *req = pop3_alloc_request(priv_decoder, POP3_COMMAND_TOP, mail, lines);
 		if(!req)
 		{
 			pop3_debug(debug_pop3_client_parser, "failed to alloc TOP command\n");
@@ -439,7 +443,7 @@ top_command: TOKEN_CLIENT_TOP request_args
 		}
 
 		if(arg1)
-			pop3_free_req_arg_list(&$2);
+			pop3_free_req_arg_list(priv_decoder, &$2);
 		$$ = req;
 	}
 	;
@@ -462,7 +466,7 @@ uidl_command: TOKEN_CLIENT_UIDL request_args
 				pop3_abnormal(debug_pop3_client_parser, "Abnormal: UIDL command need ONE or ZERO mail index as its parameter\n");
 		}
 		
-		pop3_request_t *req = pop3_alloc_request(POP3_COMMAND_UIDL, mail);
+		pop3_request_t *req = pop3_alloc_request(priv_decoder, POP3_COMMAND_UIDL, mail);
 		if(!req)
 		{
 			pop3_debug(debug_pop3_client_parser, "failed to alloc UIDL command\n");
@@ -470,7 +474,7 @@ uidl_command: TOKEN_CLIENT_UIDL request_args
 		}
 
 		if(arg)
-			pop3_free_req_arg_list(&$2);
+			pop3_free_req_arg_list(priv_decoder, &$2);
 		$$ = req;
 	}
 	;
@@ -480,13 +484,13 @@ quit_command: TOKEN_CLIENT_QUIT request_args
 		if(!STAILQ_EMPTY(&$2))
 			pop3_abnormal(debug_pop3_client_parser, "Abnormal: QUIT command do not follow any parameter\n");
 		
-		pop3_request_t *req = pop3_alloc_request(POP3_COMMAND_QUIT);
+		pop3_request_t *req = pop3_alloc_request(priv_decoder, POP3_COMMAND_QUIT);
 		if(!req)
 		{
 			pop3_debug(debug_pop3_client_parser, "failed to alloc QUIT command\n");
 			YYABORT;
 		}
-		pop3_free_req_arg_list(&$2);
+		pop3_free_req_arg_list(priv_decoder, &$2);
 		$$ = req;
 	}
 	;
@@ -496,13 +500,13 @@ noop_command: TOKEN_CLIENT_NOOP request_args
 		if(!STAILQ_EMPTY(&$2))
 			pop3_abnormal(debug_pop3_client_parser, "Abnormal: NOOP command do not follow any parameter\n");
 		
-		pop3_request_t *req = pop3_alloc_request(POP3_COMMAND_NOOP);
+		pop3_request_t *req = pop3_alloc_request(priv_decoder, POP3_COMMAND_NOOP);
 		if(!req)
 		{
 			pop3_debug(debug_pop3_client_parser, "failed to alloc NOOP command\n");
 			YYABORT;
 		}
-		pop3_free_req_arg_list(&$2);
+		pop3_free_req_arg_list(priv_decoder, &$2);
 		$$ = req;
 	}
 	;
@@ -519,14 +523,14 @@ unknown_command: TOKEN_CLIENT_UNKNOWN request_args
 		name[yylval.str_len] = '\0';
 
 		pop3_abnormal(debug_pop3_client_parser, "Abnormal: UNKNOWN command %s\n", name);
-		pop3_request_t *req = pop3_alloc_request(POP3_COMMAND_UNKNOWN, name);
+		pop3_request_t *req = pop3_alloc_request(priv_decoder, POP3_COMMAND_UNKNOWN, name);
 		if(!req)
 		{
 			pop3_debug(debug_pop3_client_parser, "failed to alloc UNKNOWN command\n");
 			pop3_free(name);
 			YYABORT;
 		}
-		pop3_free_req_arg_list(&$2);
+		pop3_free_req_arg_list(priv_decoder, &$2);
 		$$ = req;
 	}
 	;
@@ -537,7 +541,7 @@ request_args:
 	}
 	| request_args TOKEN_CLIENT_STRING
 	{
-		pop3_req_arg_t *arg = pop3_alloc_req_arg(yylval.str, yylval.str_len);
+		pop3_req_arg_t *arg = pop3_alloc_req_arg(priv_decoder, yylval.str, yylval.str_len);
 		if(!arg)
 		{
 			pop3_debug(debug_pop3_client_parser, "failed to alloc req arg\n");
@@ -584,3 +588,4 @@ int parse_pop3_client_stream(pop3_data_t *priv, const char *buf, size_t buf_len,
 	}
 	return 0;
 }
+#undef priv_decoder
