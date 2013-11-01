@@ -3,6 +3,7 @@
 
 #include "ey_queue.h"
 #include "pop3_decode.h"
+#include "libengine.h"
 
 /*
  * Client Message Type
@@ -254,6 +255,7 @@ static inline const char *pop3_state_name(pop3_state_t state)
 typedef struct pop3_data
 {
 	pop3_handler_t decoder;
+	engine_work_t *engine_work;
 
 	/*client ==> server*/
 	pop3_parser_t request_parser;

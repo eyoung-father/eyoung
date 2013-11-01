@@ -6,9 +6,10 @@
 #include <string.h>
 #include <ctype.h>
 
+#include "libengine.h"
 #include "pop3.h"
 
-static int parse_pop3_file(pop3_handler_t decoder, const char *filename)
+static int parse_pop3_file(pop3_handler_t decoder, engine_t engine, const char *filename)
 {
 	char *line = NULL;
 	size_t len = 0;
@@ -23,7 +24,7 @@ static int parse_pop3_file(pop3_handler_t decoder, const char *filename)
 		goto failed;
 	}
 
-	work = pop3_work_create(decoder, 0);
+	work = pop3_work_create(decoder, engine, 0);
 	if(!work)
 	{
 		fprintf(stderr, "failed to alloc pop3 private data\n");
@@ -91,9 +92,10 @@ int main(int argc, char *argv[])
 {
 	int ret = 0;
 	pop3_handler_t decoder = NULL;
-	if(argc != 2)
+	engine_t engine = NULL;
+	if(argc != 3)
 	{
-		fprintf(stderr, "Usage: pop3_parser <file_name>\n");
+		fprintf(stderr, "Usage: pop3_parser <signature_file> <message_file>\n");
 		return -1;
 	}
 	debug_pop3_server_lexer = 1;
@@ -102,14 +104,42 @@ int main(int argc, char *argv[])
 	debug_pop3_client_parser = 1;
 	debug_pop3_mem = 1;
 	debug_pop3_detect = 1;
+	debug_engine_parser = 1;
+	debug_engine_lexier = 1;
+	debug_engine_init = 1;
+	debug_engine_compiler = 1;
+	debug_engine_runtime = 1;
+	
+	engine = ey_engine_create("pop3");
+	if(!engine)
+	{
+		fprintf(stderr, "create pop3 engine failed\n");
+		ret = -1;
+		goto failed;
+	}
+	
+	if(ey_engine_load(engine, &argv[1], 1))
+	{
+		fprintf(stderr, "load pop3 signature failed\n");
+		ret = -1;
+		goto failed;
+	}
 	
 	decoder = pop3_decoder_init();
-	if(decoder)
+	if(!decoder)
 	{
-		ret = parse_pop3_file(decoder, argv[1]);
-		pop3_decoder_finit(decoder);
+		fprintf(stderr, "create pop3 decoder failed\n");
+		ret = -1;
+		goto failed;
 	}
 
+	ret = parse_pop3_file(decoder, engine, argv[2]);
+
+failed:
+	if(decoder)
+		pop3_decoder_finit(decoder);
+	if(engine)
+		ey_engine_destroy(engine);
 	return ret;
 }
 #endif

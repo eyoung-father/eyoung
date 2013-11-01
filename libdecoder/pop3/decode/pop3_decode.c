@@ -7,8 +7,9 @@
 #include "pop3_util.h"
 #include "pop3_type.h"
 #include "pop3_private.h"
+#include "libengine.h"
 
-pop3_work_t pop3_work_create(pop3_handler_t handler, int greedy)
+pop3_work_t pop3_work_create(pop3_handler_t handler, engine_t engine, int greedy)
 {
 	pop3_data_t *priv_data = NULL;
 	pop3_decoder_t *decoder = (pop3_decoder_t*)handler;
@@ -24,6 +25,16 @@ pop3_work_t pop3_work_create(pop3_handler_t handler, int greedy)
 		pop3_debug(debug_pop3_mem, "failed to alloc pop3 private data\n");
 		return NULL;
 	}
+
+	engine_work_t *engine_work = ey_engine_work_create(engine);
+	if(!engine_work)
+	{
+		pop3_debug(debug_pop3_mem, "failed to alloc engine work\n");
+		pop3_free_priv_data(decoder, priv_data);
+		return NULL;
+	}
+	priv_data->engine_work = engine_work;
+	priv_data->decoder = handler;
 	
 	return priv_data;
 }
@@ -34,6 +45,8 @@ void pop3_work_destroy(pop3_work_t work)
 	{
 		pop3_data_t *priv_data = (pop3_data_t*)work;
 		pop3_decoder_t *decoder = (pop3_decoder_t*)(priv_data->decoder);
+		if(priv_data->engine_work)
+			ey_engine_work_destroy(priv_data->engine_work);
 		pop3_free_priv_data(decoder, priv_data);
 	}
 }
