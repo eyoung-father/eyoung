@@ -9,7 +9,7 @@
 #include "pop3_decode.h"
 #include "pop3_private.h"
 
-pop3_decode_t pop3_decode_create(int greedy)
+pop3_work_t pop3_work_create(int greedy)
 {
 	pop3_data_t *priv_data = NULL;
 	
@@ -23,27 +23,27 @@ pop3_decode_t pop3_decode_create(int greedy)
 	return priv_data;
 }
 
-void pop3_decode_destroy(pop3_decode_t decode)
+void pop3_work_destroy(pop3_work_t work)
 {
-	if(decode)
-		pop3_free_priv_data((pop3_data_t*)decode);
+	if(work)
+		pop3_free_priv_data((pop3_data_t*)work);
 }
 
-int pop3_decode_data(pop3_decode_t decoder, const char *data, size_t data_len, int from_client, int last_frag)
+int pop3_decode_data(pop3_work_t work, const char *data, size_t data_len, int from_client, int last_frag)
 {
-	assert(decoder != NULL);
+	assert(work != NULL);
 	if(from_client)
-		return parse_pop3_client_stream((pop3_data_t*)decoder, data, data_len, last_frag);
+		return parse_pop3_client_stream((pop3_data_t*)work, data, data_len, last_frag);
 	else
-		return parse_pop3_server_stream((pop3_data_t*)decoder, data, data_len, last_frag);
+		return parse_pop3_server_stream((pop3_data_t*)work, data, data_len, last_frag);
 }
 
-void pop3_decode_init()
+void pop3_decoder_init()
 {
 	pop3_mem_init();
 }
 
-void pop3_decode_finit()
+void pop3_decoder_finit()
 {
 	pop3_mem_finit();
 }

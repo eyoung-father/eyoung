@@ -14,7 +14,7 @@ static int parse_pop3_file(const char *filename)
 	size_t len = 0;
 	ssize_t read = 0;
 	int ret = -1;
-	pop3_decode_t *decoder = NULL;
+	pop3_work_t *work = NULL;
 	int lines = 0;
 	FILE *fp = fopen(filename, "r");
 	if(!fp)
@@ -23,8 +23,8 @@ static int parse_pop3_file(const char *filename)
 		goto failed;
 	}
 
-	decoder = pop3_decode_create(0);
-	if(!decoder)
+	work = pop3_work_create(0);
+	if(!work)
 	{
 		fprintf(stderr, "failed to alloc pop3 private data\n");
 		goto failed;
@@ -40,7 +40,7 @@ static int parse_pop3_file(const char *filename)
 		}
 		if(toupper(line[0])=='C' && line[1]==':')
 		{
-			if(pop3_decode_data(decoder, line+2, read-2, 1, 0))
+			if(pop3_decode_data(work, line+2, read-2, 1, 0))
 			{
 				fprintf(stderr, "parse client failed, line(%d): %s\n", lines, line);
 				goto failed;
@@ -48,7 +48,7 @@ static int parse_pop3_file(const char *filename)
 		}
 		else if (toupper(line[0])=='S' && line[1]==':')
 		{
-			if(pop3_decode_data(decoder, line+2, read-2, 0, 0))
+			if(pop3_decode_data(work, line+2, read-2, 0, 0))
 			{
 				fprintf(stderr, "parse server failed, line(%d): %s\n", lines, line);
 				goto failed;
@@ -62,12 +62,12 @@ static int parse_pop3_file(const char *filename)
 	}
 
 	/*give end flag to parser*/
-	if(pop3_decode_data(decoder, "", 0, 1, 1))
+	if(pop3_decode_data(work, "", 0, 1, 1))
 	{
 		fprintf(stderr, "parse client end flag failed");
 		goto failed;
 	}
-	if(pop3_decode_data(decoder, "", 0, 0, 1))
+	if(pop3_decode_data(work, "", 0, 0, 1))
 	{
 		fprintf(stderr, "parse server end flag failed");
 		goto failed;
@@ -78,8 +78,8 @@ static int parse_pop3_file(const char *filename)
 	fprintf(stderr, "parser OK!\n");
 
 failed:
-	if(decoder)
-		pop3_decode_destroy(decoder);
+	if(work)
+		pop3_work_destroy(work);
 	if(line)
 		free(line);
 	if(fp)
@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "Usage: pop3_parser <file_name>\n");
 		return -1;
 	}
-	pop3_decode_init();
+	pop3_decoder_init();
 	debug_pop3_server_lexer = 1;
 	debug_pop3_server_parser = 1;
 	debug_pop3_client_lexer = 1;
@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
 	debug_pop3_mem = 1;
 	debug_pop3_detect = 1;
 	ret = parse_pop3_file(argv[1]);
-	pop3_decode_finit();
+	pop3_decoder_finit();
 
 	return ret;
 }
