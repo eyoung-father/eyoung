@@ -9,7 +9,7 @@
 #include "libengine.h"
 #include "pop3.h"
 
-static int parse_pop3_file(pop3_handler_t decoder, engine_t engine, const char *filename)
+static int parse_pop3_file(pop3_handler_t decoder, const char *filename)
 {
 	char *line = NULL;
 	size_t len = 0;
@@ -24,7 +24,7 @@ static int parse_pop3_file(pop3_handler_t decoder, engine_t engine, const char *
 		goto failed;
 	}
 
-	work = pop3_work_create(decoder, engine, 0);
+	work = pop3_work_create(decoder, 0);
 	if(!work)
 	{
 		fprintf(stderr, "failed to alloc pop3 private data\n");
@@ -125,7 +125,7 @@ int main(int argc, char *argv[])
 		goto failed;
 	}
 	
-	decoder = pop3_decoder_init();
+	decoder = pop3_decoder_init(engine);
 	if(!decoder)
 	{
 		fprintf(stderr, "create pop3 decoder failed\n");
@@ -133,7 +133,7 @@ int main(int argc, char *argv[])
 		goto failed;
 	}
 
-	ret = parse_pop3_file(decoder, engine, argv[2]);
+	ret = parse_pop3_file(decoder, argv[2]);
 
 failed:
 	if(decoder)

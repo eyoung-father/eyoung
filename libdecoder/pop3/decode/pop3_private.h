@@ -11,9 +11,11 @@ extern int parse_pop3_client_stream(struct pop3_data *priv, const char *buf, siz
 extern int parse_pop3_server_stream(struct pop3_data *priv, const char *buf, size_t buf_len, int last_frag);
 
 #include "ey_memory.h"
+#include "libengine_type.h"
 
 typedef struct pop3_decoder
 {
+	engine_t engine;
 	ey_slab_t pop3_data_slab;
 	ey_slab_t pop3_request_slab;
 	ey_slab_t pop3_response_slab;
