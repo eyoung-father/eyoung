@@ -47,11 +47,7 @@
 
 %union
 {
-	struct
-	{
-		char *str;
-		int str_len;
-	}string;
+	pop3_string_t string;
 	pop3_res_content_t content;
 	pop3_response_t *response;
 }
@@ -312,5 +308,25 @@ int parse_pop3_server_stream(pop3_data_t *priv, const char *buf, size_t buf_len,
 		return 2;
 	}
 	return 0;
+}
+
+void pop3_server_register(pop3_decoder_t *decoder)
+{
+	assert(decoder!=NULL);
+	assert(decoder->engine!=NULL);
+
+	engine_t engine = decoder->engine;
+	int index = 0;
+	for(index=0; index<YYNNTS; index++)
+	{
+		const char *name = yytname[YYNTOKENS + index];
+		if(!name || name[0]=='$' || name[0]=='@')
+			continue;
+		yytid[YYNTOKENS + index] = ey_engine_find_event(engine, name);
+		if(yytid[YYNTOKENS + index] >= 0)
+			pop3_debug(debug_pop3_server_parser, "server event id of %s is %d\n", name, yytid[YYNTOKENS + index]);
+		else
+			pop3_debug(debug_pop3_server_parser, "failed to register server event %s\n", name);
+	}
 }
 #undef priv_decoder

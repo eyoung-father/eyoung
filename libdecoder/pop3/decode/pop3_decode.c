@@ -79,6 +79,8 @@ pop3_handler_t pop3_decoder_init(engine_t engine)
 	}
 
 	decoder->engine = engine;
+	pop3_server_register(decoder);
+	pop3_client_register(decoder);
 	return (pop3_handler_t)decoder;
 
 failed:

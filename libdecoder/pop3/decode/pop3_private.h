@@ -24,4 +24,6 @@ typedef struct pop3_decoder
 	ey_slab_t pop3_res_line_slab;
 }pop3_decoder_t;
 
+extern void pop3_server_register(pop3_decoder_t *decoder);
+extern void pop3_client_register(pop3_decoder_t *decoder);
 #endif

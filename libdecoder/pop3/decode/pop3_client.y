@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
+#include <assert.h>
 #include "pop3.h"
 #include "pop3_type.h"
 #include "pop3_util.h"
@@ -49,11 +50,7 @@
 
 %union
 {
-	struct
-	{
-		char *str;
-		int str_len;
-	};
+	pop3_string_t string;
 	pop3_request_t *request;
 	pop3_req_arg_list_t arg_list;
 }
@@ -509,14 +506,14 @@ noop_command: TOKEN_CLIENT_NOOP request_args
 
 unknown_command: TOKEN_CLIENT_UNKNOWN request_args
 	{
-		char *name = (char*)pop3_malloc(yylval.str_len+1);
+		char *name = (char*)pop3_malloc(yylval.string.str_len+1);
 		if(!name)
 		{
 			pop3_debug(debug_pop3_client_parser, "failed to alloc unknown command name\n");
 			YYABORT;
 		}
-		memcpy(name, yylval.str, yylval.str_len);
-		name[yylval.str_len] = '\0';
+		memcpy(name, yylval.string.str, yylval.string.str_len);
+		name[yylval.string.str_len] = '\0';
 
 		pop3_abnormal(debug_pop3_client_parser, "Abnormal: UNKNOWN command %s\n", name);
 		pop3_request_t *req = pop3_alloc_request(priv_decoder, POP3_COMMAND_UNKNOWN, name);
@@ -537,7 +534,7 @@ request_args:
 	}
 	| request_args TOKEN_CLIENT_STRING
 	{
-		pop3_req_arg_t *arg = pop3_alloc_req_arg(priv_decoder, yylval.str, yylval.str_len);
+		pop3_req_arg_t *arg = pop3_alloc_req_arg(priv_decoder, yylval.string.str, yylval.string.str_len);
 		if(!arg)
 		{
 			pop3_debug(debug_pop3_client_parser, "failed to alloc req arg\n");
@@ -583,5 +580,25 @@ int parse_pop3_client_stream(pop3_data_t *priv, const char *buf, size_t buf_len,
 		return 2;
 	}
 	return 0;
+}
+
+void pop3_client_register(pop3_decoder_t *decoder)
+{
+	assert(decoder!=NULL);
+	assert(decoder->engine!=NULL);
+
+	engine_t engine = decoder->engine;
+	int index = 0;
+	for(index=0; index<YYNNTS; index++)
+	{
+		const char *name = yytname[YYNTOKENS + index];
+		if(!name || name[0]=='$' || name[0]=='@')
+			continue;
+		yytid[YYNTOKENS + index] = ey_engine_find_event(engine, name);
+		if(yytid[YYNTOKENS + index] >= 0)
+			pop3_debug(debug_pop3_server_parser, "client event id of %s is %d\n", name, yytid[YYNTOKENS + index]);
+		else
+			pop3_debug(debug_pop3_server_parser, "failed to register client event %s\n", name);
+	}
 }
 #undef priv_decoder

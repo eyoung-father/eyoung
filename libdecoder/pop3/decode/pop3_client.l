@@ -98,71 +98,71 @@ WORD	[^ \r\n\t]+
 "RSET"{SPACE}	{GOTO(POP3_CLIENT_RSET); RETURN(TOKEN_CLIENT_RSET);}
 "TOP"{SPACE}	{GOTO(POP3_CLIENT_TOP); RETURN(TOKEN_CLIENT_TOP);}
 "UIDL"{SPACE}	{GOTO(POP3_CLIENT_UIDL); RETURN(TOKEN_CLIENT_UIDL);}
-{WORD}{SPACE}	{GOTO(POP3_CLIENT_UNKNOWN); yylval->str=yytext; yylval->str_len=yyleng-1; RETURN(TOKEN_CLIENT_UNKNOWN);}
+{WORD}{SPACE}	{GOTO(POP3_CLIENT_UNKNOWN); yylval->string.str=yytext; yylval->string.str_len=yyleng-1; RETURN(TOKEN_CLIENT_UNKNOWN);}
 }
 
 <POP3_CLIENT_USER>{
-{WORD}			{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
+{WORD}			{yylval->string.str=yytext; yylval->string.str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
 {NEWLINE}		{GOTO(INITIAL); RETURN(TOKEN_CLIENT_NEWLINE);}
 }
 
 <POP3_CLIENT_PASS>{
-{WORD}			{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
+{WORD}			{yylval->string.str=yytext; yylval->string.str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
 {NEWLINE}		{GOTO(INITIAL); RETURN(TOKEN_CLIENT_NEWLINE);}
 }
 
 <POP3_CLIENT_APOP>{
-{WORD}			{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
+{WORD}			{yylval->string.str=yytext; yylval->string.str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
 {NEWLINE}		{GOTO(INITIAL); RETURN(TOKEN_CLIENT_NEWLINE);}
 }
 
 <POP3_CLIENT_QUIT>{
-{WORD}			{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
+{WORD}			{yylval->string.str=yytext; yylval->string.str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
 {NEWLINE}		{GOTO(INITIAL); RETURN(TOKEN_CLIENT_NEWLINE);}
 }
 
 <POP3_CLIENT_NOOP>{
-{WORD}			{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
+{WORD}			{yylval->string.str=yytext; yylval->string.str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
 {NEWLINE}		{GOTO(INITIAL); RETURN(TOKEN_CLIENT_NEWLINE);}
 }
 
 <POP3_CLIENT_STAT>{
-{WORD}			{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
+{WORD}			{yylval->string.str=yytext; yylval->string.str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
 {NEWLINE}		{GOTO(INITIAL); RETURN(TOKEN_CLIENT_NEWLINE);}
 }
 
 <POP3_CLIENT_LIST>{
-{WORD}			{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
+{WORD}			{yylval->string.str=yytext; yylval->string.str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
 {NEWLINE}		{GOTO(INITIAL); RETURN(TOKEN_CLIENT_NEWLINE);}
 }
 
 <POP3_CLIENT_RETR>{
-{WORD}			{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
+{WORD}			{yylval->string.str=yytext; yylval->string.str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
 {NEWLINE}		{GOTO(INITIAL); RETURN(TOKEN_CLIENT_NEWLINE);}
 }
 
 <POP3_CLIENT_DELE>{
-{WORD}			{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
+{WORD}			{yylval->string.str=yytext; yylval->string.str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
 {NEWLINE}		{GOTO(INITIAL); RETURN(TOKEN_CLIENT_NEWLINE);}
 }
 
 <POP3_CLIENT_RSET>{
-{WORD}			{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
+{WORD}			{yylval->string.str=yytext; yylval->string.str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
 {NEWLINE}		{GOTO(INITIAL); RETURN(TOKEN_CLIENT_NEWLINE);}
 }
 
 <POP3_CLIENT_TOP>{
-{WORD}			{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
+{WORD}			{yylval->string.str=yytext; yylval->string.str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
 {NEWLINE}		{GOTO(INITIAL); RETURN(TOKEN_CLIENT_NEWLINE);}
 }
 
 <POP3_CLIENT_UIDL>{
-{WORD}			{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
+{WORD}			{yylval->string.str=yytext; yylval->string.str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
 {NEWLINE}		{GOTO(INITIAL); RETURN(TOKEN_CLIENT_NEWLINE);}
 }
 
 <POP3_CLIENT_UNKNOWN>{
-{WORD}			{yylval->str=yytext; yylval->str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
+{WORD}			{yylval->string.str=yytext; yylval->string.str_len=yyleng; RETURN(TOKEN_CLIENT_STRING);}
 {NEWLINE}		{GOTO(INITIAL); RETURN(TOKEN_CLIENT_NEWLINE);}
 }
 

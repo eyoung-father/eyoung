@@ -5,6 +5,12 @@
 #include "pop3_decode.h"
 #include "libengine.h"
 
+typedef struct pop3_string
+{
+	char *str;
+	int str_len;
+}pop3_string_t;
+
 /*
  * Client Message Type
  */

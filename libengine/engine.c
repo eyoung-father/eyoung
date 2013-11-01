@@ -102,7 +102,7 @@ int ey_engine_find_event(engine_t engine, const char *event_name)
 	if(event_name[0]=='$' || event_name[0]=='@')
 	{
 		engine_init_debug("default event %s don't need registered\n", event_name);
-		return 0;
+		return -1;
 	}
 
 	ey_engine_t *eng = (ey_engine_t *)engine;
