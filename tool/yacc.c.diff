@@ -1,7 +1,7 @@
 892a893,900
 > /*callback while after doing reduction*/
 > #ifndef YY_REDUCTION_CALLBACK
-> #define YY_REDUCTION_CALLBACK(name,val)
+> #define YY_REDUCTION_CALLBACK(data, name, id, val)
 > #define NO_REDUCTION_CALLBACK
 > #else
 > /*ips engine element id array*/
@@ -15,13 +15,19 @@
 <   free (yyps);]b4_pure_if([], [[
 ---
 >   YYFREE (yyps);]b4_pure_if([], [[
-1807a1816,1824
+1546a1555,1559
+> #ifndef NO_REDUCTION_CALLBACK
+> 	char *cluster_buffer = NULL;
+> 	size_t cluster_buffer_len = 0;
+> #endif
+> 
+1807a1821,1829
 >   
 > #ifndef NO_REDUCTION_CALLBACK
 >   /*do ips signature check*/
 >   if(yyr1[yyn] > YYNTOKENS && yytname[yyr1[yyn]][0] != '$' && yytname[yyr1[yyn]][0] != '@@')
 >   {
-> 	YY_REDUCTION_CALLBACK(yytname[yyr1[yyn]], &yyval);
+> 	YY_REDUCTION_CALLBACK(priv_data, yytname[yyr1[yyn]], yytid[yyr1[yyn]], &yyval);
 >   }
 > #endif
 > 	

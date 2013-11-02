@@ -22,7 +22,12 @@
 #define YY_REDUCTION_CALLBACK(data,name,id,val)									\
 	do																			\
 	{																			\
-		pop3_debug(debug_pop3_detect, "detect client %s[%d]\n", name, id);		\
+		if(pop3_element_detect(data,name,id,val,								\
+			cluster_buffer,cluster_buffer_len)<0)								\
+		{																		\
+			pop3_debug(debug_pop3_detect, "find attack!\n");					\
+			return -1;															\
+		}																		\
 	}while(0)
 
 #define priv_decoder															\

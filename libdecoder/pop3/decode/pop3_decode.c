@@ -98,3 +98,44 @@ void pop3_decoder_finit(pop3_handler_t handler)
 		pop3_free(decoder);
 	}
 }
+
+int pop3_element_detect(pop3_data_t *pop3_data, const char *event_name, int event_id, void *event, 
+	char *cluster_buffer, size_t cluster_buffer_len)
+{
+	if(!event_name)
+	{
+		pop3_debug(debug_pop3_detect, "event name is null\n");
+		return 0;
+	}
+
+	if(event_id < 0)
+	{
+		pop3_debug(debug_pop3_detect, "event id %d for event %s is illegal\n", event_id, event_name);
+		return 0;
+	}
+
+	if(!pop3_data || !event)
+	{
+		pop3_debug(debug_pop3_detect, "bad parameter for event %s\n", event_name);
+		return 0;
+	}
+
+	engine_action_t action = {ENGINE_ACTION_PASS};
+	engine_work_t *work = pop3_data->engine_work;
+	engine_work_event_t *work_event = ey_engine_work_create_event(work, event_id, &action);
+	if(!work_event)
+	{
+		pop3_debug(debug_pop3_detect, "create event for %s failed\n", event_name);
+		return 0;
+	}
+	work_event->data = cluster_buffer;
+	work_event->data_len = cluster_buffer_len;
+	work_event->event = event;
+	ey_engine_work_detect_event(work_event);
+	ey_engine_work_destroy_event(work_event);
+	pop3_debug(debug_pop3_detect, "detect client %s[%d], get actoin %s\n",
+		event_name, event_id, ey_engine_action_name(action.action));
+	if(action.action==ENGINE_ACTION_PASS)
+		return 0;
+	return -1;
+}
