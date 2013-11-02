@@ -127,6 +127,13 @@ void ey_engine_work_destroy(engine_work_t *work)
 	ey_runtime_destroy(work);
 }
 
+void ey_engine_work_set_data(engine_work_event_t *event, void *predefined, char *data, size_t data_len)
+{
+	event->predefined = predefined;
+	event->data = data;
+	event->data_len = data_len;
+}
+
 engine_work_event_t *ey_engine_work_create_event(engine_work_t *work, unsigned long event_id, engine_action_t *action)
 {
 	return ey_runtime_create_event(work, event_id, action);

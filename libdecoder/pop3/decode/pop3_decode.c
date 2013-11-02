@@ -128,9 +128,7 @@ int pop3_element_detect(pop3_data_t *pop3_data, const char *event_name, int even
 		pop3_debug(debug_pop3_detect, "create event for %s failed\n", event_name);
 		return 0;
 	}
-	work_event->data = cluster_buffer;
-	work_event->data_len = cluster_buffer_len;
-	work_event->event = event;
+	ey_engine_work_set_data(work_event, event, cluster_buffer, cluster_buffer_len);
 	ey_engine_work_detect_event(work_event);
 	ey_engine_work_destroy_event(work_event);
 	pop3_debug(debug_pop3_detect, "detect client %s[%d], get actoin %s\n",

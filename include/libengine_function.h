@@ -11,6 +11,7 @@ extern int ey_engine_find_event(engine_t engine, const char *event_name);
 extern engine_work_t *ey_engine_work_create(engine_t engine);
 extern void ey_engine_work_destroy(engine_work_t *work);
 extern engine_work_event_t *ey_engine_work_create_event(engine_work_t *work, unsigned long event_id, engine_action_t *action);
+extern void ey_engine_work_set_data(engine_work_event_t *event, void *predefined, char *data, size_t data_len);
 extern int ey_engine_work_detect_event(engine_work_event_t *event);
 extern void ey_engine_work_destroy_event(engine_work_event_t *event);
 
