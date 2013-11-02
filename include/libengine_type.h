@@ -26,6 +26,19 @@ typedef struct engine_action
 	unsigned int action;
 }engine_action_t;
 
+static inline const char* ey_engine_action_name(int action)
+{
+	switch(action)
+	{
+		case ENGINE_ACTION_PASS:
+			return "PASS";
+		case ENGINE_ACTION_DROP:
+			return "DROP";
+		default:
+			return "UNKOWN";
+	}
+}
+
 typedef struct engine_work_event
 {
 	char *data;
