@@ -40,8 +40,10 @@ int ey_bitmap_init(ey_engine_t *eng)
 
 void ey_bitmap_finit(ey_engine_t *eng)
 {
-	engine_fzfinit(ey_bitmap_buffer_fslab(eng));
-	engine_zfinit(ey_bitmap_slab(eng));
+	if(ey_bitmap_buffer_fslab(eng))
+		engine_fzfinit(ey_bitmap_buffer_fslab(eng));
+	if(ey_bitmap_slab(eng))
+		engine_zfinit(ey_bitmap_slab(eng));
 }
 
 ey_bitmap_t *ey_bitmap_create(ey_engine_t *eng, unsigned long count)
