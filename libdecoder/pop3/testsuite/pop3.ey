@@ -5,6 +5,7 @@
 #include "pop3.h"
 
 static int print_user_command(engine_work_event_t *event);
+static int print_pass_command(engine_work_event_t *event);
 %}
 
 %output "pop3.eyc"
@@ -44,6 +45,8 @@ static int print_user_command(engine_work_event_t *event);
 
 %%
 1:user_command(print_user_command(_THIS_));
+
+2:pass_command(print_pass_command(_THIS_));
 %%
 int pop3_work_init(engine_work_t *work)
 {
@@ -95,7 +98,22 @@ static int print_user_command(engine_work_event_t *event)
 	{
 		memcpy(buffer, user_request->user, user_request->len);
 		buffer[user_request->len] = '\0';
-		fprintf(stderr, "=============%s\n", buffer);
+		fprintf(stderr, "user:=============%s\n", buffer);
+		free(buffer);
+	}
+	return 0;
+}
+
+static int print_pass_command(engine_work_event_t *event)
+{
+	pop3_request_t *request = *(pop3_request_t**)(event->predefined);
+	pop3_req_pass_t *pass_request = &request->pass;
+	char *buffer = (char*)malloc(pass_request->len + 1);
+	if(buffer)
+	{
+		memcpy(buffer, pass_request->pass, pass_request->len);
+		buffer[pass_request->len] = '\0';
+		fprintf(stderr, "pass:=============%s\n", buffer);
 		free(buffer);
 	}
 	return 0;
