@@ -5,7 +5,7 @@
 #include "pop3.h"
 
 static int print_user_command(engine_work_event_t *event);
-static int print_pass_command(engine_work_event_t *event);
+extern int print_pass_command(engine_work_event_t *event);
 %}
 
 %output "pop3.eyc"
@@ -112,7 +112,7 @@ static int print_user_command(engine_work_event_t *event)
 	return 1;
 }
 
-static int print_pass_command(engine_work_event_t *event)
+int print_pass_command(engine_work_event_t *event)
 {
 	pop3_request_t *request = *(pop3_request_t**)(event->predefined);
 	pop3_req_pass_t *pass_request = &request->pass;
