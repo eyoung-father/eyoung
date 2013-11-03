@@ -555,13 +555,12 @@ int ey_runtime_detect_event(engine_work_event_t *work_event)
 
 #ifndef RELEASE
 	ey_engine_t *eng = (ey_engine_t*)(engine_work->engine);
+	ey_assert(eng != NULL);
 #endif
 	ey_work_t *work = (ey_work_t*)(engine_work->priv_data);
-	ey_assert(eng != NULL && work != NULL);
+	ey_assert(work != NULL);
 
-#ifndef RELEASE
 	ey_event_t *event = (ey_event_t*)(work_event->event);
-#endif
 	engine_action_t *action = work_event->action;
 	ey_assert(event != NULL && action != NULL);
 	action->action = ENGINE_ACTION_PASS;
@@ -580,30 +579,39 @@ int ey_runtime_detect_event(engine_work_event_t *work_event)
 	engine_runtime_debug("start to do top half check\n");
 	TAILQ_INSERT_TAIL(&work->event_list, work_event, link);
 	int event_count = 0;
+	int release_list = 0;
 	engine_work_event_t *tmp = NULL;
 
 	ey_spinlock_lock(&item->lock);
 	TAILQ_FOREACH_SAFE(work_event, &work->event_list, link, tmp)
 	{
+		event = (ey_event_t*)(work_event->event);
+		engine_runtime_debug("check event %s\n", event->name);
 		if(event_count++ >= MAX_RUNTIME_EVENT)
 		{
 			engine_runtime_debug("check too many event once\n");
-			break;
+			release_list = 1;
 		}
-
-		if(do_top_half_detect(work_event))
+		
+		if(!release_list)
 		{
-			ey_spinlock_unlock(&item->lock);
-			engine_runtime_debug("no need to bottom half check, return 0\n");
-			return 0;
-		}
-
-		engine_runtime_debug("start to do bottom half check\n");
-		if(do_bottom_half_detect(work_event))
-		{
-			ey_spinlock_unlock(&item->lock);
-			engine_runtime_debug("event is clean, return 0\n");
-			return 0;
+			int do_bottom = 1;
+			if(do_top_half_detect(work_event))
+			{
+				ey_spinlock_unlock(&item->lock);
+				engine_runtime_debug("no need to bottom half check, return 0\n");
+				do_bottom = 0;
+			}
+			
+			if(do_bottom)
+			{
+				engine_runtime_debug("start to do bottom half check\n");
+				if(do_bottom_half_detect(work_event))
+				{
+					ey_spinlock_unlock(&item->lock);
+					engine_runtime_debug("event is clean, return 0\n");
+				}
+			}
 		}
 
 		TAILQ_REMOVE(&work->event_list, work_event, link);
@@ -612,5 +620,5 @@ int ey_runtime_detect_event(engine_work_event_t *work_event)
 	}
 	ey_spinlock_unlock(&item->lock);
 	engine_runtime_debug("event detect return %d\n", action->action==ENGINE_ACTION_PASS?0:-1);
-	return 0;
+	return action->action==ENGINE_ACTION_PASS?0:-1;
 }
