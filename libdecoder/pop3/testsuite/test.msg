@@ -1,5 +1,5 @@
 S:+OK mail.hillstonenet.com
-C:USER test
+C:USER test1
 S:+OK
 C:Pass test
 S:-ErR Auth Failed
@@ -9,7 +9,7 @@ C:user
 S:-err no username found
 C:retr
 S:-err need auth
-C:User test
+C:User test2
 S:+ok
 C:PASS hillstone
 S:+OK Auth Successfully
