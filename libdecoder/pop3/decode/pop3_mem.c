@@ -11,6 +11,8 @@
 #include "pop3_client_lex.h"
 #include "pop3_server_lex.h"
 
+extern int pop3_cmd_pair_id;
+
 void pop3_free_request(pop3_decoder_t *decoder, pop3_request_t *req)
 {
 	if(!req)
@@ -506,5 +508,11 @@ int pop3_add_command(pop3_decoder_t *decoder, pop3_data_t *priv_data)
 	if(req)
 		STAILQ_REMOVE_HEAD(&priv_data->request_list, next);
 	STAILQ_INSERT_TAIL(&priv_data->cmd_list, cmd, next);
+
+	if(pop3_element_detect(priv_data, "cmd_pair", pop3_cmd_pair_id, &cmd, NULL, 0) < 0)
+	{
+		pop3_debug(debug_pop3_detect, "find attack\n");
+		return -1;
+	}
 	return 0;
 }

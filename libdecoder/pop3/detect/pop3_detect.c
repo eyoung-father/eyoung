@@ -18,12 +18,6 @@ int pop3_do_brute_force_check(void *priv_data)
 	return 0;
 }
 
-int pop3_do_rule_detect(void *priv_data, const char* element_name, void *element_data)
-{
-	pop3_debug(debug_pop3_detect, "do signature check for %s\n", element_name);
-	return 0;
-}
-
 int pop3_state_check(void *link)
 {
 	pop3_data_t *priv_data = (pop3_data_t*)link;

@@ -230,34 +230,6 @@ typedef struct pop3_parser
 /*
  * pop3 private data
  */
-typedef enum pop3_state
-{
-	POP3_STATE_INIT=0,
-	POP3_STATE_AUTHORIZATION,
-	POP3_STATE_TRANSACTION,
-	POP3_STATE_UPDATE,
-
-	POP3_STATE_MAX
-}pop3_state_t;
-
-static inline const char *pop3_state_name(pop3_state_t state)
-{
-	switch(state)
-	{
-		case POP3_STATE_INIT:
-			return "INIT";
-		case POP3_STATE_AUTHORIZATION:
-			return "AUTH";
-		case POP3_STATE_TRANSACTION:
-			return "TRANSACTION";
-		case POP3_STATE_UPDATE:
-			return "UPDATE";
-		case POP3_STATE_MAX:
-		default:
-			return "Unknown";
-	}
-}
-
 typedef struct pop3_data
 {
 	pop3_handler_t decoder;

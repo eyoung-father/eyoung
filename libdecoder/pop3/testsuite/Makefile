@@ -4,4 +4,4 @@ all:
 	cp ../include/* ./include
 
 clean:
-	rm -rf pop3
+	rm -rf pop3 pop3.eyc

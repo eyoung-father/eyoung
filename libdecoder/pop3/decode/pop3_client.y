@@ -32,6 +32,8 @@
 
 #define priv_decoder															\
 	((pop3_decoder_t*)(((pop3_data_t*)priv_data)->decoder))
+
+int pop3_cmd_pair_id;
 %}
 %token TOKEN_CLIENT_USER
 %token TOKEN_CLIENT_PASS
@@ -605,5 +607,7 @@ void pop3_client_register(pop3_decoder_t *decoder)
 		else
 			pop3_debug(debug_pop3_server_parser, "failed to register client event %s\n", name);
 	}
+
+	pop3_cmd_pair_id = ey_engine_find_event(engine, "cmd_pair");
 }
 #undef priv_decoder

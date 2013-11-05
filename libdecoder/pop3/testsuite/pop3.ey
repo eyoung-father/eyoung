@@ -43,6 +43,11 @@ extern int print_pass_command(engine_work_event_t *event);
 %event "request" 					"pop3_request_t *"
 %event "request_args" 				"pop3_req_arg_list_t"
 
+/*
+ * REQUEST/RESPONSE PAIR
+ * */
+%event "cmd_pair"					"pop3_cmd_t *"
+
 %%
 1:user_command(print_user_command(_THIS_))
 	{
