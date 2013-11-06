@@ -44,8 +44,10 @@ static int destroy_each(void *l, void *e)
 	ey_library_t *lib = (ey_library_t*)l;
 	ey_engine_t *eng = (ey_engine_t*)e;
 	finit_handler finit_func = lib->finit;
-	engine_parser_debug("finit function for %s returns %d\n", lib->name, (*finit_func)(eng));
-
+	if(finit_func)
+		engine_parser_debug("finit function for %s returns %d\n", lib->name, (*finit_func)(eng));
+	else
+		engine_parser_debug("no finit function for %s\n", lib->name?lib->name:"(NULL)");
 
 	if(lib->finit_name)
 		engine_fzfree(ey_parser_fslab(eng), lib->finit_name);
@@ -129,8 +131,11 @@ int ey_attach_library(struct ey_engine *eng, char *libname)
 		engine_parser_error("insert hash failed\n");
 		goto failed;
 	}
-
-	engine_parser_debug("init function for %s returns %d\n", libname, (*init_func)(eng));
+	
+	if(init_func)
+		engine_parser_debug("init function for %s returns %d\n", libname, (*init_func)(eng));
+	else
+		engine_parser_debug("no init function\n");
 	return 0;
 
 failed:
@@ -163,7 +168,10 @@ int ey_detach_library(ey_engine_t *eng, char *libname)
 	}
 	
 	finit_func = lib->finit;
-	engine_parser_debug("finit function for %s returns %d\n", libname, (*finit_func)(eng));
+	if(finit_func)
+		engine_parser_debug("finit function for %s returns %d\n", libname, (*finit_func)(eng));
+	else
+		engine_parser_debug("no finit function\n");
 
 	if(lib->finit_name)
 		engine_fzfree(ey_parser_fslab(eng), lib->finit_name);

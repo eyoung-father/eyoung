@@ -3,7 +3,6 @@
 
 #include "ey_queue.h"
 #include "pop3_decode.h"
-#include "pop3_detect.h"
 #include "pop3_type.h"
 #include "pop3_util.h"
 

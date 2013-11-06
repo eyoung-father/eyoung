@@ -5,7 +5,6 @@
 #include <stdarg.h>
 #include <assert.h>
 #include "pop3.h"
-#include "pop3_detect.h"
 #include "pop3_util.h"
 #include "pop3_type.h"
 #include "pop3_mem.h"

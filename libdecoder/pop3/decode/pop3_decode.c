@@ -132,7 +132,7 @@ int pop3_element_detect(pop3_data_t *pop3_data, const char *event_name, int even
 	ey_engine_work_set_data(work_event, event, cluster_buffer, cluster_buffer_len);
 	ey_engine_work_detect_event(work_event);
 	ey_engine_work_destroy_event(work_event);
-	pop3_debug(debug_pop3_detect, "detect client %s[%d], get actoin %s\n",
+	pop3_debug(debug_pop3_detect, "detect %s[%d], get actoin %s\n",
 		event_name, event_id, ey_engine_action_name(action.action));
 	if(action.action==ENGINE_ACTION_PASS)
 		return 0;

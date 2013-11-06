@@ -215,6 +215,12 @@ int ey_elf_read_init(ey_engine_t *eng, void *lib_handle, const char *libname, in
 	}
 
 	*init_name = arg.name;
+	if(!*init_name)
+	{
+		engine_parser_debug("cannot find init function\n");
+		return 0;
+	}
+
 	*init = (init_handler)dlsym(lib_handle, arg.name);
 	if(!*init)
 	{
@@ -244,6 +250,12 @@ int ey_elf_read_finit(ey_engine_t *eng, void *lib_handle, const char *libname, f
 	}
 
 	*finit_name = arg.name;
+	if(!*finit_name)
+	{
+		engine_parser_debug("cannot find finit function\n");
+		return 0;
+	}
+
 	*finit = (finit_handler)dlsym(lib_handle, arg.name);
 	if(!*finit)
 	{

@@ -2,14 +2,20 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 #include "pop3.h"
+#include "pop3_detect.h"
+#include "ey_memory.h"
 
 static int print_user_command(engine_work_event_t *event);
 extern int print_pass_command(engine_work_event_t *event);
+
+static ey_slab_t pop3_userdefined_slab;
 %}
 
 %output "pop3.eyc"
 %file-init "pop3_init"
+%import "libpop3_detect.so"
 
 /*
  * SERVER SIDE EVENT
@@ -61,44 +67,56 @@ extern int print_pass_command(engine_work_event_t *event);
 	}
 	;
 %%
-int pop3_work_init(engine_work_t *work)
-{
-	fprintf(stderr, ">>>>>>>>>>>>>>>>>pop3_work_init return 0\n");
-	return 0;
-}
-
-int pop3_work_finit(engine_work_t *work)
-{
-	fprintf(stderr, "<<<<<<<<<<<<<<<<<pop3_work_init return 0\n");
-	return 0;
-}
-
 int pop3_work_init_user(engine_work_t *work)
 {
+	assert(work->user_defined == NULL);
+	pop3_userdefined_t *userdefined = ey_zalloc(pop3_userdefined_slab);
+	if(!userdefined)
+	{
+		fprintf(stderr, ">>>>>>>>>>>>>>>>>pop3_work_init_user return -1\n");
+		return -1;
+	}
+	userdefined->state = POP3_STATE_INIT;
+	userdefined->cmd_failed = 0;
+	userdefined->auth_failed = 0;
+	work->user_defined = userdefined;
+
 	fprintf(stderr, ">>>>>>>>>>>>>>>>>pop3_work_init_user return 0\n");
 	return 0;
 }
 
 int pop3_work_finit_user(engine_work_t *work)
 {
+	if(work->user_defined)
+	{
+		ey_zfree(pop3_userdefined_slab, work->user_defined);
+		fprintf(stderr, "free pop3 userdefined data\n");
+	}
 	fprintf(stderr, "<<<<<<<<<<<<<<<<<pop3_work_init_user return 0\n");
 	return 0;
 }
 
 int pop3_finit(engine_t eng)
 {
+	if(pop3_userdefined_slab)
+		ey_zfinit(pop3_userdefined_slab);
 	fprintf(stderr, "<<<<<<<<<<<<<<<<<pop3_finit return 0\n");
 	return 0;
 }
 
 int pop3_init(engine_t eng)
 {
-	fprintf(stderr, ">>>>>>>>>>>>>>>>>pop3_init return 0\n");
+	pop3_userdefined_slab = ey_zinit("pop3 userdefined slab", sizeof(pop3_userdefined_t), NULL);
+	if(!pop3_userdefined_slab)
+	{
+		fprintf(stderr, ">>>>>>>>>>>>>>>>>pop3_init return -1\n");
+		return -1;
+	}
+
 	ey_add_file_finit(eng, pop3_finit);
-	ey_set_predefine_work_init(eng, pop3_work_init);
-	ey_set_predefine_work_finit(eng, pop3_work_finit);
 	ey_set_userdefine_work_init(eng, pop3_work_init_user);
 	ey_set_userdefine_work_finit(eng, pop3_work_finit_user);
+	fprintf(stderr, ">>>>>>>>>>>>>>>>>pop3_init return 0\n");
 	return 0;
 }
 
