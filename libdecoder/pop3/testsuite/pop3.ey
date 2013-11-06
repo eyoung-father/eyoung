@@ -93,6 +93,15 @@ static ey_slab_t pop3_userdefined_slab;
 6:cmd_pair(do_weak_password_check(_THIS_))
 	;
 
+7:request(pop3_state_check(_WORK_, _THIS_))
+	;
+
+8:cmd_pair
+	{
+		pop3_state_transfer(_WORK_, _THIS_);
+		return 0;
+	}
+	;
 %%
 int pop3_work_init_user(engine_work_t *work)
 {

@@ -6,8 +6,11 @@
 #include "pop3_util.h"
 #include "pop3_mem.h"
 
+#define ENTER_FUNC	pop3_debug(debug_pop3_detect, "\n=============ENTER %s=============\n", __FUNCTION__)
+#define EXIT_FUNC	pop3_debug(debug_pop3_detect, "=============EXIT %s=============\n\n", __FUNCTION__)
 int pop3_state_check(engine_work_t *link, engine_work_event_t *event)
 {
+	ENTER_FUNC;
 	pop3_data_t *predefined = (pop3_data_t*)(link->predefined);
 	pop3_userdefined_t *userdefined = (pop3_userdefined_t*)(link->user_defined);
 	pop3_request_t *request = *(pop3_request_t**)(event->predefined);
@@ -15,6 +18,7 @@ int pop3_state_check(engine_work_t *link, engine_work_event_t *event)
 	if(!predefined || !userdefined || !request)
 	{
 		pop3_debug(debug_pop3_detect, "null pop3_data(%p) or null pop3_userdefined(%p) or null request(%p)\n", predefined, userdefined, request);
+		EXIT_FUNC;
 		return 0;
 	}
 
@@ -35,18 +39,22 @@ int pop3_state_check(engine_work_t *link, engine_work_event_t *event)
 		pop3_debug(debug_pop3_detect, "current state: %s, current req: %s, check result: %s\n",
 			pop3_state_name(userdefined->state),
 			pop3_req_type_name(request->req_code),
-			!check_table[userdefined->state][request->req_code]?"TRUE":"FALSE");
+			check_table[userdefined->state][request->req_code]?"TRUE":"FALSE");
+		EXIT_FUNC;
 		return !check_table[userdefined->state][request->req_code];
 	}
 	else if(userdefined->state == POP3_STATE_INIT)
 	{
+		EXIT_FUNC;
 		return 0;
 	}
+	EXIT_FUNC;
 	return 1;
 }
 
 void pop3_state_transfer(engine_work_t *link, engine_work_event_t *event)
 {
+	ENTER_FUNC;
 	pop3_data_t *predefined = (pop3_data_t*)(link->predefined);
 	pop3_userdefined_t *userdefined = (pop3_userdefined_t*)(link->user_defined);
 	pop3_cmd_t *cmd = *(pop3_cmd_t**)(event->predefined);
@@ -54,6 +62,7 @@ void pop3_state_transfer(engine_work_t *link, engine_work_event_t *event)
 	if(!predefined || !userdefined || !cmd)
 	{
 		pop3_debug(debug_pop3_detect, "null pop3_data(%p) or null pop3_userdefined(%p) or null cmd(%p)\n", predefined, userdefined, cmd);
+		EXIT_FUNC;
 		return;
 	}
 	
@@ -62,12 +71,14 @@ void pop3_state_transfer(engine_work_t *link, engine_work_event_t *event)
 	if(!response)
 	{
 		pop3_debug(debug_pop3_detect, "null response\n");
+		EXIT_FUNC;
 		return;
 	}
 	
 	if(response->res_code != POP3_RESPONSE_OK)
 	{
 		pop3_debug(debug_pop3_detect, "no need do state tranfer for negative response\n");
+		EXIT_FUNC;
 		return;
 	}
 
@@ -106,4 +117,5 @@ void pop3_state_transfer(engine_work_t *link, engine_work_event_t *event)
 	{
 		pop3_debug(debug_pop3_detect, "current state is %s, but get null request\n", pop3_state_name(userdefined->state));
 	}
+	EXIT_FUNC;
 }
