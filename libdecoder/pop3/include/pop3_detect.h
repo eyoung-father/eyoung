@@ -1,6 +1,8 @@
 #ifndef POP3_DETECT
 #define POP3_DETECT 1
 
+#include "libengine.h"
+
 typedef enum pop3_state
 {
 	POP3_STATE_INIT=0,
@@ -29,8 +31,13 @@ static inline const char *pop3_state_name(pop3_state_t state)
 	}
 }
 
-extern int pop3_do_weak_password_check(void *priv_data);
-extern int pop3_do_brute_force_check(void *priv_data);
-extern int pop3_state_check(void *priv_data);
-extern void pop3_state_transfer(void *priv_data);
+typedef struct pop3_userdefined
+{
+	pop3_state_t state;
+	int cmd_failed;
+	int auth_failed;
+}pop3_userdefined_t;
+
+extern int pop3_state_check(engine_work_t *link, engine_work_event_t *event);
+extern void pop3_state_transfer(engine_work_t *link, engine_work_event_t *event);
 #endif

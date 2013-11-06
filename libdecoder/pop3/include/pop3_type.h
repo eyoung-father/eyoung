@@ -134,7 +134,7 @@ typedef int pop3_req_rset_t;
 
 typedef struct pop3_request
 {
-	int req_code;
+	pop3_req_type_t req_code;
 	STAILQ_ENTRY(pop3_request) next;
 	union
 	{
@@ -192,7 +192,7 @@ typedef STAILQ_HEAD(pop3_res_content, pop3_line) pop3_res_content_t;
 
 typedef struct pop3_response
 {
-	int res_code;
+	pop3_res_type_t res_code;
 	int len;
 	char *msg;
 	pop3_res_content_t content;
@@ -244,7 +244,6 @@ typedef struct pop3_data
 	pop3_responses_t response_list;
 
 	/*pop3 session*/
-	int state;
 	pop3_cmd_list_t cmd_list;
 }pop3_data_t;
 #endif

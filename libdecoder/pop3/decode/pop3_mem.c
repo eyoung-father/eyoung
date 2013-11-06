@@ -203,7 +203,6 @@ pop3_data_t* pop3_alloc_priv_data(pop3_decoder_t *decoder, int greedy)
 	pop3_server_set_extra((void*)data, server_lexier);
 
 	/*init session*/
-	data->state = POP3_STATE_INIT;
 	STAILQ_INIT(&data->cmd_list);
 	return data;
 

@@ -36,6 +36,7 @@ pop3_work_t pop3_work_create(pop3_handler_t handler, int greedy)
 	}
 	priv_data->engine_work = engine_work;
 	priv_data->decoder = handler;
+	engine_work->predefined = (void*)priv_data;
 	
 	return priv_data;
 }
