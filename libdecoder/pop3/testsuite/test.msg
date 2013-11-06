@@ -1,7 +1,11 @@
 S:+OK mail.hillstonenet.com
 C:USER test1
 S:+OK
-C:Pass test
+C:Pass test_0
+S:-ErR Auth Failed
+C:USER test1
+S:+OK
+C:Pass test_1
 S:-ErR Auth Failed
 C:stat
 S:-ERR Need Auth
@@ -11,7 +15,7 @@ C:retr
 S:-err need auth
 C:User test2
 S:+ok
-C:PASS hillstone
+C:PASS hillstone123
 S:+OK Auth Successfully
 C:STAT
 S:+OK 2 messages(12345 bytes)

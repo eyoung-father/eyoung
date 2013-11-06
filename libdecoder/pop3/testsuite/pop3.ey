@@ -3,14 +3,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <ctype.h>
 #include "pop3.h"
 #include "pop3_detect.h"
 #include "ey_memory.h"
 
 static int print_user_command(engine_work_event_t *event);
-extern int print_pass_command(engine_work_event_t *event);
+static int print_pass_command(engine_work_event_t *event);
+
+static int do_max_failed_check(engine_work_t *work);
+static int do_brute_auth_check(engine_work_t *work, engine_work_event_t *event);
+static int do_weak_password_check(engine_work_event_t *event);
 
 static ey_slab_t pop3_userdefined_slab;
+
+#define ENTER_FUNC	fprintf(stderr, "\n=============ENTER %s=============\n", __FUNCTION__)
+#define EXIT_FUNC	fprintf(stderr, "=============EXIT %s=============\n\n", __FUNCTION__)
 %}
 
 %output "pop3.eyc"
@@ -55,61 +63,93 @@ static ey_slab_t pop3_userdefined_slab;
 %event "cmd_pair"					"pop3_cmd_t *"
 
 %%
-1:user_command(print_user_command(_THIS_))
+1:user_command
 	{
 		return print_user_command(_THIS_);
 	}
 	;
 
-2:pass_command(print_pass_command(_THIS_))
+2:pass_command
 	{
 		return print_pass_command(_THIS_);
 	}
 	;
+
+3:negative_response(do_max_failed_check(_WORK_))
+	;
+
+4:cmd_pair(do_brute_auth_check(_WORK_,_THIS_))
+	;
+
+5:cmd_pair
+	{
+		pop3_userdefined_t *userdefined = (pop3_userdefined_t*)(_WORK_->user_defined);
+		if(userdefined)
+			userdefined->cmd_count++;
+		return 0;
+	}
+	;
+
+6:cmd_pair(do_weak_password_check(_THIS_))
+	;
+
 %%
 int pop3_work_init_user(engine_work_t *work)
 {
+	ENTER_FUNC;
 	assert(work->user_defined == NULL);
 	pop3_userdefined_t *userdefined = ey_zalloc(pop3_userdefined_slab);
 	if(!userdefined)
 	{
-		fprintf(stderr, ">>>>>>>>>>>>>>>>>pop3_work_init_user return -1\n");
+		fprintf(stderr, "-----------------pop3_work_init_user return -1\n");
+		EXIT_FUNC;
 		return -1;
 	}
 	userdefined->state = POP3_STATE_INIT;
+	userdefined->cmd_count = 0;
 	userdefined->cmd_failed = 0;
 	userdefined->auth_failed = 0;
 	work->user_defined = userdefined;
 
 	fprintf(stderr, ">>>>>>>>>>>>>>>>>pop3_work_init_user return 0\n");
+	EXIT_FUNC;
 	return 0;
 }
 
 int pop3_work_finit_user(engine_work_t *work)
 {
+	ENTER_FUNC;
 	if(work->user_defined)
 	{
+		pop3_userdefined_t *userdefined = (pop3_userdefined_t*)(work->user_defined);
+		fprintf(stderr, "total command: %d, failed command: %d, failed PASS command: %d\n", 
+			userdefined->cmd_count, userdefined->cmd_failed, userdefined->auth_failed);
 		ey_zfree(pop3_userdefined_slab, work->user_defined);
 		fprintf(stderr, "free pop3 userdefined data\n");
 	}
 	fprintf(stderr, "<<<<<<<<<<<<<<<<<pop3_work_init_user return 0\n");
+	EXIT_FUNC;
 	return 0;
 }
 
 int pop3_finit(engine_t eng)
 {
+	ENTER_FUNC;
 	if(pop3_userdefined_slab)
 		ey_zfinit(pop3_userdefined_slab);
 	fprintf(stderr, "<<<<<<<<<<<<<<<<<pop3_finit return 0\n");
+	EXIT_FUNC;
 	return 0;
 }
 
 int pop3_init(engine_t eng)
 {
+	ENTER_FUNC;
 	pop3_userdefined_slab = ey_zinit("pop3 userdefined slab", sizeof(pop3_userdefined_t), NULL);
 	if(!pop3_userdefined_slab)
 	{
-		fprintf(stderr, ">>>>>>>>>>>>>>>>>pop3_init return -1\n");
+		fprintf(stderr, "-----------------pop3_init return -1\n");
+		EXIT_FUNC;
 		return -1;
 	}
 
@@ -117,11 +157,13 @@ int pop3_init(engine_t eng)
 	ey_set_userdefine_work_init(eng, pop3_work_init_user);
 	ey_set_userdefine_work_finit(eng, pop3_work_finit_user);
 	fprintf(stderr, ">>>>>>>>>>>>>>>>>pop3_init return 0\n");
+	EXIT_FUNC;
 	return 0;
 }
 
 static int print_user_command(engine_work_event_t *event)
 {
+	ENTER_FUNC;
 	pop3_request_t *request = *(pop3_request_t**)(event->predefined);
 	pop3_req_user_t *user_request = &request->user;
 	char *buffer = (char*)malloc(user_request->len + 1);
@@ -132,11 +174,13 @@ static int print_user_command(engine_work_event_t *event)
 		fprintf(stderr, "user:=============%s\n", buffer);
 		free(buffer);
 	}
+	EXIT_FUNC;
 	return 1;
 }
 
-int print_pass_command(engine_work_event_t *event)
+static int print_pass_command(engine_work_event_t *event)
 {
+	ENTER_FUNC;
 	pop3_request_t *request = *(pop3_request_t**)(event->predefined);
 	pop3_req_pass_t *pass_request = &request->pass;
 	char *buffer = (char*)malloc(pass_request->len + 1);
@@ -147,5 +191,124 @@ int print_pass_command(engine_work_event_t *event)
 		fprintf(stderr, "pass:=============%s\n", buffer);
 		free(buffer);
 	}
+	EXIT_FUNC;
 	return 1;
+}
+
+static int do_max_failed_check(engine_work_t *work)
+{
+#define MAX_CMD_FAILED	3
+	ENTER_FUNC;
+	pop3_userdefined_t *userdefined = (pop3_userdefined_t*)(work->user_defined);
+	if(userdefined)
+	{
+		userdefined->cmd_failed++;
+		if(userdefined->cmd_failed >= MAX_CMD_FAILED)
+		{
+			fprintf(stderr, "++++++++++++too many errors(%d) in this pop3 session\n", userdefined->cmd_failed);
+			EXIT_FUNC;
+			return 1;
+		}
+		fprintf(stderr, "------------%d errors in this pop3 session\n", userdefined->cmd_failed);
+		EXIT_FUNC;
+		return 0;
+	}
+	else
+	{
+		fprintf(stderr, "null userdefined data\n");
+		EXIT_FUNC;
+		return 0;
+	}
+#undef MAX_CMD_FAILED
+}
+
+static int do_brute_auth_check(engine_work_t *work, engine_work_event_t *event)
+{
+#define MAX_AUTH_FAILED 2
+	ENTER_FUNC;
+	pop3_userdefined_t *userdefined = (pop3_userdefined_t*)(work->user_defined);
+	pop3_cmd_t *cmd = *(pop3_cmd_t**)(event->predefined);
+	if(!userdefined || !cmd)
+	{
+		fprintf(stderr, "null userdefined(%p) or null cmd(%p)\n", userdefined, cmd);
+		EXIT_FUNC;
+		return 0;
+	}
+
+	pop3_request_t *request = cmd->req;
+	pop3_response_t *response = cmd->res;
+	if(!request || !response)
+	{
+		fprintf(stderr, "null request(%p) or null response(%p)\n", request, response);
+		EXIT_FUNC;
+		return 0;
+	}
+
+	fprintf(stderr, "request: %s, response: %s\n", pop3_req_type_name(request->req_code), pop3_res_type_name(response->res_code));
+	if(response->res_code == POP3_RESPONSE_ERROR && request->req_code == POP3_COMMAND_PASS)
+	{
+		userdefined->auth_failed++;
+		fprintf(stderr, "find %d failed in PASS command\n", userdefined->auth_failed);
+		if(userdefined->auth_failed >= MAX_AUTH_FAILED)
+		{
+			fprintf(stderr, "++++++++++++find brute auth attack\n", userdefined->auth_failed);
+			EXIT_FUNC;
+			return 1;
+		}
+	}
+
+	EXIT_FUNC;
+	return 0;
+#undef MAX_AUTH_FAILED
+}
+
+static int do_weak_password_check(engine_work_event_t *event)
+{
+	ENTER_FUNC;
+	pop3_cmd_t *cmd = *(pop3_cmd_t**)(event->predefined);
+
+	if(!cmd)
+	{
+		fprintf(stderr, "null cmd(%p)\n", cmd);
+		EXIT_FUNC;
+		return 0;
+	}
+
+	pop3_request_t *request = cmd->req;
+	pop3_response_t *response = cmd->res;
+	if(!request || !response)
+	{
+		fprintf(stderr, "null request(%p) or null response(%p)\n", request, response);
+		EXIT_FUNC;
+		return 0;
+	}
+
+	fprintf(stderr, "request: %s, response: %s\n", pop3_req_type_name(request->req_code), pop3_res_type_name(response->res_code));
+	if(response->res_code == POP3_RESPONSE_OK && request->req_code == POP3_COMMAND_PASS)
+	{
+		pop3_req_pass_t *pass_req = &request->pass;
+		int index = 0;
+		int weak = 1;
+		while(index < pass_req->len)
+		{
+			if(!isalpha(pass_req->pass[index]))
+			{
+				weak = 0;
+				break;
+			}
+			index++;
+		}
+		if(weak)
+		{
+			fprintf(stderr, "find weak password\n");
+			EXIT_FUNC;
+			return 1;
+		}
+		fprintf(stderr, "password is strong\n");
+		EXIT_FUNC;
+		return 0;
+	}
+
+	EXIT_FUNC;
+	return 0;
 }

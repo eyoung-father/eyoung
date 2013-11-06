@@ -34,6 +34,7 @@ static inline const char *pop3_state_name(pop3_state_t state)
 typedef struct pop3_userdefined
 {
 	pop3_state_t state;
+	int cmd_count;
 	int cmd_failed;
 	int auth_failed;
 }pop3_userdefined_t;
