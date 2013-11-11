@@ -6,5 +6,5 @@ all:
 	cp ../detect/obj/libpop3_detect.so .
 
 clean:
-	rm -rf pop3 pop3.eyc libpop3_detect.so
+	rm -rf pop3 pop3.eyc libpop3_detect.so log
 
