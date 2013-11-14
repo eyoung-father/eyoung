@@ -5,7 +5,7 @@ eyoung
 	- run install.sh(you should have install privilege)
 
 2, build the code
-	- run "make prepare ; make"
+	- run "make prepare ; make ARCH=(i386|x86-64|arm)", x86-64 is the default target
 	- copy the library files in build/lib to the LD_LIBRARY_PATH
 
 3, run the sample
