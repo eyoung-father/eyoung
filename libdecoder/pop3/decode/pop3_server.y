@@ -304,7 +304,7 @@ int parse_pop3_server_stream(pop3_data_t *priv, const char *buf, size_t buf_len,
 		if(parser_ret != YYPUSH_MORE)
 			break;
 	}
-	pop3_server__delete_buffer(input, lexier);
+	pop3_server_delete_buffer(input, lexier);
 
 	if(parser_ret != YYPUSH_MORE && parser_ret != 0)
 	{

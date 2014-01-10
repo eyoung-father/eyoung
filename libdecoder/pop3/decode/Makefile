@@ -17,6 +17,10 @@ prepare_local:
 	$(FREPLACE) YYSTYPE POP3_CLIENT_STYPE pop3_client_lex.c
 	$(FREPLACE) YYSTYPE POP3_SERVER_STYPE pop3_server_lex.h
 	$(FREPLACE) YYSTYPE POP3_SERVER_STYPE pop3_server_lex.c
+	$(FREPLACE) pop3_client__ pop3_client_ pop3_client_lex.c
+	$(FREPLACE) pop3_client__ pop3_client_ pop3_client_lex.h
+	$(FREPLACE) pop3_server__ pop3_server_ pop3_server_lex.c
+	$(FREPLACE) pop3_server__ pop3_server_ pop3_server_lex.h
 
 clean_local:
 	$(RM) pop3_client_parser.* pop3_client_lex.* pop3_server_parser.* pop3_server_lex.* pop3

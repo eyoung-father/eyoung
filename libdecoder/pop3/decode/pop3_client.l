@@ -210,10 +210,10 @@ struct yy_buffer_state* pop3_client_scan_stream(const char *new_buf, size_t new_
 	buf[_yybytes_len] = buf[_yybytes_len+1] = YY_END_OF_BUFFER_CHAR;
 	pop3_debug(debug_pop3_client_lexer, "[POP3 CLIENT]: %s\n", buf);
 
-	b = pop3_client__scan_buffer(buf, n, scanner);
+	b = pop3_client_scan_buffer(buf, n, scanner);
 	if ( ! b )
 	{
-		pop3_debug(debug_pop3_client_lexer, "bad buffer in pop3_client__scan_bytes()\n");
+		pop3_debug(debug_pop3_client_lexer, "bad buffer in pop3_client_scan_bytes()\n");
 		pop3_client_free(buf, scanner);
 		return NULL;
 	}
