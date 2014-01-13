@@ -73,9 +73,58 @@ static int save_client_stream_context(yyscan_t yyscanner, int from_default);
 %x HTTP_CLIENT_BODY_TRUNK_END
 %x HTTP_CLIENT_BODY_TRUNK_TAILER
 
-%%
+SPACE	[ \t]*
+NEWLINE	(\r)?\n
+WORD	[^ \r\n\t]+
 
 %%
+
+<INITIAL>{
+
+}
+
+<HTTP_CLIENT_FIRST_METHOD>{
+
+}
+
+<HTTP_CLIENT_FIRST_URI>{
+
+}
+
+<HTTP_CLIENT_FIRST_VERSION>{
+
+}
+
+<HTTP_CLIENT_HEADER_NAME>{
+
+}
+
+<HTTP_CLIENT_HEADER_VALUE>{
+
+}
+
+<HTTP_CLIENT_BODY_NORMAL>{
+
+}
+
+<HTTP_CLIENT_BODY_TRUNK_HEADER>{
+
+}
+
+<HTTP_CLIENT_BODY_TRUNK_BODY>{
+
+}
+
+<HTTP_CLIENT_BODY_TRUNK_END>{
+
+}
+
+<HTTP_CLIENT_BODY_TRUNK_TAILER>{
+
+}
+
+%%
+
 void *http_client_alloc (yy_size_t sz,yyscan_t yyscanner )
 {
 	return http_malloc(sz);

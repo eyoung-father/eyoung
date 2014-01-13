@@ -61,9 +61,68 @@ static int save_server_stream_context(yyscan_t yyscanner, int from_default);
 %option noyyfree
 %option noyyrealloc
 
-%%
+%x HTTP_SERVER_FIRST_VERSION
+%x HTTP_SERVER_FIRST_CODE
+%x HTTP_SERVER_FIRST_MESSAGE
+%x HTTP_SERVER_HEADER_NAME
+%x HTTP_SERVER_HEADER_VALUE
+%x HTTP_SERVER_BODY_NORMAL
+%x HTTP_SERVER_BODY_TRUNK_HEADER
+%x HTTP_SERVER_BODY_TRUNK_BODY
+%x HTTP_SERVER_BODY_TRUNK_END
+%x HTTP_SERVER_BODY_TRUNK_TAILER
+
+SPACE	[ \t]*
+NEWLINE	(\r)?\n
+WORD	[^ \r\n\t]+
 
 %%
+
+<INITIAL>{
+
+}
+
+<HTTP_SERVER_FIRST_VERSION>{
+
+}
+
+<HTTP_SERVER_FIRST_CODE>{
+
+}
+<HTTP_SERVER_FIRST_MESSAGE>{
+
+}
+
+<HTTP_SERVER_HEADER_NAME>{
+
+}
+
+<HTTP_SERVER_HEADER_VALUE>{
+
+}
+
+<HTTP_SERVER_BODY_NORMAL>{
+
+}
+
+<HTTP_SERVER_BODY_TRUNK_HEADER>{
+
+}
+
+<HTTP_SERVER_BODY_TRUNK_BODY>{
+
+}
+
+<HTTP_SERVER_BODY_TRUNK_END>{
+
+}
+
+<HTTP_SERVER_BODY_TRUNK_TAILER>{
+
+}
+
+%%
+
 void *http_server_alloc (yy_size_t sz,yyscan_t yyscanner )
 {
 	return http_malloc(sz);
