@@ -62,6 +62,17 @@ static int save_client_stream_context(yyscan_t yyscanner, int from_default);
 %option noyyfree
 %option noyyrealloc
 
+%x HTTP_CLIENT_FIRST_METHOD
+%x HTTP_CLIENT_FIRST_URI
+%x HTTP_CLIENT_FIRST_VERSION
+%x HTTP_CLIENT_HEADER_NAME
+%x HTTP_CLIENT_HEADER_VALUE
+%x HTTP_CLIENT_BODY_NORMAL
+%x HTTP_CLIENT_BODY_TRUNK_HEADER
+%x HTTP_CLIENT_BODY_TRUNK_BODY
+%x HTTP_CLIENT_BODY_TRUNK_END
+%x HTTP_CLIENT_BODY_TRUNK_TAILER
+
 %%
 
 %%

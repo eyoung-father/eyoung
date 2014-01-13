@@ -12,6 +12,10 @@ extern int parse_http_server_stream(struct http_data *priv, const char *buf, siz
 
 #include "ey_memory.h"
 #include "libengine_type.h"
+#include "http_client_parser.h"
+#include "http_server_parser.h"
+#include "http_client_lex.h"
+#include "http_server_lex.h"
 
 typedef struct http_decoder
 {
