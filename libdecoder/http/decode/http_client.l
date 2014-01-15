@@ -1,8 +1,8 @@
 %{
 #include <stdlib.h>
 #include <string.h>
-#include "http_client_parser.h"
 #include "http.h"
+#include "http_client_parser.h"
 
 static int save_client_stream_context(yyscan_t yyscanner, int from_default);
 

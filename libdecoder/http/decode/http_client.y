@@ -56,12 +56,14 @@ int http_cmd_pair_id;
 %token TOKEN_CLIENT_FIRST_METHOD_MKACTIVITY
 %token TOKEN_CLIENT_FIRST_METHOD_ORDERPATCH
 %token TOKEN_CLIENT_FIRST_METHOD_BASELINE_CONTROL
+%token TOKEN_CLIENT_FIRST_METHOD_UNKOWN
 
 %token TOKEN_CLINET_FIRST_URI
 
 %token TOKEN_CLIENT_FIRST_VERSION_09
 %token TOKEN_CLIENT_FIRST_VERSION_10
 %token TOKEN_CLIENT_FIRST_VERSION_11
+%token TOKEN_CLIENT_FIRST_VERSION_UNKOWN
 
 %token TOKEN_CLIENT_HEADER_HOST
 %token TOKEN_CLIENT_HEADER_CACHE_CONTROL	
@@ -123,6 +125,87 @@ int http_cmd_pair_id;
 
 %token TOKEN_CLIENT_BODY_PART
 
+%union
+{
+	http_request_method_t method;
+	http_request_version_t version;
+	http_request_first_line_t *first_line;
+	http_request_header_t *header;
+	http_request_header_list_t header_list;
+	http_request_body_part_t *body_part;
+	http_request_body_t body;
+	http_request_t *request;
+	http_request_list_t request_list;
+	char *string;
+}
+
+%type <request_list>		request_list
+%type <request>				request
+%type <first_line>			request_line
+%type <header_list>			request_headers
+							request_header_list
+%type <body>				request_body
+%type <method>				request_line_method
+%type <string>				request_line_uri
+							TOKEN_CLIENT_HEADER_VALUE
+							TOKEN_CLINET_FIRST_URI
+%type <version>				request_line_version
+%type <header>				request_header
+							request_header_cache_control
+							request_header_connection
+							request_header_date
+							request_header_pragma
+							request_header_trailer
+							request_header_transfer_encoding
+							request_header_upgrade
+							request_header_via
+							request_header_warning
+							request_header_mime_version
+							request_header_allow
+							request_header_content_encoding
+							request_header_content_language
+							request_header_content_length
+							request_header_content_location
+							request_header_content_md5
+							request_header_content_range
+							request_header_content_type
+							request_header_etag
+							request_header_expires
+							request_header_last_modified
+							request_header_content_base
+							request_header_content_version
+							request_header_derived_from
+							request_header_link
+							request_header_keep_alive
+							request_header_uri
+							request_header_accept_charset
+							request_header_accept_encoding
+							request_header_accept_language
+							request_header_accept
+							request_header_authorization
+							request_header_except
+							request_header_from
+							request_header_host
+							request_header_if_match
+							request_header_if_modified_since
+							request_header_if_none_match
+							request_header_if_range
+							request_header_if_unmodified_since
+							request_header_max_forwards
+							request_header_proxy_authorization
+							request_header_range
+							request_header_referer
+							request_header_te
+							request_header_user_agent
+							request_header_cookie2
+							request_header_cookie
+							request_header_ua_pixels
+							request_header_ua_color
+							request_header_ua_os
+							request_header_ua_cpu
+							request_header_x_flash_version
+							request_header_unkown
+
 %debug
 %verbose
 %defines "http_client_parser.h"
@@ -137,9 +220,12 @@ int http_cmd_pair_id;
 request_list:
 	empty
 	{
+		STAILQ_INIT(&$$);
 	}
 	| request_list request
 	{
+		STAILQ_INSERT_TAIL(&$1, $2, next);
+		STAILQ_CONCAT(&$$, &$1);
 	}
 	;
 
@@ -158,297 +244,391 @@ request_line:
 request_line_method: 
 	TOKEN_CLIENT_FIRST_METHOD_GET
 	{
+		$$ = HTTP_REQUEST_METHOD_METHOD_GET;
 	}
 	| TOKEN_CLIENT_FIRST_METHOD_POST
 	{
+		$$ = HTTP_REQUEST_METHOD_METHOD_POST;
 	}
 	| TOKEN_CLIENT_FIRST_METHOD_HEAD
 	{
+		$$ = HTTP_REQUEST_METHOD_METHOD_HEAD;
 	}
 	| TOKEN_CLIENT_FIRST_METHOD_OPTIONS
 	{
+		$$ = HTTP_REQUEST_METHOD_METHOD_OPTIONS;
 	}
 	| TOKEN_CLIENT_FIRST_METHOD_PUT
 	{
+		$$ = HTTP_REQUEST_METHOD_METHOD_PUT;
 	}
 	| TOKEN_CLIENT_FIRST_METHOD_DELETE
 	{
+		$$ = HTTP_REQUEST_METHOD_METHOD_DELETE;
 	}
 	| TOKEN_CLIENT_FIRST_METHOD_TRACE
 	{
+		$$ = HTTP_REQUEST_METHOD_METHOD_TRACE;
 	}
 	| TOKEN_CLIENT_FIRST_METHOD_CONNECT
 	{
+		$$ = HTTP_REQUEST_METHOD_METHOD_CONNECT;
 	}
 	| TOKEN_CLIENT_FIRST_METHOD_PATCH
 	{
+		$$ = HTTP_REQUEST_METHOD_METHOD_PATCH;
 	}
 	| TOKEN_CLIENT_FIRST_METHOD_LINK
 	{
+		$$ = HTTP_REQUEST_METHOD_METHOD_LINK;
 	}
 	| TOKEN_CLIENT_FIRST_METHOD_UNLINK
 	{
+		$$ = HTTP_REQUEST_METHOD_METHOD_UNLINK;
 	}
 	| TOKEN_CLIENT_FIRST_METHOD_PROPFIND
 	{
+		$$ = HTTP_REQUEST_METHOD_METHOD_PROPFIND;
 	}
 	| TOKEN_CLIENT_FIRST_METHOD_PROPPATCH
 	{
+		$$ = HTTP_REQUEST_METHOD_METHOD_PROPPATCH;
 	}
 	| TOKEN_CLIENT_FIRST_METHOD_MKCOL
 	{
+		$$ = HTTP_REQUEST_METHOD_METHOD_MKCOL;
 	}
 	| TOKEN_CLIENT_FIRST_METHOD_COPY
 	{
+		$$ = HTTP_REQUEST_METHOD_METHOD_COPY;
 	}
 	| TOKEN_CLIENT_FIRST_METHOD_MOVE
 	{
+		$$ = HTTP_REQUEST_METHOD_METHOD_MOVE;
 	}
 	| TOKEN_CLIENT_FIRST_METHOD_LOCK
 	{
+		$$ = HTTP_REQUEST_METHOD_METHOD_LOCK;
 	}
 	| TOKEN_CLIENT_FIRST_METHOD_UNLOCK
 	{
+		$$ = HTTP_REQUEST_METHOD_METHOD_UNLOCK;
 	}
 	| TOKEN_CLIENT_FIRST_METHOD_CHECKOUT
 	{
+		$$ = HTTP_REQUEST_METHOD_METHOD_CHECKOUT;
 	}
 	| TOKEN_CLIENT_FIRST_METHOD_REPORT
 	{
+		$$ = HTTP_REQUEST_METHOD_METHOD_REPORT;
 	}
 	| TOKEN_CLIENT_FIRST_METHOD_VERSION_CONTROL
 	{
+		$$ = HTTP_REQUEST_METHOD_METHOD_VERSION_CONTROL;
 	}
 	| TOKEN_CLIENT_FIRST_METHOD_CHECKIN
 	{
+		$$ = HTTP_REQUEST_METHOD_METHOD_CHECKIN;
 	}
 	| TOKEN_CLIENT_FIRST_METHOD_UNCHECKOUT
 	{
+		$$ = HTTP_REQUEST_METHOD_METHOD_UNCHECKOUT;
 	}
 	| TOKEN_CLIENT_FIRST_METHOD_MKWORKSPACE
 	{
+		$$ = HTTP_REQUEST_METHOD_METHOD_MKWORKSPACE;
 	}
 	| TOKEN_CLIENT_FIRST_METHOD_UPDATE
 	{
+		$$ = HTTP_REQUEST_METHOD_METHOD_UPDATE;
 	}
 	| TOKEN_CLIENT_FIRST_METHOD_LABEL
 	{
+		$$ = HTTP_REQUEST_METHOD_METHOD_LABEL;
 	}
 	| TOKEN_CLIENT_FIRST_METHOD_MERGE
 	{
+		$$ = HTTP_REQUEST_METHOD_METHOD_MERGE;
 	}
 	| TOKEN_CLIENT_FIRST_METHOD_MKACTIVITY
 	{
+		$$ = HTTP_REQUEST_METHOD_METHOD_MKACTIVITY;
 	}
 	| TOKEN_CLIENT_FIRST_METHOD_ORDERPATCH
 	{
+		$$ = HTTP_REQUEST_METHOD_METHOD_ORDERPATCH;
 	}
 	| TOKEN_CLIENT_FIRST_METHOD_BASELINE_CONTROL
 	{
+		$$ = HTTP_REQUEST_METHOD_METHOD_BASELINE_CONTROL;
 	}
-	| error
+	| TOKEN_CLIENT_FIRST_METHOD_UNKOWN
 	{
+		$$ = HTTP_REQUEST_METHOD_METHOD_UNKOWN;
 	}
 	;
 
 request_line_uri: 
 	TOKEN_CLINET_FIRST_URI
 	{
+		$$ = $1;
 	}
 	;
 
 request_line_version:
 	TOKEN_CLIENT_FIRST_VERSION_09
 	{
+		$$ = HTTP_REQUEST_VERSION_09;
 	}
 	| TOKEN_CLIENT_FIRST_VERSION_10
 	{
+		$$ = HTTP_REQUEST_VERSION_10;
 	}
 	| TOKEN_CLIENT_FIRST_VERSION_11
 	{
+		$$ = HTTP_REQUEST_VERSION_11;
 	}
-	| error
+	| TOKEN_CLIENT_FIRST_VERSION_UNKOWN
 	{
+		$$ = HTTP_REQUEST_VERSION_UNKOWN;
 	}
 	;
 
 request_headers:
 	request_header_list TOKEN_CLIENT_HEADER_TERM
 	{
+		STAILQ_CONCAT(&$$, &$1);
 	}
 	;
 
 request_header_list:
 	empty
 	{
+		STAILQ_INIT(&$$);
 	}
 	| request_header_list request_header
 	{
+		STAILQ_INSERT_TAIL(&$1, $2, next);
+		STAILQ_CONCAT(&$$, &$1);
 	}
 	;
 
 request_header:
 	request_header_cache_control
 	{
+		$$ = $1;
 	}
 	| request_header_connection
 	{
+		$$ = $1;
 	}
 	| request_header_date
 	{
+		$$ = $1;
 	}
 	| request_header_pragma
 	{
+		$$ = $1;
 	}
 	| request_header_trailer
 	{
+		$$ = $1;
 	}
 	| request_header_transfer_encoding
 	{
+		$$ = $1;
 	}
 	| request_header_upgrade
 	{
+		$$ = $1;
 	}
 	| request_header_via
 	{
+		$$ = $1;
 	}
 	| request_header_warning
 	{
+		$$ = $1;
 	}
 	| request_header_mime_version
 	{
+		$$ = $1;
 	}
 	| request_header_allow
 	{
+		$$ = $1;
 	}
 	| request_header_content_encoding
 	{
+		$$ = $1;
 	}
 	| request_header_content_language
 	{
+		$$ = $1;
 	}
 	| request_header_content_length
 	{
+		$$ = $1;
 	}
 	| request_header_content_location
 	{
+		$$ = $1;
 	}
 	| request_header_content_md5
 	{
+		$$ = $1;
 	}
 	| request_header_content_range
 	{
+		$$ = $1;
 	}
 	| request_header_content_type
 	{
+		$$ = $1;
 	}
 	| request_header_etag
 	{
+		$$ = $1;
 	}
 	| request_header_expires
 	{
+		$$ = $1;
 	}
 	| request_header_last_modified
 	{
+		$$ = $1;
 	}
 	| request_header_content_base
 	{
+		$$ = $1;
 	}
 	| request_header_content_version
 	{
+		$$ = $1;
 	}
 	| request_header_derived_from
 	{
+		$$ = $1;
 	}
 	| request_header_link
 	{
+		$$ = $1;
 	}
 	| request_header_keep_alive
 	{
+		$$ = $1;
 	}
 	| request_header_uri
 	{
+		$$ = $1;
 	}
 	| request_header_accept_charset
 	{
+		$$ = $1;
 	}
 	| request_header_accept_encoding
 	{
+		$$ = $1;
 	}
 	| request_header_accept_language
 	{
+		$$ = $1;
 	}
 	| request_header_accept
 	{
+		$$ = $1;
 	}
 	| request_header_authorization
 	{
+		$$ = $1;
 	}
 	| request_header_except
 	{
+		$$ = $1;
 	}
 	| request_header_from
 	{
+		$$ = $1;
 	}
 	| request_header_host
 	{
+		$$ = $1;
 	}
 	| request_header_if_match
 	{
+		$$ = $1;
 	}
 	| request_header_if_modified_since
 	{
+		$$ = $1;
 	}
 	| request_header_if_none_match
 	{
+		$$ = $1;
 	}
 	| request_header_if_range
 	{
+		$$ = $1;
 	}
 	| request_header_if_unmodified_since
 	{
+		$$ = $1;
 	}
 	| request_header_max_forwards
 	{
+		$$ = $1;
 	}
 	| request_header_proxy_authorization
 	{
+		$$ = $1;
 	}
 	| request_header_range
 	{
+		$$ = $1;
 	}
 	| request_header_referer
 	{
+		$$ = $1;
 	}
 	| request_header_te
 	{
+		$$ = $1;
 	}
 	| request_header_user_agent
 	{
+		$$ = $1;
 	}
 	| request_header_cookie2
 	{
+		$$ = $1;
 	}
 	| request_header_cookie
 	{
+		$$ = $1;
 	}
 	| request_header_ua_pixels
 	{
+		$$ = $1;
 	}
 	| request_header_ua_color
 	{
+		$$ = $1;
 	}
 	| request_header_ua_os
 	{
+		$$ = $1;
 	}
 	| request_header_ua_cpu
 	{
+		$$ = $1;
 	}
 	| request_header_x_flash_version
 	{
+		$$ = $1;
 	}
 	| request_header_unkown
 	{
+		$$ = $1;
 	}
 	;
 
