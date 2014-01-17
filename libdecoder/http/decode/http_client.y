@@ -147,8 +147,10 @@ int http_cmd_pair_id;
 %type <body>				request_body
 %type <method>				request_line_method
 %type <string>				request_line_uri
+							request_header_value
 							TOKEN_CLIENT_HEADER_VALUE
 							TOKEN_CLINET_FIRST_URI
+							TOKEN_CLIENT_BODY_PART
 %type <version>				request_line_version
 %type <header>				request_header
 							request_header_cache_control
@@ -232,12 +234,26 @@ request_list:
 request: 
 	request_line request_headers request_body
 	{
+		http_request_t *request = http_client_alloc_request(priv_decoder, $1, &$2, &$3);
+		if(!request)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc request\n");
+			YYABORT;
+		}
+		$$ = request;
 	}
 	;
 
 request_line: 
 	request_line_method request_line_uri request_line_version
 	{
+		http_request_first_line_t *first_line = http_client_alloc_first_line(priv_decoder, $1, $2, $3);
+		if(!first_line)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc first line\n");
+			YYABORT;
+		}
+		$$ = first_line;
 	}
 	;
 
@@ -397,6 +413,7 @@ request_line_version:
 request_headers:
 	request_header_list TOKEN_CLIENT_HEADER_TERM
 	{
+		STAILQ_INIT(&$$);
 		STAILQ_CONCAT(&$$, &$1);
 	}
 	;
@@ -633,336 +650,728 @@ request_header:
 	;
 
 request_header_unkown:
-	TOKEN_CLIENT_HEADER_UNKOWN TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_UNKOWN request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_UNKOWN, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc UNKOWN header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 	
 request_header_cache_control:
-	TOKEN_CLIENT_HEADER_CACHE_CONTROL TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_CACHE_CONTROL request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_CACHE_CONTROL, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc Cache-Control header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_connection:
-	TOKEN_CLIENT_HEADER_CONNECTION TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_CONNECTION request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_CONNECTION, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc Connection header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_date:
-	TOKEN_CLIENT_HEADER_DATE TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_DATE request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_DATE, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc Date header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_pragma:
-	TOKEN_CLIENT_HEADER_PRAGMA TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_PRAGMA request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_PRAGMA, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc Pragma header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_trailer:
-	TOKEN_CLIENT_HEADER_TRAILER TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_TRAILER request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_TRAILER, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc Trailer header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_transfer_encoding:
-	TOKEN_CLIENT_HEADER_TRANSFER_ENCODING TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_TRANSFER_ENCODING request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_TRANSFER_ENCODING, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc Transfer-Encoding header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_upgrade:
-	TOKEN_CLIENT_HEADER_UPGRADE TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_UPGRADE request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_UPGRADE, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc Upgrade header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_via:
-	TOKEN_CLIENT_HEADER_VIA TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_VIA request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_VIA, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc Via header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_warning:
-	TOKEN_CLIENT_HEADER_WARNING TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_WARNING request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_WARNING, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc Warning header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_mime_version:
-	TOKEN_CLIENT_HEADER_MIME_VERSION TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_MIME_VERSION request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_MIME_VERSION, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc Mime-Version header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_allow:
-	TOKEN_CLIENT_HEADER_ALLOW TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_ALLOW request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_ALLOW, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc Allow header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_content_encoding:
-	TOKEN_CLIENT_HEADER_CONTENT_ENCODING TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_CONTENT_ENCODING request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_CONTENT_ENCODING, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc Content-Encoding header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_content_language:
-	TOKEN_CLIENT_HEADER_CONTENT_LANGUAGE TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_CONTENT_LANGUAGE request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_CONTENT_LANGUAGE, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc Content-Language header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_content_length:
-	TOKEN_CLIENT_HEADER_CONTENT_LENGTH TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_CONTENT_LENGTH request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_CONTENT_LENGTH, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc Content-Length header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_content_location:
-	TOKEN_CLIENT_HEADER_CONTENT_LOCATION TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_CONTENT_LOCATION request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_CONTENT_LOCATION, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc Content-Location header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_content_md5:
-	TOKEN_CLIENT_HEADER_CONTENT_MD5 TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_CONTENT_MD5 request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_CONTENT_MD5, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc Content-MD5 header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_content_range:
-	TOKEN_CLIENT_HEADER_CONTENT_RANGE TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_CONTENT_RANGE request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_CONTENT_RANGE, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc Content-Range header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_content_type:
-	TOKEN_CLIENT_HEADER_CONTENT_TYPE TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_CONTENT_TYPE request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_CONTENT_TYPE, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc Content-Type header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_etag:
-	TOKEN_CLIENT_HEADER_ETAG TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_ETAG request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_ETAG, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc Etag header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_expires:
-	TOKEN_CLIENT_HEADER_EXPIRES TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_EXPIRES request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_EXPIRES, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc Expires header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_last_modified:
-	TOKEN_CLIENT_HEADER_LAST_MODIFIED TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_LAST_MODIFIED request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_LAST_MODIFIED, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc Last-Modified header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_content_base:
-	TOKEN_CLIENT_HEADER_CONTENT_BASE TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_CONTENT_BASE request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_CONTENT_BASE, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc Content-Base header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_content_version:
-	TOKEN_CLIENT_HEADER_CONTENT_VERSION TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_CONTENT_VERSION request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_CONTENT_VERSION, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc Content-Version header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_derived_from:
-	TOKEN_CLIENT_HEADER_DERIVED_FROM TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_DERIVED_FROM request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_DERIVED_FROM, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc Derived-From header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_link:
-	TOKEN_CLIENT_HEADER_LINK TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_LINK request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_LINK, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc Link header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_keep_alive:
-	TOKEN_CLIENT_HEADER_KEEP_ALIVE TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_KEEP_ALIVE request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_KEEP_ALIVE, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc Keep-Alive header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_uri:
-	TOKEN_CLIENT_HEADER_URI TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_URI request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_URI, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc URI header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_accept_charset:
-	TOKEN_CLIENT_HEADER_ACCEPT_CHARSET TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_ACCEPT_CHARSET request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_ACCEPT_CHARSET, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc Accept-Charset header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_accept_encoding:
-	TOKEN_CLIENT_HEADER_ACCEPT_ENCODING TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_ACCEPT_ENCODING request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_ACCEPT_ENCODING, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc Accept-Encoding header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_accept_language:
-	TOKEN_CLIENT_HEADER_ACCEPT_LANGUAGE TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_ACCEPT_LANGUAGE request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_ACCEPT_LANGUAGE, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc Accept-Language header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_accept:
-	TOKEN_CLIENT_HEADER_ACCEPT TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_ACCEPT request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_ACCEPT, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc Accept header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_authorization:
-	TOKEN_CLIENT_HEADER_AUTHORIZATION TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_AUTHORIZATION request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_AUTHORIZATION, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc AUTHORIZATION header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_except:
-	TOKEN_CLIENT_HEADER_EXCEPT TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_EXCEPT request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_EXCEPT, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc Except header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_from:
-	TOKEN_CLIENT_HEADER_FROM TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_FROM request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_FROM, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc From header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_host:
-	TOKEN_CLIENT_HEADER_HOST TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_HOST request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_HOST, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc Host header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_if_match:
-	TOKEN_CLIENT_HEADER_IF_MATCH TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_IF_MATCH request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_IF_MATCH, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc If-Match header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_if_modified_since:
-	TOKEN_CLIENT_HEADER_IF_MODIFIED_SINCE TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_IF_MODIFIED_SINCE request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_IF_MODIFIED_SINCE, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc If-Modified-Since header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_if_none_match:
-	TOKEN_CLIENT_HEADER_IF_NONE_MATCH TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_IF_NONE_MATCH request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_IF_NONE_MATCH, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc If-None-Match header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_if_range:
-	TOKEN_CLIENT_HEADER_IF_RANGE TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_IF_RANGE request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_IF_RANGE, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc If-Range header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_if_unmodified_since:
-	TOKEN_CLIENT_HEADER_IF_UNMODIFIED_SINCE TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_IF_UNMODIFIED_SINCE request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_IF_UNMODIFIED_SINCE, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc If-Unmodified-Since header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_max_forwards:
-	TOKEN_CLIENT_HEADER_MAX_FORWARDS TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_MAX_FORWARDS request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_MAX_FORWARDS, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc Max-Forwards header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_proxy_authorization:
-	TOKEN_CLIENT_HEADER_PROXY_AUTHORIZATION TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_PROXY_AUTHORIZATION request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_PROXY_AUTHORIZATION, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc PROXY_AUTHORIZATION header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_range:
-	TOKEN_CLIENT_HEADER_RANGE TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_RANGE request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_RANGE, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc Range header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_referer:
-	TOKEN_CLIENT_HEADER_REFERER TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_REFERER request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_REFERER, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc Referer header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_te:
-	TOKEN_CLIENT_HEADER_TE TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_TE request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_TE, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc Te header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_user_agent:
-	TOKEN_CLIENT_HEADER_USER_AGENT TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_USER_AGENT request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_USER_AGENT, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc User-Agent header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_cookie2:
-	TOKEN_CLIENT_HEADER_COOKIE2 TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_COOKIE2 request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_COOKIE2, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc Cookie2 header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_cookie:
-	TOKEN_CLIENT_HEADER_COOKIE TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_COOKIE request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_COOKIE, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc Cookie header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_ua_pixels:
-	TOKEN_CLIENT_HEADER_UA_PIXELS TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_UA_PIXELS request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_UA_PIXELS, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc UA-PIXELS header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_ua_color:
-	TOKEN_CLIENT_HEADER_UA_COLOR TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_UA_COLOR request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_UA_COLOR, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc UA-COLOR header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_ua_os:
-	TOKEN_CLIENT_HEADER_UA_OS TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_UA_OS request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_UA_OS, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc UA-OS header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_ua_cpu:
-	TOKEN_CLIENT_HEADER_UA_CPU TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_UA_CPU request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_UA_CPU, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc UA-CPU header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
 request_header_x_flash_version:
-	TOKEN_CLIENT_HEADER_X_FLASH_VERSION TOKEN_CLIENT_HEADER_VALUE
+	TOKEN_CLIENT_HEADER_X_FLASH_VERSION request_header_value
 	{
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_X_FLASH_VERSION, $2);
+		if(!header)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc X-FLASH-VERSION header\n");
+			YYABORT;
+		}
+		$$ = header;
 	}
 	;
 
+request_header_value:
+	TOKEN_CLIENT_HEADER_VALUE
+	{
+		$$ = $1;
+	}
 
 request_body:
 	empty
 	{
+		STAILQ_INIT(&$$);
 	}
 	| request_body TOKEN_CLIENT_BODY_PART
 	{
+		http_request_body_part_t *part = http_client_alloc_body_part(priv_decoder, $2);
+		if(!part)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc body part\n");
+			YYABORT;
+		}
+		STAILQ_INSERT_TAIL(&$1, part, next);
+		STAILQ_CONCAT(&$$, &$1);
 	}
 	;
 
