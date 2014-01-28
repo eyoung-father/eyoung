@@ -136,7 +136,7 @@ int http_cmd_pair_id;
 	http_request_body_t body;
 	http_request_t *request;
 	http_request_list_t request_list;
-	char *string;
+	http_request_string_t string;
 }
 
 %type <request_list>		request_list
@@ -247,7 +247,7 @@ request:
 request_line: 
 	request_line_method request_line_uri request_line_version
 	{
-		http_request_first_line_t *first_line = http_client_alloc_first_line(priv_decoder, $1, $2, $3);
+		http_request_first_line_t *first_line = http_client_alloc_first_line(priv_decoder, $1, &$2, $3);
 		if(!first_line)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc first line\n");
@@ -652,7 +652,7 @@ request_header:
 request_header_unkown:
 	TOKEN_CLIENT_HEADER_UNKOWN request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_UNKOWN, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_UNKOWN, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc UNKOWN header\n");
@@ -665,7 +665,7 @@ request_header_unkown:
 request_header_cache_control:
 	TOKEN_CLIENT_HEADER_CACHE_CONTROL request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_CACHE_CONTROL, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_CACHE_CONTROL, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc Cache-Control header\n");
@@ -678,7 +678,7 @@ request_header_cache_control:
 request_header_connection:
 	TOKEN_CLIENT_HEADER_CONNECTION request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_CONNECTION, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_CONNECTION, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc Connection header\n");
@@ -691,7 +691,7 @@ request_header_connection:
 request_header_date:
 	TOKEN_CLIENT_HEADER_DATE request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_DATE, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_DATE, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc Date header\n");
@@ -704,7 +704,7 @@ request_header_date:
 request_header_pragma:
 	TOKEN_CLIENT_HEADER_PRAGMA request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_PRAGMA, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_PRAGMA, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc Pragma header\n");
@@ -717,7 +717,7 @@ request_header_pragma:
 request_header_trailer:
 	TOKEN_CLIENT_HEADER_TRAILER request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_TRAILER, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_TRAILER, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc Trailer header\n");
@@ -730,7 +730,7 @@ request_header_trailer:
 request_header_transfer_encoding:
 	TOKEN_CLIENT_HEADER_TRANSFER_ENCODING request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_TRANSFER_ENCODING, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_TRANSFER_ENCODING, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc Transfer-Encoding header\n");
@@ -743,7 +743,7 @@ request_header_transfer_encoding:
 request_header_upgrade:
 	TOKEN_CLIENT_HEADER_UPGRADE request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_UPGRADE, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_UPGRADE, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc Upgrade header\n");
@@ -756,7 +756,7 @@ request_header_upgrade:
 request_header_via:
 	TOKEN_CLIENT_HEADER_VIA request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_VIA, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_VIA, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc Via header\n");
@@ -769,7 +769,7 @@ request_header_via:
 request_header_warning:
 	TOKEN_CLIENT_HEADER_WARNING request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_WARNING, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_WARNING, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc Warning header\n");
@@ -782,7 +782,7 @@ request_header_warning:
 request_header_mime_version:
 	TOKEN_CLIENT_HEADER_MIME_VERSION request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_MIME_VERSION, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_MIME_VERSION, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc Mime-Version header\n");
@@ -795,7 +795,7 @@ request_header_mime_version:
 request_header_allow:
 	TOKEN_CLIENT_HEADER_ALLOW request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_ALLOW, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_ALLOW, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc Allow header\n");
@@ -808,7 +808,7 @@ request_header_allow:
 request_header_content_encoding:
 	TOKEN_CLIENT_HEADER_CONTENT_ENCODING request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_CONTENT_ENCODING, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_CONTENT_ENCODING, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc Content-Encoding header\n");
@@ -821,7 +821,7 @@ request_header_content_encoding:
 request_header_content_language:
 	TOKEN_CLIENT_HEADER_CONTENT_LANGUAGE request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_CONTENT_LANGUAGE, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_CONTENT_LANGUAGE, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc Content-Language header\n");
@@ -834,7 +834,7 @@ request_header_content_language:
 request_header_content_length:
 	TOKEN_CLIENT_HEADER_CONTENT_LENGTH request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_CONTENT_LENGTH, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_CONTENT_LENGTH, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc Content-Length header\n");
@@ -847,7 +847,7 @@ request_header_content_length:
 request_header_content_location:
 	TOKEN_CLIENT_HEADER_CONTENT_LOCATION request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_CONTENT_LOCATION, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_CONTENT_LOCATION, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc Content-Location header\n");
@@ -860,7 +860,7 @@ request_header_content_location:
 request_header_content_md5:
 	TOKEN_CLIENT_HEADER_CONTENT_MD5 request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_CONTENT_MD5, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_CONTENT_MD5, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc Content-MD5 header\n");
@@ -873,7 +873,7 @@ request_header_content_md5:
 request_header_content_range:
 	TOKEN_CLIENT_HEADER_CONTENT_RANGE request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_CONTENT_RANGE, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_CONTENT_RANGE, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc Content-Range header\n");
@@ -886,7 +886,7 @@ request_header_content_range:
 request_header_content_type:
 	TOKEN_CLIENT_HEADER_CONTENT_TYPE request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_CONTENT_TYPE, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_CONTENT_TYPE, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc Content-Type header\n");
@@ -899,7 +899,7 @@ request_header_content_type:
 request_header_etag:
 	TOKEN_CLIENT_HEADER_ETAG request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_ETAG, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_ETAG, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc Etag header\n");
@@ -912,7 +912,7 @@ request_header_etag:
 request_header_expires:
 	TOKEN_CLIENT_HEADER_EXPIRES request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_EXPIRES, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_EXPIRES, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc Expires header\n");
@@ -925,7 +925,7 @@ request_header_expires:
 request_header_last_modified:
 	TOKEN_CLIENT_HEADER_LAST_MODIFIED request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_LAST_MODIFIED, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_LAST_MODIFIED, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc Last-Modified header\n");
@@ -938,7 +938,7 @@ request_header_last_modified:
 request_header_content_base:
 	TOKEN_CLIENT_HEADER_CONTENT_BASE request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_CONTENT_BASE, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_CONTENT_BASE, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc Content-Base header\n");
@@ -951,7 +951,7 @@ request_header_content_base:
 request_header_content_version:
 	TOKEN_CLIENT_HEADER_CONTENT_VERSION request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_CONTENT_VERSION, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_CONTENT_VERSION, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc Content-Version header\n");
@@ -964,7 +964,7 @@ request_header_content_version:
 request_header_derived_from:
 	TOKEN_CLIENT_HEADER_DERIVED_FROM request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_DERIVED_FROM, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_DERIVED_FROM, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc Derived-From header\n");
@@ -977,7 +977,7 @@ request_header_derived_from:
 request_header_link:
 	TOKEN_CLIENT_HEADER_LINK request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_LINK, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_LINK, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc Link header\n");
@@ -990,7 +990,7 @@ request_header_link:
 request_header_keep_alive:
 	TOKEN_CLIENT_HEADER_KEEP_ALIVE request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_KEEP_ALIVE, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_KEEP_ALIVE, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc Keep-Alive header\n");
@@ -1003,7 +1003,7 @@ request_header_keep_alive:
 request_header_uri:
 	TOKEN_CLIENT_HEADER_URI request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_URI, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_URI, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc URI header\n");
@@ -1016,7 +1016,7 @@ request_header_uri:
 request_header_accept_charset:
 	TOKEN_CLIENT_HEADER_ACCEPT_CHARSET request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_ACCEPT_CHARSET, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_ACCEPT_CHARSET, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc Accept-Charset header\n");
@@ -1029,7 +1029,7 @@ request_header_accept_charset:
 request_header_accept_encoding:
 	TOKEN_CLIENT_HEADER_ACCEPT_ENCODING request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_ACCEPT_ENCODING, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_ACCEPT_ENCODING, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc Accept-Encoding header\n");
@@ -1042,7 +1042,7 @@ request_header_accept_encoding:
 request_header_accept_language:
 	TOKEN_CLIENT_HEADER_ACCEPT_LANGUAGE request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_ACCEPT_LANGUAGE, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_ACCEPT_LANGUAGE, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc Accept-Language header\n");
@@ -1055,7 +1055,7 @@ request_header_accept_language:
 request_header_accept:
 	TOKEN_CLIENT_HEADER_ACCEPT request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_ACCEPT, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_ACCEPT, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc Accept header\n");
@@ -1068,7 +1068,7 @@ request_header_accept:
 request_header_authorization:
 	TOKEN_CLIENT_HEADER_AUTHORIZATION request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_AUTHORIZATION, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_AUTHORIZATION, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc AUTHORIZATION header\n");
@@ -1081,7 +1081,7 @@ request_header_authorization:
 request_header_except:
 	TOKEN_CLIENT_HEADER_EXCEPT request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_EXCEPT, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_EXCEPT, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc Except header\n");
@@ -1094,7 +1094,7 @@ request_header_except:
 request_header_from:
 	TOKEN_CLIENT_HEADER_FROM request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_FROM, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_FROM, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc From header\n");
@@ -1107,7 +1107,7 @@ request_header_from:
 request_header_host:
 	TOKEN_CLIENT_HEADER_HOST request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_HOST, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_HOST, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc Host header\n");
@@ -1120,7 +1120,7 @@ request_header_host:
 request_header_if_match:
 	TOKEN_CLIENT_HEADER_IF_MATCH request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_IF_MATCH, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_IF_MATCH, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc If-Match header\n");
@@ -1133,7 +1133,7 @@ request_header_if_match:
 request_header_if_modified_since:
 	TOKEN_CLIENT_HEADER_IF_MODIFIED_SINCE request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_IF_MODIFIED_SINCE, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_IF_MODIFIED_SINCE, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc If-Modified-Since header\n");
@@ -1146,7 +1146,7 @@ request_header_if_modified_since:
 request_header_if_none_match:
 	TOKEN_CLIENT_HEADER_IF_NONE_MATCH request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_IF_NONE_MATCH, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_IF_NONE_MATCH, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc If-None-Match header\n");
@@ -1159,7 +1159,7 @@ request_header_if_none_match:
 request_header_if_range:
 	TOKEN_CLIENT_HEADER_IF_RANGE request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_IF_RANGE, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_IF_RANGE, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc If-Range header\n");
@@ -1172,7 +1172,7 @@ request_header_if_range:
 request_header_if_unmodified_since:
 	TOKEN_CLIENT_HEADER_IF_UNMODIFIED_SINCE request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_IF_UNMODIFIED_SINCE, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_IF_UNMODIFIED_SINCE, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc If-Unmodified-Since header\n");
@@ -1185,7 +1185,7 @@ request_header_if_unmodified_since:
 request_header_max_forwards:
 	TOKEN_CLIENT_HEADER_MAX_FORWARDS request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_MAX_FORWARDS, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_MAX_FORWARDS, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc Max-Forwards header\n");
@@ -1198,7 +1198,7 @@ request_header_max_forwards:
 request_header_proxy_authorization:
 	TOKEN_CLIENT_HEADER_PROXY_AUTHORIZATION request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_PROXY_AUTHORIZATION, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_PROXY_AUTHORIZATION, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc PROXY_AUTHORIZATION header\n");
@@ -1211,7 +1211,7 @@ request_header_proxy_authorization:
 request_header_range:
 	TOKEN_CLIENT_HEADER_RANGE request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_RANGE, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_RANGE, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc Range header\n");
@@ -1224,7 +1224,7 @@ request_header_range:
 request_header_referer:
 	TOKEN_CLIENT_HEADER_REFERER request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_REFERER, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_REFERER, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc Referer header\n");
@@ -1237,7 +1237,7 @@ request_header_referer:
 request_header_te:
 	TOKEN_CLIENT_HEADER_TE request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_TE, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_TE, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc Te header\n");
@@ -1250,7 +1250,7 @@ request_header_te:
 request_header_user_agent:
 	TOKEN_CLIENT_HEADER_USER_AGENT request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_USER_AGENT, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_USER_AGENT, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc User-Agent header\n");
@@ -1263,7 +1263,7 @@ request_header_user_agent:
 request_header_cookie2:
 	TOKEN_CLIENT_HEADER_COOKIE2 request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_COOKIE2, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_COOKIE2, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc Cookie2 header\n");
@@ -1276,7 +1276,7 @@ request_header_cookie2:
 request_header_cookie:
 	TOKEN_CLIENT_HEADER_COOKIE request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_COOKIE, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_COOKIE, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc Cookie header\n");
@@ -1289,7 +1289,7 @@ request_header_cookie:
 request_header_ua_pixels:
 	TOKEN_CLIENT_HEADER_UA_PIXELS request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_UA_PIXELS, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_UA_PIXELS, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc UA-PIXELS header\n");
@@ -1302,7 +1302,7 @@ request_header_ua_pixels:
 request_header_ua_color:
 	TOKEN_CLIENT_HEADER_UA_COLOR request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_UA_COLOR, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_UA_COLOR, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc UA-COLOR header\n");
@@ -1315,7 +1315,7 @@ request_header_ua_color:
 request_header_ua_os:
 	TOKEN_CLIENT_HEADER_UA_OS request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_UA_OS, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_UA_OS, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc UA-OS header\n");
@@ -1328,7 +1328,7 @@ request_header_ua_os:
 request_header_ua_cpu:
 	TOKEN_CLIENT_HEADER_UA_CPU request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_UA_CPU, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_UA_CPU, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc UA-CPU header\n");
@@ -1341,7 +1341,7 @@ request_header_ua_cpu:
 request_header_x_flash_version:
 	TOKEN_CLIENT_HEADER_X_FLASH_VERSION request_header_value
 	{
-		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_X_FLASH_VERSION, $2);
+		http_request_header_t *header = http_client_alloc_header(priv_decoder, HTTP_REQUEST_HEADER_X_FLASH_VERSION, &$2);
 		if(!header)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc X-FLASH-VERSION header\n");
@@ -1364,7 +1364,7 @@ request_body:
 	}
 	| request_body TOKEN_CLIENT_BODY_PART
 	{
-		http_request_body_part_t *part = http_client_alloc_body_part(priv_decoder, $2);
+		http_request_body_part_t *part = http_client_alloc_body_part(priv_decoder, &$2);
 		if(!part)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc body part\n");

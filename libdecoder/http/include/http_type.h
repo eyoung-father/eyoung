@@ -2,12 +2,15 @@
 #define HTTP_TYPE_H 1
 
 #include "ey_queue.h"
+#include "ey_string.h"
 #include "http_decode.h"
 #include "libengine.h"
 
 /*
  * Client Message Type
  */
+typedef ey_string_t http_request_string_t;
+
 typedef enum http_request_method
 {
 	HTTP_REQUEST_METHOD_METHOD_GET = 1,
@@ -143,7 +146,7 @@ typedef struct http_request_first_line
 {
 	http_request_method_t method;
 	http_request_version_t version;
-	char *uri;
+	http_request_string_t uri;
 }http_request_first_line_t;
 
 typedef enum http_request_header_type
@@ -324,14 +327,14 @@ static inline const char* http_request_header_name(http_request_header_type_t ty
 typedef struct http_request_header
 {
 	http_request_header_type_t type;
-	char *value;
+	http_request_string_t value;
 	STAILQ_ENTRY(http_request_header) next;
 }http_request_header_t;
 typedef STAILQ_HEAD(http_request_header_list, http_request_header) http_request_header_list_t;
 
 typedef struct http_request_body_part
 {
-	char *value;
+	http_request_string_t value;
 	STAILQ_ENTRY(http_request_body_part) next;
 }http_request_body_part_t;
 typedef STAILQ_HEAD(http_request_body, http_request_body_part) http_request_body_t;
@@ -350,13 +353,15 @@ typedef STAILQ_HEAD(http_request_list, http_request) http_request_list_t;
 /*
  * Server Message Type
  */
+typedef ey_string_t http_response_string_t;
+
 typedef enum http_response_version
 {
 	HTTP_RESPONSE_VERSION_09,
 	HTTP_RESPONSE_VERSION_10,
 	HTTP_RESPONSE_VERSION_11,
 
-	HTTP_RESPOSNE_VERSION_UNKOWN
+	HTTP_RESPONSE_VERSION_UNKOWN
 }http_response_version_t;
 
 static inline const char* http_resposne_version_name(http_response_version_t version)
@@ -369,7 +374,7 @@ static inline const char* http_resposne_version_name(http_response_version_t ver
 			return "HTTP/1.0";
 		case HTTP_RESPONSE_VERSION_11:
 			return "HTTP/1.1";
-		case HTTP_RESPOSNE_VERSION_UNKOWN:
+		case HTTP_RESPONSE_VERSION_UNKOWN:
 		default:
 			return "(UNKOWN)";
 	}
@@ -381,7 +386,7 @@ typedef struct http_response_first_line
 {
 	http_response_version_t version;
 	http_response_code_t code;
-	char *message;
+	http_response_string_t message;
 }http_response_first_line_t;
 
 typedef enum http_response_header_type
@@ -516,7 +521,7 @@ static inline const char* http_response_header_name(http_response_header_type_t 
 typedef struct http_response_header
 {
 	http_response_header_type_t type;
-	char *value;
+	http_response_string_t value;
 
 	STAILQ_ENTRY(http_response_header) next;
 }http_response_header_t;
@@ -524,7 +529,7 @@ typedef STAILQ_HEAD(http_resposne_header_list, http_response_header) http_respon
 
 typedef struct http_response_body_part
 {
-	char *value;
+	http_response_string_t value;
 	STAILQ_ENTRY(http_response_body_part) next;
 }http_response_body_part_t;
 typedef STAILQ_HEAD(http_response_body, http_response_body_part) http_response_body_t;
