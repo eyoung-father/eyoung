@@ -341,7 +341,7 @@ typedef STAILQ_HEAD(http_request_body, http_request_body_part) http_request_body
 
 typedef struct http_request
 {
-	http_request_first_line_t first_line;
+	http_request_first_line_t *first_line;
 	http_request_header_list_t header_list;
 	http_request_body_t body;
 
@@ -536,7 +536,7 @@ typedef STAILQ_HEAD(http_response_body, http_response_body_part) http_response_b
 
 typedef struct http_response
 {
-	http_response_first_line_t first_line;
+	http_response_first_line_t *first_line;
 	http_response_header_list_t header_list;
 	http_response_body_t body;
 
