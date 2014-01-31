@@ -56,6 +56,10 @@ extern http_cmd_t* http_alloc_cmd(http_decoder_t *decoder, http_request_t *reque
 extern void http_free_cmd(http_decoder_t *decoder, http_cmd_t *cmd);
 extern void http_free_cmd_list(http_decoder_t *decoder, http_cmd_list_t *cmd_list);
 
+extern void http_free_string(http_decoder_t *decoder, ey_string_t *string);
+#define http_server_free_string(decoder,string) http_free_string(decoder,string)
+#define http_client_free_string(decoder,string) http_free_string(decoder,string)
+
 /*
  * FOR REQUEST
  * */

@@ -552,3 +552,10 @@ void http_server_free_body(http_decoder_t *decoder, http_response_body_t *body)
 	STAILQ_FOREACH_SAFE(part, body, next, tmp)
 		http_server_free_body_part(decoder, part);
 }
+
+void http_free_string(http_decoder_t *decoder, ey_string_t *string)
+{
+	if(!string || !string->buf)
+		return;
+	http_free(string->buf);
+}

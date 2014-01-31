@@ -147,6 +147,46 @@
 						response_header_proxy_authenticate
 						response_header_unkown
 
+%destructor
+{
+	http_server_free_response_list(priv_decoder, &$$);
+}<response_list>;
+
+%destructor
+{
+	http_server_free_response(priv_decoder, $$);
+}<response>
+
+%destructor
+{
+	http_server_free_first_line(priv_decoder, $$);
+}<first_line>
+
+%destructor
+{
+	http_server_free_header_list(priv_decoder, &$$);
+}<header_list>
+
+%destructor
+{
+	http_server_free_body(priv_decoder, &$$);
+}<body>
+
+%destructor
+{
+	http_server_free_string(priv_decoder, &$$);
+}<string>
+
+%destructor
+{
+	http_server_free_header(priv_decoder, $$);
+}<header>
+
+%destructor
+{
+	http_server_free_body_part(priv_decoder, $$);
+}<body_part>
+
 %debug
 %verbose
 %defines "http_server_parser.h"

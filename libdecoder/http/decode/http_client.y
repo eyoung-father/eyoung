@@ -208,6 +208,46 @@ int http_cmd_pair_id;
 							request_header_x_flash_version
 							request_header_unkown
 
+%destructor
+{
+	http_client_free_first_line(priv_decoder, $$);
+}<first_line>
+
+%destructor
+{
+	http_client_free_header(priv_decoder, $$);
+}<header>
+
+%destructor
+{
+	http_client_free_header_list(priv_decoder, &$$);
+}<header_list>
+
+%destructor
+{
+	http_client_free_body_part(priv_decoder, $$);
+}<body_part>
+
+%destructor
+{
+	http_client_free_body(priv_decoder, &$$);
+}<body>
+
+%destructor
+{
+	http_client_free_request(priv_decoder, $$);
+}<request>
+
+%destructor
+{
+	http_client_free_request_list(priv_decoder, &$$);
+}<request_list>
+
+%destructor
+{
+	http_client_free_string(priv_decoder, &$$);
+}<string>
+
 %debug
 %verbose
 %defines "http_client_parser.h"
