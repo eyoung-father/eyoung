@@ -2,7 +2,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
-#include "http_util.h"
+#include <ctype.h>
+#include <string.h>
+#include "http.h"
 
 int debug_http_mem=1;
 int debug_http_client_lexer=1;
@@ -95,4 +97,29 @@ int http_client_error(void *this_priv, const char *format, ...)
 	http_debug(debug_http_client_lexer||debug_http_client_parser||debug_http_detect, "%s\n", buffer);
 	va_end(args);
 	return 0;
+}
+
+char* http_string_trim(const char *old_string, size_t old_len, size_t *new_len)
+{
+	if(!old_string || !old_len || !new_len)
+		return NULL;
+	
+	const char *head = NULL, *tail = NULL;
+	for(tail = old_string + old_len - 1; isspace(*tail) && tail > old_string ; tail--);
+	for(head = old_string ; isspace(*head) && head<tail; head++);
+
+	*new_len = tail - head;
+	if(!isspace(*tail))
+		(*new_len)++;
+	char *ret = (char*)http_malloc(*new_len+1);
+	if(!ret)
+	{
+		*new_len = 0;
+		return NULL;
+	}
+
+	if(*new_len)
+		memcpy(ret, head, *new_len);
+	ret[*new_len] = '\0';
+	return ret;
 }

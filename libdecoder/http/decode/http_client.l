@@ -198,10 +198,6 @@ WORD	[^ \r\n\t]+
 
 }
 
-<HTTP_CLIENT_BODY_TRUNK_END>{
-
-}
-
 <HTTP_CLIENT_BODY_TRUNK_TAILER>{
 
 }
