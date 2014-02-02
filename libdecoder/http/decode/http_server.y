@@ -81,7 +81,7 @@
 
 %union
 {
-	http_response_version_t version;
+	http_version_t version;
 	http_response_code_t code;
 	http_response_string_t string;
 	http_response_first_line_t *first_line;
@@ -244,19 +244,19 @@ response_line:
 response_line_version:
 	TOKEN_SERVER_FIRST_VERSION_09
 	{
-		$$ = HTTP_RESPONSE_VERSION_09;
+		$$ = HTTP_VERSION_09;
 	}
 	| TOKEN_SERVER_FIRST_VERSION_10
 	{
-		$$ = HTTP_RESPONSE_VERSION_10;
+		$$ = HTTP_VERSION_10;
 	}
 	| TOKEN_SERVER_FIRST_VERSION_11
 	{
-		$$ = HTTP_RESPONSE_VERSION_11;
+		$$ = HTTP_VERSION_11;
 	}
 	| TOKEN_SERVER_FIRST_VERSION_UNKOWN
 	{
-		$$ = HTTP_RESPONSE_VERSION_UNKOWN;
+		$$ = HTTP_VERSION_UNKOWN;
 	}
 	;
 

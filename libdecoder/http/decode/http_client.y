@@ -128,7 +128,7 @@ int http_cmd_pair_id;
 %union
 {
 	http_request_method_t method;
-	http_request_version_t version;
+	http_version_t version;
 	http_request_first_line_t *first_line;
 	http_request_header_t *header;
 	http_request_header_list_t header_list;
@@ -434,19 +434,19 @@ request_line_uri:
 request_line_version:
 	TOKEN_CLIENT_FIRST_VERSION_09
 	{
-		$$ = HTTP_REQUEST_VERSION_09;
+		$$ = HTTP_VERSION_09;
 	}
 	| TOKEN_CLIENT_FIRST_VERSION_10
 	{
-		$$ = HTTP_REQUEST_VERSION_10;
+		$$ = HTTP_VERSION_10;
 	}
 	| TOKEN_CLIENT_FIRST_VERSION_11
 	{
-		$$ = HTTP_REQUEST_VERSION_11;
+		$$ = HTTP_VERSION_11;
 	}
 	| TOKEN_CLIENT_FIRST_VERSION_UNKOWN
 	{
-		$$ = HTTP_REQUEST_VERSION_UNKOWN;
+		$$ = HTTP_VERSION_UNKOWN;
 	}
 	;
 

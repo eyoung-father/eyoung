@@ -6,6 +6,209 @@
 #include "http_decode.h"
 #include "libengine.h"
 
+/*common info*/
+
+/*
+ * HTTP VERSION
+ * */
+typedef enum http_version
+{
+	HTTP_VERSION_09,
+	HTTP_VERSION_10,
+	HTTP_VERSION_11,
+
+	HTTP_VERSION_UNKOWN
+}http_version_t;
+
+static inline const char* http_version_name(http_version_t version)
+{
+	switch(version)
+	{
+		case HTTP_VERSION_09:
+			return "HTTP/0.9";
+		case HTTP_VERSION_10:
+			return "HTTP/1.0";
+		case HTTP_VERSION_11:
+			return "HTTP/1.1";
+		case HTTP_VERSION_UNKOWN:
+		default:
+			return "(UNKOWN)";
+	}
+}
+
+/*
+ * BODY CONTENT MAIN-TYPE
+ * */
+typedef enum http_body_content_maintype
+{
+	HTTP_BODY_CONTENT_MAINTYPE_TEXT,
+	HTTP_BODY_CONTENT_MAINTYPE_IMAGE,
+	HTTP_BODY_CONTENT_MAINTYPE_AUDIO,
+	HTTP_BODY_CONTENT_MAINTYPE_VIDEO,
+	HTTP_BODY_CONTENT_MAINTYPE_APPLICATION,
+	HTTP_BODY_CONTENT_MAINTYPE_DRAWING,
+	HTTP_BODY_CONTENT_MAINTYPE_MODEL,
+	HTTP_BODY_CONTENT_MAINTYPE_MESSAGE,
+
+	HTTP_BODY_CONTENT_MAINTYPE_UNKOWN
+}http_body_content_maintype_t;
+
+static inline const char *http_body_content_maintype_name(http_body_content_maintype_t type)
+{
+	switch(type)
+	{
+		case HTTP_BODY_CONTENT_MAINTYPE_TEXT:
+			return "text";
+		case HTTP_BODY_CONTENT_MAINTYPE_IMAGE:
+			return "image";
+		case HTTP_BODY_CONTENT_MAINTYPE_AUDIO:
+			return "audio";
+		case HTTP_BODY_CONTENT_MAINTYPE_VIDEO:
+			return "video";
+		case HTTP_BODY_CONTENT_MAINTYPE_APPLICATION:
+			return "application";
+		case HTTP_BODY_CONTENT_MAINTYPE_DRAWING:
+			return "drawing";
+		case HTTP_BODY_CONTENT_MAINTYPE_MODEL:
+			return "model";
+		case HTTP_BODY_CONTENT_MAINTYPE_MESSAGE:
+			return "message";
+		case HTTP_BODY_CONTENT_MAINTYPE_UNKOWN:
+		default:
+			return "UNKOWN";
+	}
+}
+
+/*
+ * BODY CONTENT SUB-TYPE
+ * */
+typedef enum http_body_content_subtype
+{
+	HTTP_BODY_CONTENT_SUBTYPE_UNKOWN
+}http_body_content_subtype_t;
+
+static inline const char *http_body_content_subtype_name(http_body_content_subtype_t type)
+{
+	switch(type)
+	{
+		case HTTP_BODY_CONTENT_SUBTYPE_UNKOWN:
+		default:
+			return "UNKOWN";
+	}
+}
+
+/*
+ * BODY CONTENT-TYPE
+ * */
+typedef struct http_body_content_type
+{
+	http_body_content_maintype_t maintype;
+	http_body_content_subtype_t subtype;
+}http_body_content_type_t;
+
+/*
+ * BODY CONTENT-ENCODING
+ * */
+typedef enum http_body_content_encoding
+{
+	HTTP_BODY_CONTENT_ENCODING_GZIP,
+	HTTP_BODY_CONTENT_ENCODING_COMPRESS,
+	HTTP_BODY_CONTENT_ENCODING_DEFLATE,
+	HTTP_BODY_CONTENT_ENCODING_IDENTITY,
+
+	HTTP_BODY_CONTENT_ENCODING_UNKOWN
+}http_body_content_encoding_t;
+
+static inline const char *http_body_content_encoding_name(http_body_content_encoding_t type)
+{
+	switch(type)
+	{
+		case HTTP_BODY_CONTENT_ENCODING_GZIP:
+			return "gzip";
+		case HTTP_BODY_CONTENT_ENCODING_COMPRESS:
+			return "compress";
+		case HTTP_BODY_CONTENT_ENCODING_DEFLATE:
+			return "deflate";
+		case HTTP_BODY_CONTENT_ENCODING_IDENTITY:
+			return "identity";
+		case HTTP_BODY_CONTENT_ENCODING_UNKOWN:
+		default:
+			return "UNKOWN";
+	}
+}
+
+/*
+ * BODY TRANSFER-ENCODING
+ * */
+typedef enum http_body_transfer_encoding
+{
+	HTTP_BODY_TRANSFER_ENCODING_CHUNKED,
+
+	HTTP_BODY_TRANSFER_ENCODING_UNKOWN
+}http_body_transfer_encoding_t;
+
+static inline const char *http_body_transfer_encoding_name(http_body_transfer_encoding_t type)
+{
+	switch(type)
+	{
+		case HTTP_BODY_TRANSFER_ENCODING_CHUNKED:
+			return "chunked";
+		case HTTP_BODY_TRANSFER_ENCODING_UNKOWN:
+		default:
+			return "UNKOWN";
+	}
+}
+
+/*
+ * BODY CONTENT-LANGUAGE
+ * */
+typedef enum http_body_content_language
+{
+	HTTP_BODY_CONTent_LANGUAGE_UNKOWN
+}http_body_content_language_t;
+
+static inline const char *http_body_content_language_name(http_body_content_language_t type)
+{
+	switch(type)
+	{
+		case HTTP_BODY_CONTent_LANGUAGE_UNKOWN:
+		default:
+			return "UNKOWN";
+	}
+}
+
+/*
+ * BODY CONTENT-CHARSET
+ * */
+typedef enum http_body_content_charset
+{
+	HTTP_BODY_CONTENT_CHARSET_UNKOWN
+}http_body_content_charset_t;
+
+static inline const char *http_body_content_charset_name(http_body_content_charset_t type)
+{
+	switch(type)
+	{
+		case HTTP_BODY_CONTENT_CHARSET_UNKOWN:
+		default:
+			return "UNKOWN";
+	}
+}
+
+typedef struct http_body_info
+{
+	http_body_content_type_t content_type;
+	http_body_content_encoding_t content_encoding;
+	http_body_transfer_encoding_t transfer_encoding;
+	http_body_content_language_t content_language;
+	http_body_content_charset_t content_charset;
+	union
+	{
+		size_t content_length;
+		size_t chunk_length;
+	};
+}http_body_info_t;
+
 /*
  * Client Message Type
  */
@@ -117,35 +320,10 @@ static inline const char *http_request_method_name(http_request_method_t method)
 	}
 }
 
-typedef enum http_request_version
-{
-	HTTP_REQUEST_VERSION_09,
-	HTTP_REQUEST_VERSION_10,
-	HTTP_REQUEST_VERSION_11,
-
-	HTTP_REQUEST_VERSION_UNKOWN
-}http_request_version_t;
-
-static inline const char* http_request_version_name(http_request_version_t version)
-{
-	switch(version)
-	{
-		case HTTP_REQUEST_VERSION_09:
-			return "HTTP/0.9";
-		case HTTP_REQUEST_VERSION_10:
-			return "HTTP/1.0";
-		case HTTP_REQUEST_VERSION_11:
-			return "HTTP/1.1";
-		case HTTP_REQUEST_VERSION_UNKOWN:
-		default:
-			return "(UNKOWN)";
-	}
-}
-
 typedef struct http_request_first_line
 {
 	http_request_method_t method;
-	http_request_version_t version;
+	http_version_t version;
 	http_request_string_t uri;
 }http_request_first_line_t;
 
@@ -344,6 +522,7 @@ typedef struct http_request
 	http_request_first_line_t *first_line;
 	http_request_header_list_t header_list;
 	http_request_body_t body;
+	http_body_info_t body_info;
 
 	STAILQ_ENTRY(http_request) next;
 }http_request_t;
@@ -355,36 +534,11 @@ typedef STAILQ_HEAD(http_request_list, http_request) http_request_list_t;
  */
 typedef ey_string_t http_response_string_t;
 
-typedef enum http_response_version
-{
-	HTTP_RESPONSE_VERSION_09,
-	HTTP_RESPONSE_VERSION_10,
-	HTTP_RESPONSE_VERSION_11,
-
-	HTTP_RESPONSE_VERSION_UNKOWN
-}http_response_version_t;
-
-static inline const char* http_resposne_version_name(http_response_version_t version)
-{
-	switch(version)
-	{
-		case HTTP_RESPONSE_VERSION_09:
-			return "HTTP/0.9";
-		case HTTP_RESPONSE_VERSION_10:
-			return "HTTP/1.0";
-		case HTTP_RESPONSE_VERSION_11:
-			return "HTTP/1.1";
-		case HTTP_RESPONSE_VERSION_UNKOWN:
-		default:
-			return "(UNKOWN)";
-	}
-}
-
 typedef int http_response_code_t;
 
 typedef struct http_response_first_line
 {
-	http_response_version_t version;
+	http_version_t version;
 	http_response_code_t code;
 	http_response_string_t message;
 }http_response_first_line_t;
@@ -539,6 +693,7 @@ typedef struct http_response
 	http_response_first_line_t *first_line;
 	http_response_header_list_t header_list;
 	http_response_body_t body;
+	http_body_info_t body_info;
 
 	STAILQ_ENTRY(http_response) next;
 }http_response_t;

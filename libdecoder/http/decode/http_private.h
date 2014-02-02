@@ -75,7 +75,7 @@ extern void http_client_free_request_list(http_decoder_t *decoder, http_request_
 extern http_request_first_line_t *http_client_alloc_first_line(http_decoder_t *decoder,
 										  http_request_method_t method,
 										  http_request_string_t *uri,
-										  http_request_version_t version);
+										  http_version_t version);
 extern void http_client_free_first_line(http_decoder_t *decoder, http_request_first_line_t *first_line);
 
 /*alloc/free header*/
@@ -104,7 +104,7 @@ extern void http_server_free_response_list(http_decoder_t *decoder, http_respons
 
 /*alloc/free first_line*/
 extern http_response_first_line_t *http_server_alloc_first_line(http_decoder_t *decoder,
-										  http_response_version_t version,
+										  http_version_t version,
 										  http_response_code_t code,
 										  http_response_string_t *message);
 extern void http_server_free_first_line(http_decoder_t *decoder, http_response_first_line_t *first_line);
