@@ -49,10 +49,17 @@ int http_mem_init(http_decoder_t *decoder)
 		return -1;
 	}
 	
-	decoder->http_request_body_part_slab = http_zinit("http request body part", sizeof(http_request_body_part_t));
-	if(!decoder->http_request_body_part_slab)
+	decoder->http_request_string_part_slab = http_zinit("http request string part", sizeof(http_string_list_part_t));
+	if(!decoder->http_request_string_part_slab)
 	{
-		http_debug(debug_http_mem, "init http_request_body_part_slab failed\n");
+		http_debug(debug_http_mem, "init http_request_string_part_slab failed\n");
+		return -1;
+	}
+
+	decoder->http_request_chunk_part_slab = http_zinit("http request chunk part", sizeof(http_chunk_body_part_t));
+	if(!decoder->http_request_chunk_part_slab)
+	{
+		http_debug(debug_http_mem, "init http_request_chunk_part_slab failed\n");
 		return -1;
 	}
 
@@ -85,10 +92,17 @@ int http_mem_init(http_decoder_t *decoder)
 		return -1;
 	}
 	
-	decoder->http_response_body_part_slab = http_zinit("http response body part", sizeof(http_response_body_part_t));
-	if(!decoder->http_response_body_part_slab)
+	decoder->http_response_string_part_slab = http_zinit("http response string part", sizeof(http_string_list_part_t));
+	if(!decoder->http_response_string_part_slab)
 	{
-		http_debug(debug_http_mem, "init http_response_body_part_slab failed\n");
+		http_debug(debug_http_mem, "init http_response_string_part_slab failed\n");
+		return -1;
+	}
+
+	decoder->http_response_chunk_part_slab = http_zinit("http response chunk part", sizeof(http_chunk_body_part_t));
+	if(!decoder->http_response_chunk_part_slab)
+	{
+		http_debug(debug_http_mem, "init http_response_chunk_part_slab failed\n");
 		return -1;
 	}
 
@@ -110,13 +124,15 @@ void http_mem_finit(http_decoder_t *decoder)
 	http_fzfinit(decoder->http_request_value_fslab);
 	http_zfinit(decoder->http_request_first_line_slab);
 	http_zfinit(decoder->http_request_header_slab);
-	http_zfinit(decoder->http_request_body_part_slab);
+	http_zfinit(decoder->http_request_string_part_slab);
+	http_zfinit(decoder->http_request_chunk_part_slab);
 	http_zfinit(decoder->http_request_slab);
 
 	http_fzfinit(decoder->http_response_value_fslab);
 	http_zfinit(decoder->http_response_first_line_slab);
 	http_zfinit(decoder->http_response_header_slab);
-	http_zfinit(decoder->http_response_body_part_slab);
+	http_zfinit(decoder->http_response_string_part_slab);
+	http_zfinit(decoder->http_response_chunk_part_slab);
 	http_zfinit(decoder->http_response_slab);
 }
 
@@ -260,7 +276,7 @@ void http_free_cmd_list(http_decoder_t *decoder, http_cmd_list_t *cmd_list)
 http_request_t* http_client_alloc_request(http_decoder_t *decoder,
 										  http_request_first_line_t *first_line,
 										  http_request_header_list_t *header_list,
-										  http_request_body_t *body)
+										  http_body_t *body)
 {
 	http_request_t *request = http_zalloc(decoder->http_request_slab);
 	if(!request)
@@ -277,9 +293,8 @@ http_request_t* http_client_alloc_request(http_decoder_t *decoder,
 	if(header_list)
 		STAILQ_CONCAT(&request->header_list, header_list);
 	
-	STAILQ_INIT(&request->body);
 	if(body)
-		STAILQ_CONCAT(&request->body, body);
+		request->body = *body;
 	
 	return request;
 }
@@ -306,7 +321,7 @@ void http_client_free_request_list(http_decoder_t *decoder, http_request_list_t 
 
 http_request_first_line_t *http_client_alloc_first_line(http_decoder_t *decoder,
 										  http_request_method_t method,
-										  http_request_string_t *uri,
+										  http_string_t *uri,
 										  http_version_t version)
 {
 	http_request_first_line_t *line = (http_request_first_line_t*)http_zalloc(decoder->http_request_first_line_slab);
@@ -335,7 +350,7 @@ void http_client_free_first_line(http_decoder_t *decoder, http_request_first_lin
 
 http_request_header_t* http_client_alloc_header(http_decoder_t *decoder,
 										  http_request_header_type_t type,
-										  http_request_string_t *value)
+										  http_string_t *value)
 {
 	http_request_header_t *header = (http_request_header_t*)http_zalloc(decoder->http_request_header_slab);
 	if(!header)
@@ -370,45 +385,17 @@ void http_client_free_header_list(http_decoder_t *decoder, http_request_header_l
 		http_client_free_header(decoder, header);
 }
 
-http_request_body_part_t* http_client_alloc_body_part(http_decoder_t *decoder,
-										  http_request_string_t *value)
-{
-	http_request_body_part_t *part = (http_request_body_part_t*)http_zalloc(decoder->http_request_body_part_slab);
-	if(!part)
-	{
-		http_debug(debug_http_mem, "alloc http request body part failed\n");
-		return NULL;
-	}
-
-	memset(part, 0, sizeof(*part));
-	if(value)
-		part->value = *value;
-	return part;
-}
-
-void http_client_free_body_part(http_decoder_t *decoder, http_request_body_part_t *part)
-{
-	if(!part)
-		return;
-	if(part->value.buf)
-		http_fzfree(decoder->http_request_value_fslab, part->value.buf);
-	http_zfree(decoder->http_request_body_part_slab, part);
-}
-
-void http_client_free_body(http_decoder_t *decoder, http_request_body_t *body)
+void http_client_free_body(http_decoder_t *decoder, http_body_t *body)
 {
 	if(!body)
 		return;
-	
-	http_request_body_part_t *part, *tmp;
-	STAILQ_FOREACH_SAFE(part, body, next, tmp)
-		http_client_free_body_part(decoder, part);
+	/*TODO*/
 }
 
 http_response_t* http_server_alloc_response(http_decoder_t *decoder,
 										  http_response_first_line_t *first_line,
 										  http_response_header_list_t *header_list,
-										  http_response_body_t *body)
+										  http_body_t *body)
 {
 	http_response_t *response = http_zalloc(decoder->http_response_slab);
 	if(!response)
@@ -425,9 +412,8 @@ http_response_t* http_server_alloc_response(http_decoder_t *decoder,
 	if(header_list)
 		STAILQ_CONCAT(&response->header_list, header_list);
 	
-	STAILQ_INIT(&response->body);
 	if(body)
-		STAILQ_CONCAT(&response->body, body);
+		response->body = *body;
 	
 	return response;
 }
@@ -455,7 +441,7 @@ void http_server_free_response_list(http_decoder_t *decoder, http_response_list_
 http_response_first_line_t *http_server_alloc_first_line(http_decoder_t *decoder,
 										  http_version_t version,
 										  http_response_code_t code,
-										  http_response_string_t *message)
+										  http_string_t *message)
 {
 	http_response_first_line_t *line = (http_response_first_line_t*)http_zalloc(decoder->http_response_first_line_slab);
 	if(!line)
@@ -483,7 +469,7 @@ void http_server_free_first_line(http_decoder_t *decoder, http_response_first_li
 
 http_response_header_t* http_server_alloc_header(http_decoder_t *decoder,
 										  http_response_header_type_t type,
-										  http_response_string_t *value)
+										  http_string_t *value)
 {
 	http_response_header_t *header = (http_response_header_t*)http_zalloc(decoder->http_response_header_slab);
 	if(!header)
@@ -518,39 +504,11 @@ void http_server_free_header_list(http_decoder_t *decoder, http_response_header_
 		http_server_free_header(decoder, header);
 }
 
-http_response_body_part_t* http_server_alloc_body_part(http_decoder_t *decoder,
-										  http_response_string_t *value)
-{
-	http_response_body_part_t *part = (http_response_body_part_t*)http_zalloc(decoder->http_response_body_part_slab);
-	if(!part)
-	{
-		http_debug(debug_http_mem, "alloc http response body part failed\n");
-		return NULL;
-	}
-
-	memset(part, 0, sizeof(*part));
-	if(value)
-		part->value = *value;
-	return part;
-}
-
-void http_server_free_body_part(http_decoder_t *decoder, http_response_body_part_t *part)
-{
-	if(!part)
-		return;
-	if(part->value.buf)
-		http_fzfree(decoder->http_response_value_fslab, part->value.buf);
-	http_zfree(decoder->http_response_body_part_slab, part);
-}
-
-void http_server_free_body(http_decoder_t *decoder, http_response_body_t *body)
+void http_server_free_body(http_decoder_t *decoder, http_body_t *body)
 {
 	if(!body)
 		return;
-	
-	http_response_body_part_t *part, *tmp;
-	STAILQ_FOREACH_SAFE(part, body, next, tmp)
-		http_server_free_body_part(decoder, part);
+	/*TODO*/
 }
 
 void http_free_string(http_decoder_t *decoder, ey_string_t *string)

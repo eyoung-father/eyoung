@@ -83,12 +83,11 @@
 {
 	http_version_t version;
 	http_response_code_t code;
-	http_response_string_t string;
+	http_string_t string;
 	http_response_first_line_t *first_line;
 	http_response_header_t *header;
 	http_response_header_list_t header_list;
-	http_response_body_part_t *body_part;
-	http_response_body_t body;
+	http_body_t body;
 	http_response_t *response;
 	http_response_list_t response_list;
 }
@@ -169,11 +168,6 @@
 
 %destructor
 {
-	http_server_free_body(priv_decoder, &$$);
-}<body>
-
-%destructor
-{
 	http_server_free_string(priv_decoder, &$$);
 }<string>
 
@@ -181,11 +175,6 @@
 {
 	http_server_free_header(priv_decoder, $$);
 }<header>
-
-%destructor
-{
-	http_server_free_body_part(priv_decoder, $$);
-}<body_part>
 
 %debug
 %verbose
@@ -963,18 +952,10 @@ response_header_proxy_authenticate:
 response_body:
 	empty
 	{
-		STAILQ_INIT(&$$);
 	}
 	| response_body TOKEN_SERVER_BODY_PART
 	{
-		http_response_body_part_t *part = http_server_alloc_body_part(priv_decoder, &$2);
-		if(!part)
-		{
-			http_debug(debug_http_server_parser, "failed to alloc body part\n");
-			YYABORT;
-		}
-		STAILQ_INSERT_TAIL(&$1, part, next);
-		STAILQ_CONCAT(&$$, &$1);
+		/*TODO*/
 	}
 	;
 %%

@@ -25,14 +25,16 @@ typedef struct http_decoder
 	ey_fslab_t http_request_value_fslab;
 	ey_slab_t http_request_first_line_slab;
 	ey_slab_t http_request_header_slab;
-	ey_slab_t http_request_body_part_slab;
+	ey_slab_t http_request_string_part_slab;
+	ey_slab_t http_request_chunk_part_slab;
 	ey_slab_t http_request_slab;
 	
 	/*for response*/
 	ey_fslab_t http_response_value_fslab;
 	ey_slab_t http_response_first_line_slab;
 	ey_slab_t http_response_header_slab;
-	ey_slab_t http_response_body_part_slab;
+	ey_slab_t http_response_string_part_slab;
+	ey_slab_t http_response_chunk_part_slab;
 	ey_slab_t http_response_slab;
 
 	ey_slab_t http_data_slab;
@@ -67,29 +69,29 @@ extern void http_free_string(http_decoder_t *decoder, ey_string_t *string);
 extern http_request_t* http_client_alloc_request(http_decoder_t *decoder,
 										  http_request_first_line_t *first_line,
 										  http_request_header_list_t *header_list,
-										  http_request_body_t *body);
+										  http_body_t *body);
 extern void http_client_free_request(http_decoder_t *decoder, http_request_t*request);
 extern void http_client_free_request_list(http_decoder_t *decoder, http_request_list_t*request_list);
 
 /*alloc/free first_line*/
 extern http_request_first_line_t *http_client_alloc_first_line(http_decoder_t *decoder,
 										  http_request_method_t method,
-										  http_request_string_t *uri,
+										  http_string_t *uri,
 										  http_version_t version);
 extern void http_client_free_first_line(http_decoder_t *decoder, http_request_first_line_t *first_line);
 
 /*alloc/free header*/
 extern http_request_header_t* http_client_alloc_header(http_decoder_t *decoder,
 										  http_request_header_type_t type,
-										  http_request_string_t *value);
+										  http_string_t *value);
 extern void http_client_free_header(http_decoder_t *decoder, http_request_header_t *header);
 extern void http_client_free_header_list(http_decoder_t *decoder, http_request_header_list_t *header_list);
 
 /*alloc/free body*/
-extern http_request_body_part_t* http_client_alloc_body_part(http_decoder_t *decoder,
-										  http_request_string_t *value);
-extern void http_client_free_body_part(http_decoder_t *decoder, http_request_body_part_t *part);
-extern void http_client_free_body(http_decoder_t *decoder, http_request_body_t *body);
+extern void http_client_free_body(http_decoder_t *decoder, http_body_t *body);
+/*
+ * TODO
+ * */
 
 /*
  * FOR RESPONSE
@@ -98,7 +100,7 @@ extern void http_client_free_body(http_decoder_t *decoder, http_request_body_t *
 extern http_response_t* http_server_alloc_response(http_decoder_t *decoder,
 										  http_response_first_line_t *first_line,
 										  http_response_header_list_t *header_list,
-										  http_response_body_t *body);
+										  http_body_t *body);
 extern void http_server_free_response(http_decoder_t *decoder, http_response_t *response);
 extern void http_server_free_response_list(http_decoder_t *decoder, http_response_list_t *response_list);
 
@@ -106,19 +108,19 @@ extern void http_server_free_response_list(http_decoder_t *decoder, http_respons
 extern http_response_first_line_t *http_server_alloc_first_line(http_decoder_t *decoder,
 										  http_version_t version,
 										  http_response_code_t code,
-										  http_response_string_t *message);
+										  http_string_t *message);
 extern void http_server_free_first_line(http_decoder_t *decoder, http_response_first_line_t *first_line);
 
 /*alloc/free header*/
 extern http_response_header_t* http_server_alloc_header(http_decoder_t *decoder,
 										  http_response_header_type_t type,
-										  http_response_string_t *value);
+										  http_string_t *value);
 extern void http_server_free_header(http_decoder_t *decoder, http_response_header_t *header);
 extern void http_server_free_header_list(http_decoder_t *decoder, http_response_header_list_t *header_list);
 
 /*alloc/free body*/
-extern http_response_body_part_t* http_server_alloc_body_part(http_decoder_t *decoder,
-										  http_response_string_t *value);
-extern void http_server_free_body_part(http_decoder_t *decoder, http_response_body_part_t *part);
-extern void http_server_free_body(http_decoder_t *decoder, http_response_body_t *body);
+extern void http_server_free_body(http_decoder_t *decoder, http_body_t *body);
+/*
+ * TODO
+ * */
 #endif

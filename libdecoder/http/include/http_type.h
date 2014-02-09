@@ -8,6 +8,14 @@
 
 /*common info*/
 
+typedef ey_string_t http_string_t;
+typedef struct http_string_part
+{
+	http_string_t string;
+	STAILQ_ENTRY(http_string_part) next;
+}http_string_list_part_t;
+typedef STAILQ_HEAD(http_string_list, http_string_list_part) http_string_list_t;
+
 /*
  * HTTP VERSION
  * */
@@ -202,18 +210,46 @@ typedef struct http_body_info
 	http_body_transfer_encoding_t transfer_encoding;
 	http_body_content_language_t content_language;
 	http_body_content_charset_t content_charset;
+	size_t body_size;
+}http_body_info_t;
+
+/*
+ * CHUNKED BODY
+ * */
+typedef struct http_chunk_body_header
+{
+	size_t chunk_size;
+	http_string_t chunk_extension;
+}http_chunk_body_header_t;
+typedef http_string_list_t http_chunk_body_value_t;
+
+typedef struct http_chunk_body_part
+{
+	http_chunk_body_header_t chunk_header;
+	http_chunk_body_value_t chunk_value;
+	STAILQ_ENTRY(http_chunk_body_part) next;
+}http_chunk_body_part_t;
+typedef STAILQ_HEAD(http_chunk_body_list, http_chunk_body_part) http_chunk_body_list_t;
+
+typedef struct http_chunk_body
+{
+	http_chunk_body_list_t chunk_body;
+	http_string_list_t chunk_tailer;
+}http_chunk_body_t;
+
+typedef struct http_body
+{
+	http_body_info_t info;
 	union
 	{
-		size_t content_length;
-		size_t chunk_length;
+		http_string_list_t normal_body;
+		http_chunk_body_t chunk_body;
 	};
-}http_body_info_t;
+}http_body_t;
 
 /*
  * Client Message Type
  */
-typedef ey_string_t http_request_string_t;
-
 typedef enum http_request_method
 {
 	HTTP_REQUEST_METHOD_METHOD_GET = 1,
@@ -324,7 +360,7 @@ typedef struct http_request_first_line
 {
 	http_request_method_t method;
 	http_version_t version;
-	http_request_string_t uri;
+	http_string_t uri;
 }http_request_first_line_t;
 
 typedef enum http_request_header_type
@@ -505,24 +541,16 @@ static inline const char* http_request_header_name(http_request_header_type_t ty
 typedef struct http_request_header
 {
 	http_request_header_type_t type;
-	http_request_string_t value;
+	http_string_t value;
 	STAILQ_ENTRY(http_request_header) next;
 }http_request_header_t;
 typedef STAILQ_HEAD(http_request_header_list, http_request_header) http_request_header_list_t;
-
-typedef struct http_request_body_part
-{
-	http_request_string_t value;
-	STAILQ_ENTRY(http_request_body_part) next;
-}http_request_body_part_t;
-typedef STAILQ_HEAD(http_request_body, http_request_body_part) http_request_body_t;
 
 typedef struct http_request
 {
 	http_request_first_line_t *first_line;
 	http_request_header_list_t header_list;
-	http_request_body_t body;
-	http_body_info_t body_info;
+	http_body_t body;
 
 	STAILQ_ENTRY(http_request) next;
 }http_request_t;
@@ -532,15 +560,13 @@ typedef STAILQ_HEAD(http_request_list, http_request) http_request_list_t;
 /*
  * Server Message Type
  */
-typedef ey_string_t http_response_string_t;
-
 typedef int http_response_code_t;
 
 typedef struct http_response_first_line
 {
 	http_version_t version;
 	http_response_code_t code;
-	http_response_string_t message;
+	http_string_t message;
 }http_response_first_line_t;
 
 typedef enum http_response_header_type
@@ -675,25 +701,17 @@ static inline const char* http_response_header_name(http_response_header_type_t 
 typedef struct http_response_header
 {
 	http_response_header_type_t type;
-	http_response_string_t value;
+	http_string_t value;
 
 	STAILQ_ENTRY(http_response_header) next;
 }http_response_header_t;
 typedef STAILQ_HEAD(http_resposne_header_list, http_response_header) http_response_header_list_t;
 
-typedef struct http_response_body_part
-{
-	http_response_string_t value;
-	STAILQ_ENTRY(http_response_body_part) next;
-}http_response_body_part_t;
-typedef STAILQ_HEAD(http_response_body, http_response_body_part) http_response_body_t;
-
 typedef struct http_response
 {
 	http_response_first_line_t *first_line;
 	http_response_header_list_t header_list;
-	http_response_body_t body;
-	http_body_info_t body_info;
+	http_body_t body;
 
 	STAILQ_ENTRY(http_response) next;
 }http_response_t;

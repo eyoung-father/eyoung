@@ -132,11 +132,10 @@ int http_cmd_pair_id;
 	http_request_first_line_t *first_line;
 	http_request_header_t *header;
 	http_request_header_list_t header_list;
-	http_request_body_part_t *body_part;
-	http_request_body_t body;
+	http_body_t body;
 	http_request_t *request;
 	http_request_list_t request_list;
-	http_request_string_t string;
+	http_string_t string;
 }
 
 %type <request_list>		request_list
@@ -144,7 +143,6 @@ int http_cmd_pair_id;
 %type <first_line>			request_line
 %type <header_list>			request_headers
 							request_header_list
-%type <body>				request_body
 %type <method>				request_line_method
 %type <string>				request_line_uri
 							request_header_value
@@ -152,6 +150,7 @@ int http_cmd_pair_id;
 							TOKEN_CLINET_FIRST_URI
 							TOKEN_CLIENT_BODY_PART
 %type <version>				request_line_version
+%type <body>				request_body
 %type <header>				request_header
 							request_header_cache_control
 							request_header_connection
@@ -222,16 +221,6 @@ int http_cmd_pair_id;
 {
 	http_client_free_header_list(priv_decoder, &$$);
 }<header_list>
-
-%destructor
-{
-	http_client_free_body_part(priv_decoder, $$);
-}<body_part>
-
-%destructor
-{
-	http_client_free_body(priv_decoder, &$$);
-}<body>
 
 %destructor
 {
@@ -1400,18 +1389,10 @@ request_header_value:
 request_body:
 	empty
 	{
-		STAILQ_INIT(&$$);
 	}
 	| request_body TOKEN_CLIENT_BODY_PART
 	{
-		http_request_body_part_t *part = http_client_alloc_body_part(priv_decoder, &$2);
-		if(!part)
-		{
-			http_debug(debug_http_client_parser, "failed to alloc body part\n");
-			YYABORT;
-		}
-		STAILQ_INSERT_TAIL(&$1, part, next);
-		STAILQ_CONCAT(&$$, &$1);
+		/*TODO*/
 	}
 	;
 
