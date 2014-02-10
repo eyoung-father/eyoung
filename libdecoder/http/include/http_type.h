@@ -9,10 +9,10 @@
 /*common info*/
 
 typedef ey_string_t http_string_t;
-typedef struct http_string_part
+typedef struct http_string_list_part
 {
 	http_string_t string;
-	STAILQ_ENTRY(http_string_part) next;
+	STAILQ_ENTRY(http_string_list_part) next;
 }http_string_list_part_t;
 typedef STAILQ_HEAD(http_string_list, http_string_list_part) http_string_list_t;
 
@@ -221,30 +221,26 @@ typedef struct http_chunk_body_header
 	size_t chunk_size;
 	http_string_t chunk_extension;
 }http_chunk_body_header_t;
-typedef http_string_list_t http_chunk_body_value_t;
 
 typedef struct http_chunk_body_part
 {
 	http_chunk_body_header_t chunk_header;
-	http_chunk_body_value_t chunk_value;
+	http_string_list_t chunk_value;
 	STAILQ_ENTRY(http_chunk_body_part) next;
 }http_chunk_body_part_t;
 typedef STAILQ_HEAD(http_chunk_body_list, http_chunk_body_part) http_chunk_body_list_t;
 
 typedef struct http_chunk_body
 {
-	http_chunk_body_list_t chunk_body;
+	http_chunk_body_list_t chunk_list;
 	http_string_list_t chunk_tailer;
 }http_chunk_body_t;
 
 typedef struct http_body
 {
 	http_body_info_t info;
-	union
-	{
-		http_string_list_t normal_body;
-		http_chunk_body_t chunk_body;
-	};
+	http_string_list_t normal_body;
+	http_chunk_body_t chunk_body;
 }http_body_t;
 
 /*
@@ -550,7 +546,7 @@ typedef struct http_request
 {
 	http_request_first_line_t *first_line;
 	http_request_header_list_t header_list;
-	http_body_t body;
+	http_body_t *body;
 
 	STAILQ_ENTRY(http_request) next;
 }http_request_t;
@@ -711,7 +707,7 @@ typedef struct http_response
 {
 	http_response_first_line_t *first_line;
 	http_response_header_list_t header_list;
-	http_body_t body;
+	http_body_t *body;
 
 	STAILQ_ENTRY(http_response) next;
 }http_response_t;

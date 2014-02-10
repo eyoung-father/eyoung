@@ -63,6 +63,13 @@ int http_mem_init(http_decoder_t *decoder)
 		return -1;
 	}
 
+	decoder->http_request_body_slab = http_zinit("http request body", sizeof(http_body_t));
+	if(!decoder->http_request_body_slab)
+	{
+		http_debug(debug_http_mem, "init http_request_body_slab failed\n");
+		return -1;
+	}
+
 	decoder->http_request_slab = http_zinit("http request data", sizeof(http_request_t));
 	if(!decoder->http_request_slab)
 	{
@@ -103,6 +110,13 @@ int http_mem_init(http_decoder_t *decoder)
 	if(!decoder->http_response_chunk_part_slab)
 	{
 		http_debug(debug_http_mem, "init http_response_chunk_part_slab failed\n");
+		return -1;
+	}
+
+	decoder->http_response_body_slab = http_zinit("http response body", sizeof(http_body_t));
+	if(!decoder->http_response_body_slab)
+	{
+		http_debug(debug_http_mem, "init http_response_body_slab failed\n");
 		return -1;
 	}
 
@@ -294,7 +308,7 @@ http_request_t* http_client_alloc_request(http_decoder_t *decoder,
 		STAILQ_CONCAT(&request->header_list, header_list);
 	
 	if(body)
-		request->body = *body;
+		request->body = body;
 	
 	return request;
 }
@@ -306,7 +320,7 @@ void http_client_free_request(http_decoder_t *decoder, http_request_t*request)
 	
 	http_client_free_first_line(decoder, request->first_line);
 	http_client_free_header_list(decoder, &request->header_list);
-	http_client_free_body(decoder, &request->body);
+	http_client_free_body(decoder, request->body);
 }
 
 void http_client_free_request_list(http_decoder_t *decoder, http_request_list_t *request_list)
@@ -385,13 +399,6 @@ void http_client_free_header_list(http_decoder_t *decoder, http_request_header_l
 		http_client_free_header(decoder, header);
 }
 
-void http_client_free_body(http_decoder_t *decoder, http_body_t *body)
-{
-	if(!body)
-		return;
-	/*TODO*/
-}
-
 http_response_t* http_server_alloc_response(http_decoder_t *decoder,
 										  http_response_first_line_t *first_line,
 										  http_response_header_list_t *header_list,
@@ -413,7 +420,7 @@ http_response_t* http_server_alloc_response(http_decoder_t *decoder,
 		STAILQ_CONCAT(&response->header_list, header_list);
 	
 	if(body)
-		response->body = *body;
+		response->body = body;
 	
 	return response;
 }
@@ -425,7 +432,7 @@ void http_server_free_response(http_decoder_t *decoder, http_response_t*response
 	
 	http_server_free_first_line(decoder, response->first_line);
 	http_server_free_header_list(decoder, &response->header_list);
-	http_server_free_body(decoder, &response->body);
+	http_server_free_body(decoder, response->body);
 }
 
 void http_server_free_response_list(http_decoder_t *decoder, http_response_list_t *response_list)
@@ -504,16 +511,155 @@ void http_server_free_header_list(http_decoder_t *decoder, http_response_header_
 		http_server_free_header(decoder, header);
 }
 
-void http_server_free_body(http_decoder_t *decoder, http_body_t *body)
-{
-	if(!body)
-		return;
-	/*TODO*/
-}
-
-void http_free_string(http_decoder_t *decoder, ey_string_t *string)
+void http_free_string(http_decoder_t *decoder, http_string_t *string, int from_client)
 {
 	if(!string || !string->buf)
 		return;
-	http_free(string->buf);
+	if(from_client)
+		http_fzfree(decoder->http_request_value_fslab, string->buf);
+	else
+		http_fzfree(decoder->http_response_value_fslab, string->buf);
+	string->buf = NULL;
+	string->len = 0;
+}
+
+char* http_alloc_string(http_decoder_t *decoder, const char *i_str, size_t i_len, http_string_t *o_str, int from_client)
+{
+	if(!o_str)
+		return NULL;
+	
+	char *ret = NULL;
+	if(from_client)
+		ret = (char*)http_fzalloc(i_len+1, decoder->http_request_value_fslab);
+	else
+		ret = (char*)http_fzalloc(i_len+1, decoder->http_response_value_fslab);
+	if(ret)
+	{
+		if(i_str)
+			memcpy(ret, i_str, i_len);
+		ret[i_len] = '\0';
+		o_str->buf = ret;
+		o_str->len = i_len;
+	}
+	return ret;
+}
+
+http_string_list_part_t* http_alloc_string_list_part(http_decoder_t *decoder, const http_string_t *src, int from_client)
+{
+	if(!src)
+		return NULL;
+	http_string_list_part_t *ret = NULL;
+	if(from_client)
+		ret = (http_string_list_part_t*)http_zalloc(decoder->http_request_string_part_slab);
+	else
+		ret = (http_string_list_part_t*)http_zalloc(decoder->http_response_string_part_slab);
+	
+	memset(ret, 0, sizeof(*ret));
+	ret->string = *src;
+	return ret;
+}
+
+void http_free_string_list_part(http_decoder_t *decoder, http_string_list_part_t *src, int from_client)
+{
+	if(!src)
+		return;
+	http_free_string(decoder, &src->string, from_client);
+	if(from_client)
+		http_zfree(decoder->http_request_string_part_slab, src);
+	else
+		http_zfree(decoder->http_response_string_part_slab, src);
+}
+
+void http_free_string_list(http_decoder_t *decoder, http_string_list_t *list_head, int from_client)
+{
+	if(!list_head)
+		return;
+	
+	http_string_list_part_t *entry=NULL, *tmp=NULL;
+	STAILQ_FOREACH_SAFE(entry, list_head, next, tmp)
+		http_free_string_list_part(decoder, entry, from_client);
+}
+
+http_chunk_body_part_t* http_alloc_chunk_body_part(http_decoder_t *decoder, int from_client)
+{
+	http_chunk_body_part_t *ret = NULL;
+	if(from_client)
+		ret = (http_chunk_body_part_t*)http_zalloc(decoder->http_request_chunk_part_slab);
+	else
+		ret = (http_chunk_body_part_t*)http_zalloc(decoder->http_response_chunk_part_slab);
+	
+	if(ret)
+	{
+		memset(ret, 0, sizeof(*ret));
+		STAILQ_INIT(&ret->chunk_value);
+	}
+	return ret;
+}
+
+void http_free_chunk_body_part(http_decoder_t *decoder, http_chunk_body_part_t *src, int from_client)
+{
+	if(!src)
+		return;
+	http_free_string(decoder, &src->chunk_header.chunk_extension, from_client);
+	http_free_string_list(decoder, &src->chunk_value, from_client);
+	if(from_client)
+		http_zfree(decoder->http_request_chunk_part_slab, src);
+	else
+		http_zfree(decoder->http_response_chunk_part_slab, src);
+}
+
+void http_free_chunk_body_list(http_decoder_t *decoder, http_chunk_body_list_t *list, int from_client)
+{
+	if(!list)
+		return;
+	
+	http_chunk_body_part_t *part=NULL, *tmp=NULL;
+	STAILQ_FOREACH_SAFE(part, list, next, tmp)
+		http_free_chunk_body_part(decoder, part, from_client);
+}
+
+void http_free_chunk_body(http_decoder_t *decoder, http_chunk_body_t *body, int from_client)
+{
+	if(!body)
+		return;
+	
+	http_free_chunk_body_list(decoder, &body->chunk_list, from_client);
+	http_free_string_list(decoder, &body->chunk_tailer, from_client);
+}
+
+http_body_t* http_alloc_body(http_decoder_t *decoder, int from_client)
+{
+	http_body_t *ret = NULL;
+	if(from_client)
+		ret = (http_body_t*)http_zalloc(decoder->http_request_body_slab);
+	else
+		ret = (http_body_t*)http_zalloc(decoder->http_response_body_slab);
+	
+	if(ret)
+	{
+		memset(ret, 0, sizeof(*ret));
+		STAILQ_INIT(&ret->normal_body);
+		STAILQ_INIT(&ret->chunk_body.chunk_list);
+		STAILQ_INIT(&ret->chunk_body.chunk_tailer);
+		ret->info.content_type.maintype = HTTP_BODY_CONTENT_MAINTYPE_UNKOWN;
+		ret->info.content_type.subtype = HTTP_BODY_CONTENT_SUBTYPE_UNKOWN;
+		ret->info.content_encoding = HTTP_BODY_CONTENT_ENCODING_UNKOWN;
+		ret->info.transfer_encoding = HTTP_BODY_TRANSFER_ENCODING_UNKOWN;
+		ret->info.content_language = HTTP_BODY_CONTent_LANGUAGE_UNKOWN;
+		ret->info.content_charset = HTTP_BODY_CONTENT_CHARSET_UNKOWN;
+	}
+	return ret;
+}
+
+void http_free_body(http_decoder_t *decoder, http_body_t *body, int from_client)
+{
+	if(!body)
+		return;
+	http_free_string_list(decoder, &body->normal_body, from_client);
+	http_free_string_list(decoder, &body->chunk_body.chunk_tailer, from_client);
+	http_free_chunk_body_list(decoder, &body->chunk_body.chunk_list, from_client);
+	if(from_client)
+		http_zfree(decoder->http_request_body_slab, body);
+	else
+		http_zfree(decoder->http_response_body_slab, body);
 }
