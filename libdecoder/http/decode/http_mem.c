@@ -140,6 +140,7 @@ void http_mem_finit(http_decoder_t *decoder)
 	http_zfinit(decoder->http_request_header_slab);
 	http_zfinit(decoder->http_request_string_part_slab);
 	http_zfinit(decoder->http_request_chunk_part_slab);
+	http_zfinit(decoder->http_request_body_slab);
 	http_zfinit(decoder->http_request_slab);
 
 	http_fzfinit(decoder->http_response_value_fslab);
@@ -147,6 +148,7 @@ void http_mem_finit(http_decoder_t *decoder)
 	http_zfinit(decoder->http_response_header_slab);
 	http_zfinit(decoder->http_response_string_part_slab);
 	http_zfinit(decoder->http_response_chunk_part_slab);
+	http_zfinit(decoder->http_response_body_slab);
 	http_zfinit(decoder->http_response_slab);
 }
 
@@ -306,9 +308,7 @@ http_request_t* http_client_alloc_request(http_decoder_t *decoder,
 	STAILQ_INIT(&request->header_list);
 	if(header_list)
 		STAILQ_CONCAT(&request->header_list, header_list);
-	
-	if(body)
-		request->body = body;
+	request->body = body;
 	
 	return request;
 }
@@ -418,9 +418,7 @@ http_response_t* http_server_alloc_response(http_decoder_t *decoder,
 	STAILQ_INIT(&response->header_list);
 	if(header_list)
 		STAILQ_CONCAT(&response->header_list, header_list);
-	
-	if(body)
-		response->body = body;
+	response->body = body;
 	
 	return response;
 }
