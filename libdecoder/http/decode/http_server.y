@@ -78,18 +78,27 @@
 %token TOKEN_SERVER_HEADER_TERM
 
 %token TOKEN_SERVER_BODY_PART
+%token TOKEN_SERVER_BODY_CHUNK_SIZE
+%token TOKEN_SERVER_BODY_CHUNK_EXTENSION
+%token TOKEN_SERVER_BODY_CHUNK_TAILER
 
 %union
 {
+	size_t chunk_size;
 	http_version_t version;
 	http_response_code_t code;
 	http_string_t string;
+	http_string_list_t string_list;
 	http_response_first_line_t *first_line;
 	http_response_header_t *header;
 	http_response_header_list_t header_list;
-	http_body_t body;
+	http_body_t *body;
 	http_response_t *response;
 	http_response_list_t response_list;
+	http_chunk_body_part_t *chunk;
+	http_chunk_body_list_t chunk_list;
+	http_chunk_body_t chunk_body;
+	http_chunk_body_header_t chunk_header;
 }
 
 %type <response_list>	response_list
@@ -98,6 +107,14 @@
 %type <header_list>		response_headers
 						response_header_list
 %type <body>			response_body
+%type <string_list>		response_normal_body
+						response_chunk_tailer_list
+						response_chunk_data
+%type <chunk>			response_chunk
+%type <chunk_list>		response_chunk_list
+%type <chunk_header>	response_chunk_header
+%type <chunk_body>		response_chunk_body
+%type <chunk_size>		TOKEN_SERVER_BODY_CHUNK_SIZE
 %type <version>			response_line_version
 %type <code>			response_line_code
 						TOKEN_SERVER_FIRST_CODE
@@ -105,6 +122,8 @@
 						TOKEN_SERVER_FIRST_VALUE
 						TOKEN_SERVER_HEADER_VALUE
 						TOKEN_SERVER_BODY_PART
+						TOKEN_SERVER_BODY_CHUNK_EXTENSION
+						TOKEN_SERVER_BODY_CHUNK_TAILER
 %type <header>			response_header
 						response_header_cache_control
 						response_header_connection
@@ -207,7 +226,7 @@ empty:
 response:
 	response_line response_headers response_body
 	{
-		http_response_t *response = http_server_alloc_response(priv_decoder, $1, &$2, &$3);
+		http_response_t *response = http_server_alloc_response(priv_decoder, $1, &$2, $3);
 		if(!response)
 		{
 			http_debug(debug_http_server_parser, "failed to alloc response\n");
@@ -952,10 +971,135 @@ response_header_proxy_authenticate:
 response_body:
 	empty
 	{
+		$$ = NULL;
 	}
-	| response_body TOKEN_SERVER_BODY_PART
+	| response_normal_body 
 	{
-		/*TODO*/
+		http_body_t *ret = http_server_alloc_body(priv_decoder);
+		if(!ret)
+		{
+			http_debug(debug_http_server_parser, "failed to alloc http normal body\n");
+			YYABORT;
+		}
+		STAILQ_CONCAT(&ret->normal_body, &$1);
+		$$ = ret;
+	}
+	| response_chunk_body
+	{
+		http_body_t *ret = http_server_alloc_body(priv_decoder);
+		if(!ret)
+		{
+			http_debug(debug_http_server_parser, "failed to alloc http chunk body\n");
+			YYABORT;
+		}
+		STAILQ_CONCAT(&ret->chunk_body.chunk_list, &$1.chunk_list);
+		STAILQ_CONCAT(&ret->chunk_body.chunk_tailer, &$1.chunk_tailer);
+		$$ = ret;
+	}
+	;
+
+response_normal_body:
+	TOKEN_SERVER_BODY_PART
+	{
+		http_string_list_part_t *ret = http_server_alloc_string_list_part(priv_decoder, &$1);
+		if(!ret)
+		{
+			http_debug(debug_http_server_parser, "failed to alloc normal body data part\n");
+			YYABORT;
+		}
+		STAILQ_INIT(&$$);
+		STAILQ_INSERT_TAIL(&$$, ret, next);
+	}
+	| response_normal_body TOKEN_SERVER_BODY_PART
+	{
+		http_string_list_part_t *ret = http_server_alloc_string_list_part(priv_decoder, &$2);
+		if(!ret)
+		{
+			http_debug(debug_http_server_parser, "failed to alloc normal body data part\n");
+			YYABORT;
+		}
+		STAILQ_INSERT_TAIL(&$1, ret, next);
+		STAILQ_CONCAT(&$$, &$1);
+	}
+	;
+
+response_chunk_body:
+	response_chunk_list response_chunk_tailer_list
+	{
+		STAILQ_INIT(&$$.chunk_list);
+		STAILQ_INIT(&$$.chunk_tailer);
+	}
+	;
+
+response_chunk_list:
+	response_chunk
+	{
+		STAILQ_INIT(&$$);
+		STAILQ_INSERT_TAIL(&$$, $1, next);
+	}
+	| response_chunk_list response_chunk
+	{
+		STAILQ_INSERT_TAIL(&$1, $2, next);
+		STAILQ_CONCAT(&$$, &$1);
+	}
+	;
+
+response_chunk:
+	response_chunk_header response_chunk_data
+	{
+		http_chunk_body_part_t *ret = http_server_alloc_chunk_body_part(priv_decoder);
+		if(!ret)
+		{
+			http_debug(debug_http_server_parser, "failed to alloc chunk part\n");
+			YYABORT;
+		}
+		ret->chunk_header = $1;
+		STAILQ_CONCAT(&ret->chunk_value, &$2);
+		$$ = ret;
+	}
+	;
+
+response_chunk_header:
+	TOKEN_SERVER_BODY_CHUNK_SIZE TOKEN_SERVER_BODY_CHUNK_EXTENSION
+	{
+		$$.chunk_size = $1;
+		$$.chunk_extension = $2;
+	}
+	;
+
+response_chunk_data:
+	empty
+	{
+		STAILQ_INIT(&$$);
+	}
+	| response_chunk_data TOKEN_SERVER_BODY_PART
+	{
+		http_string_list_part_t *ret = http_server_alloc_string_list_part(priv_decoder, &$2);
+		if(!ret)
+		{
+			http_debug(debug_http_server_parser, "failed to alloc chunk data part\n");
+			YYABORT;
+		}
+		STAILQ_INSERT_TAIL(&$1, ret, next);
+		STAILQ_CONCAT(&$$, &$1);
+	}
+	;
+
+response_chunk_tailer_list:
+	empty
+	{
+		STAILQ_INIT(&$$);
+	}
+	| response_chunk_tailer_list TOKEN_SERVER_BODY_CHUNK_TAILER
+	{
+		http_string_list_part_t *ret = http_server_alloc_string_list_part(priv_decoder, &$2);
+		if(!ret)
+		{
+			http_debug(debug_http_server_parser, "failed to alloc chunk tailer part\n");
+			YYABORT;
+		}
+		STAILQ_INSERT_TAIL(&$1, ret, next);
+		STAILQ_CONCAT(&$$, &$1);
 	}
 	;
 %%

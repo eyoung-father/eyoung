@@ -124,6 +124,9 @@ int http_cmd_pair_id;
 %token TOKEN_CLIENT_HEADER_TERM
 
 %token TOKEN_CLIENT_BODY_PART
+%token TOKEN_CLIENT_BODY_CHUNK_SIZE
+%token TOKEN_CLIENT_BODY_CHUNK_EXTENSION
+%token TOKEN_CLIENT_BODY_CHUNK_TAILER
 
 %union
 {
@@ -136,6 +139,11 @@ int http_cmd_pair_id;
 	http_request_t *request;
 	http_request_list_t request_list;
 	http_string_t string;
+	http_string_list_t string_list;
+	http_chunk_body_part_t *chunk;
+	http_chunk_body_list_t chunk_list;
+	http_chunk_body_t chunk_body;
+	http_chunk_body_header_t chunk_header;
 }
 
 %type <request_list>		request_list
@@ -149,8 +157,18 @@ int http_cmd_pair_id;
 							TOKEN_CLIENT_HEADER_VALUE
 							TOKEN_CLINET_FIRST_URI
 							TOKEN_CLIENT_BODY_PART
+							TOKEN_CLIENT_BODY_CHUNK_EXTENSION
+							TOKEN_CLIENT_BODY_CHUNK_TAILER
 %type <version>				request_line_version
 %type <body>				request_body
+%type <string_list>			request_normal_body
+							request_chunk_tailer_list
+							request_chunk_data
+%type <chunk>				request_chunk
+%type <chunk_list>			request_chunk_list
+%type <chunk_header>		request_chunk_header
+%type <chunk_body>			request_chunk_body
+%type <chunk_size>			TOKEN_CLIENT_BODY_CHUNK_SIZE
 %type <header>				request_header
 							request_header_cache_control
 							request_header_connection
@@ -1390,9 +1408,65 @@ request_body:
 	empty
 	{
 	}
-	| request_body TOKEN_CLIENT_BODY_PART
+	| request_normal_body 
 	{
-		/*TODO*/
+	}
+	| request_chunk_body
+	{
+	}
+	;
+
+request_normal_body:
+	TOKEN_CLIENT_BODY_PART
+	{
+	}
+	| request_normal_body TOKEN_CLIENT_BODY_PART
+	{
+	}
+	;
+
+request_chunk_body:
+	request_chunk_list request_chunk_tailer_list
+	{
+	}
+	;
+
+request_chunk_list:
+	request_chunk
+	{
+	}
+	| request_chunk_list request_chunk
+	{
+	}
+	;
+
+request_chunk:
+	request_chunk_header request_chunk_data
+	{
+	}
+	;
+
+request_chunk_header:
+	TOKEN_CLIENT_BODY_CHUNK_SIZE TOKEN_CLIENT_BODY_CHUNK_EXTENSION
+	{
+	}
+	;
+
+request_chunk_data:
+	empty
+	{
+	}
+	| request_chunk_data TOKEN_CLIENT_BODY_PART
+	{
+	}
+	;
+
+request_chunk_tailer_list:
+	empty
+	{
+	}
+	| request_chunk_tailer_list TOKEN_CLIENT_BODY_CHUNK_TAILER
+	{
 	}
 	;
 
