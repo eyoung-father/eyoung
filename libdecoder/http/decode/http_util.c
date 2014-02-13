@@ -125,18 +125,18 @@ char* http_string_trim(const char *old_string, size_t old_len, size_t *new_len)
 	return ret;
 }
 
-int http_parse_chunk_header(http_decoder_t *decoder, const char *line, size_t line_size, size_t *chunk_size, http_string_t *chunk_ext, int from_client)
+int http_parse_chunk_header(http_decoder_t *decoder, http_string_t *line, http_chunk_body_header_t *header, int from_client)
 {
 	int need_debug = (from_client?debug_http_client_lexer:debug_http_server_lexer);
-	if(!line || !chunk_size || !chunk_ext || line_size<2)
+	char *end = NULL;
+	if(!line || line->len<2 || !header)
 	{
 		http_debug(need_debug, "bad paramter\n");
 		return -1;
 	}
-
-	char *end = NULL;
+	
 	errno = 0;
-	*chunk_size = strtol(line, &end, 16);
+	header->chunk_size = strtol(line->buf, &end, 16);
 	if(errno)
 	{
 		http_debug(need_debug, "bad chunk size format\n");
@@ -152,14 +152,14 @@ int http_parse_chunk_header(http_decoder_t *decoder, const char *line, size_t li
 	while(isspace(*end))
 		end++;
 	
-	chunk_ext->buf = NULL;
-	chunk_ext->len = 0;
+	header->chunk_extension.buf = NULL;
+	header->chunk_extension.len = 0;
 	if(*end)
 	{
-		int chunk_ext_len = line_size - (end-line);
-		if(line[line_size-2] == '\r')
+		int chunk_ext_len = line->len - (end-line->buf);
+		if(line->buf[line->len-2] == '\r')
 			chunk_ext_len -= 1;
-		if(!http_alloc_string(decoder, end, chunk_ext_len, chunk_ext, from_client))
+		if(!http_alloc_string(decoder, end, chunk_ext_len, &header->chunk_extension, from_client))
 		{
 			http_debug(need_debug, "alloc chunk extension failed\n");
 			return -1;
