@@ -106,6 +106,11 @@ extern http_body_t* http_alloc_body(http_decoder_t *decoder, int from_client);
 extern void http_free_body(http_decoder_t *decoder, http_body_t *body, int from_client);
 #define http_client_free_body(decoder,body) http_free_body(decoder,body,1)
 #define http_server_free_body(decoder,body) http_free_body(decoder,body,0)
+
+extern int http_parse_chunk_header(http_decoder_t *decoder, const char *line, size_t line_size, size_t *chunk_size, http_string_t *chunk_ext, int from_client);
+#define http_client_parse_chunk_header(decoder,line,line_size,chunk_size,chunk_ext) http_parse_chunk_header(decoder,line,line_size,chunk_size,chunk_ext,1)
+#define http_server_parse_chunk_header(decoder,line,line_size,chunk_size,chunk_ext) http_parse_chunk_header(decoder,line,line_size,chunk_size,chunk_ext,0)
+
 /*
  * FOR REQUEST
  * */
@@ -155,4 +160,5 @@ extern http_response_header_t* http_server_alloc_header(http_decoder_t *decoder,
 										  http_string_t *value);
 extern void http_server_free_header(http_decoder_t *decoder, http_response_header_t *header);
 extern void http_server_free_header_list(http_decoder_t *decoder, http_response_header_list_t *header_list);
+
 #endif

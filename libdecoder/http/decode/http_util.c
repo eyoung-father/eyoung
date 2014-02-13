@@ -5,6 +5,7 @@
 #include <ctype.h>
 #include <string.h>
 #include "http.h"
+#include "http_private.h"
 
 int debug_http_mem=1;
 int debug_http_client_lexer=1;
@@ -122,4 +123,48 @@ char* http_string_trim(const char *old_string, size_t old_len, size_t *new_len)
 		memcpy(ret, head, *new_len);
 	ret[*new_len] = '\0';
 	return ret;
+}
+
+int http_parse_chunk_header(http_decoder_t *decoder, const char *line, size_t line_size, size_t *chunk_size, http_string_t *chunk_ext, int from_client)
+{
+	int need_debug = (from_client?debug_http_client_lexer:debug_http_server_lexer);
+	if(!line || !chunk_size || !chunk_ext || line_size<2)
+	{
+		http_debug(need_debug, "bad paramter\n");
+		return -1;
+	}
+
+	char *end = NULL;
+	errno = 0;
+	*chunk_size = strtol(line, &end, 16);
+	if(errno)
+	{
+		http_debug(need_debug, "bad chunk size format\n");
+		return -1;
+	}
+
+	if(!isspace(*end))
+	{
+		http_debug(need_debug, "chunk size not followed by space char\n");
+		return -1;
+	}
+
+	while(isspace(*end))
+		end++;
+	
+	chunk_ext->buf = NULL;
+	chunk_ext->len = 0;
+	if(*end)
+	{
+		int chunk_ext_len = line_size - (end-line);
+		if(line[line_size-2] == '\r')
+			chunk_ext_len -= 1;
+		if(!http_alloc_string(decoder, end, chunk_ext_len, chunk_ext, from_client))
+		{
+			http_debug(need_debug, "alloc chunk extension failed\n");
+			return -1;
+		}
+	}
+
+	return 0;
 }
