@@ -135,7 +135,7 @@ int http_cmd_pair_id;
 	http_request_first_line_t *first_line;
 	http_request_header_t *header;
 	http_request_header_list_t header_list;
-	http_body_t body;
+	http_body_t *body;
 	http_request_t *request;
 	http_request_list_t request_list;
 	http_string_t string;
@@ -144,6 +144,7 @@ int http_cmd_pair_id;
 	http_chunk_body_list_t chunk_list;
 	http_chunk_body_t chunk_body;
 	http_chunk_body_header_t chunk_header;
+	size_t chunk_size;
 }
 
 %type <request_list>		request_list
@@ -154,6 +155,7 @@ int http_cmd_pair_id;
 %type <method>				request_line_method
 %type <string>				request_line_uri
 							request_header_value
+							request_chunk_extension_opt
 							TOKEN_CLIENT_HEADER_VALUE
 							TOKEN_CLINET_FIRST_URI
 							TOKEN_CLIENT_BODY_PART
@@ -281,7 +283,7 @@ request_list:
 request: 
 	request_line request_headers request_body
 	{
-		http_request_t *request = http_client_alloc_request(priv_decoder, $1, &$2, &$3);
+		http_request_t *request = http_client_alloc_request(priv_decoder, $1, &$2, $3);
 		if(!request)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc request\n");
@@ -1399,7 +1401,12 @@ request_header_x_flash_version:
 	;
 
 request_header_value:
-	TOKEN_CLIENT_HEADER_VALUE
+	empty
+	{
+		$$.buf = NULL;
+		$$.len = 0;
+	}
+	| TOKEN_CLIENT_HEADER_VALUE
 	{
 		$$ = $1;
 	}
@@ -1407,66 +1414,147 @@ request_header_value:
 request_body:
 	empty
 	{
+		$$ = NULL;
 	}
 	| request_normal_body 
 	{
+		http_body_t *ret = http_client_alloc_body(priv_decoder);
+		if(!ret)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc http normal body\n");
+			YYABORT;
+		}
+		STAILQ_CONCAT(&ret->normal_body, &$1);
+		$$ = ret;
 	}
 	| request_chunk_body
 	{
+		http_body_t *ret = http_client_alloc_body(priv_decoder);
+		if(!ret)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc http chunk body\n");
+			YYABORT;
+		}
+		STAILQ_CONCAT(&ret->chunk_body.chunk_list, &$1.chunk_list);
+		STAILQ_CONCAT(&ret->chunk_body.chunk_tailer, &$1.chunk_tailer);
+		$$ = ret;
 	}
 	;
 
 request_normal_body:
 	TOKEN_CLIENT_BODY_PART
 	{
+		http_string_list_part_t *ret = http_client_alloc_string_list_part(priv_decoder, &$1);
+		if(!ret)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc normal body data part\n");
+			YYABORT;
+		}
+		STAILQ_INIT(&$$);
+		STAILQ_INSERT_TAIL(&$$, ret, next);
 	}
 	| request_normal_body TOKEN_CLIENT_BODY_PART
 	{
+		http_string_list_part_t *ret = http_client_alloc_string_list_part(priv_decoder, &$2);
+		if(!ret)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc normal body data part\n");
+			YYABORT;
+		}
+		STAILQ_INSERT_TAIL(&$1, ret, next);
+		STAILQ_CONCAT(&$$, &$1);
 	}
 	;
 
 request_chunk_body:
 	request_chunk_list request_chunk_tailer_list
 	{
+		STAILQ_INIT(&$$.chunk_list);
+		STAILQ_INIT(&$$.chunk_tailer);
 	}
 	;
 
 request_chunk_list:
 	request_chunk
 	{
+		STAILQ_INIT(&$$);
+		STAILQ_INSERT_TAIL(&$$, $1, next);
 	}
 	| request_chunk_list request_chunk
 	{
+		STAILQ_INSERT_TAIL(&$1, $2, next);
+		STAILQ_CONCAT(&$$, &$1);
 	}
 	;
 
 request_chunk:
 	request_chunk_header request_chunk_data
 	{
+		http_chunk_body_part_t *ret = http_client_alloc_chunk_body_part(priv_decoder);
+		if(!ret)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc chunk part\n");
+			YYABORT;
+		}
+		ret->chunk_header = $1;
+		STAILQ_CONCAT(&ret->chunk_value, &$2);
+		$$ = ret;
 	}
 	;
 
 request_chunk_header:
-	TOKEN_CLIENT_BODY_CHUNK_SIZE TOKEN_CLIENT_BODY_CHUNK_EXTENSION
+	TOKEN_CLIENT_BODY_CHUNK_SIZE request_chunk_extension_opt
 	{
+		$$.chunk_size = $1;
+		$$.chunk_extension = $2;
+	}
+	;
+
+request_chunk_extension_opt:
+	empty
+	{
+		$$.buf = NULL;
+		$$.len = 0;
+	}
+	| TOKEN_CLIENT_BODY_CHUNK_EXTENSION
+	{
+		$$ = $1;
 	}
 	;
 
 request_chunk_data:
 	empty
 	{
+		STAILQ_INIT(&$$);
 	}
 	| request_chunk_data TOKEN_CLIENT_BODY_PART
 	{
+		http_string_list_part_t *ret = http_client_alloc_string_list_part(priv_decoder, &$2);
+		if(!ret)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc chunk data part\n");
+			YYABORT;
+		}
+		STAILQ_INSERT_TAIL(&$1, ret, next);
+		STAILQ_CONCAT(&$$, &$1);
 	}
 	;
 
 request_chunk_tailer_list:
 	empty
 	{
+		STAILQ_INIT(&$$);
 	}
 	| request_chunk_tailer_list TOKEN_CLIENT_BODY_CHUNK_TAILER
 	{
+		http_string_list_part_t *ret = http_client_alloc_string_list_part(priv_decoder, &$2);
+		if(!ret)
+		{
+			http_debug(debug_http_client_parser, "failed to alloc chunk tailer part\n");
+			YYABORT;
+		}
+		STAILQ_INSERT_TAIL(&$1, ret, next);
+		STAILQ_CONCAT(&$$, &$1);
 	}
 	;
 

@@ -119,6 +119,8 @@
 %type <code>			response_line_code
 						TOKEN_SERVER_FIRST_CODE
 %type <string>			response_line_message
+						response_chunk_extension_opt
+						response_header_value
 						TOKEN_SERVER_FIRST_VALUE
 						TOKEN_SERVER_HEADER_VALUE
 						TOKEN_SERVER_BODY_PART
@@ -462,7 +464,7 @@ response_header:
 	;
 
 response_header_unkown:
-	TOKEN_SERVER_HEADER_UNKOWN TOKEN_SERVER_HEADER_VALUE
+	TOKEN_SERVER_HEADER_UNKOWN response_header_value
 	{
 		http_response_header_t *header = http_server_alloc_header(priv_decoder, HTTP_RESPONSE_HEADER_UNKOWN, &$2);
 		if(!header)
@@ -475,7 +477,7 @@ response_header_unkown:
 	;
 
 response_header_cache_control:
-	TOKEN_SERVER_HEADER_CACHE_CONTROL TOKEN_SERVER_HEADER_VALUE
+	TOKEN_SERVER_HEADER_CACHE_CONTROL response_header_value
 	{
 		http_response_header_t *header = http_server_alloc_header(priv_decoder, HTTP_RESPONSE_HEADER_CACHE_CONTROL, &$2);
 		if(!header)
@@ -488,7 +490,7 @@ response_header_cache_control:
 	;
 
 response_header_connection:
-	TOKEN_SERVER_HEADER_CONNECTION TOKEN_SERVER_HEADER_VALUE
+	TOKEN_SERVER_HEADER_CONNECTION response_header_value
 	{
 		http_response_header_t *header = http_server_alloc_header(priv_decoder, HTTP_RESPONSE_HEADER_CONNECTION, &$2);
 		if(!header)
@@ -501,7 +503,7 @@ response_header_connection:
 	;
 
 response_header_date:
-	TOKEN_SERVER_HEADER_DATE TOKEN_SERVER_HEADER_VALUE
+	TOKEN_SERVER_HEADER_DATE response_header_value
 	{
 		http_response_header_t *header = http_server_alloc_header(priv_decoder, HTTP_RESPONSE_HEADER_DATE, &$2);
 		if(!header)
@@ -514,7 +516,7 @@ response_header_date:
 	;
 
 response_header_pragma:
-	TOKEN_SERVER_HEADER_PRAGMA TOKEN_SERVER_HEADER_VALUE
+	TOKEN_SERVER_HEADER_PRAGMA response_header_value
 	{
 		http_response_header_t *header = http_server_alloc_header(priv_decoder, HTTP_RESPONSE_HEADER_PRAGMA, &$2);
 		if(!header)
@@ -527,7 +529,7 @@ response_header_pragma:
 	;
 
 response_header_trailer:
-	TOKEN_SERVER_HEADER_TRAILER TOKEN_SERVER_HEADER_VALUE
+	TOKEN_SERVER_HEADER_TRAILER response_header_value
 	{
 		http_response_header_t *header = http_server_alloc_header(priv_decoder, HTTP_RESPONSE_HEADER_TRAILER, &$2);
 		if(!header)
@@ -540,7 +542,7 @@ response_header_trailer:
 	;
 
 response_header_transfer_encoding:
-	TOKEN_SERVER_HEADER_TRANSFER_ENCODING TOKEN_SERVER_HEADER_VALUE
+	TOKEN_SERVER_HEADER_TRANSFER_ENCODING response_header_value
 	{
 		http_response_header_t *header = http_server_alloc_header(priv_decoder, HTTP_RESPONSE_HEADER_TRANSFER_ENCODING, &$2);
 		if(!header)
@@ -553,7 +555,7 @@ response_header_transfer_encoding:
 	;
 
 response_header_upgrade:
-	TOKEN_SERVER_HEADER_UPGRADE TOKEN_SERVER_HEADER_VALUE
+	TOKEN_SERVER_HEADER_UPGRADE response_header_value
 	{
 		http_response_header_t *header = http_server_alloc_header(priv_decoder, HTTP_RESPONSE_HEADER_UPGRADE, &$2);
 		if(!header)
@@ -566,7 +568,7 @@ response_header_upgrade:
 	;
 
 response_header_via:
-	TOKEN_SERVER_HEADER_VIA TOKEN_SERVER_HEADER_VALUE
+	TOKEN_SERVER_HEADER_VIA response_header_value
 	{
 		http_response_header_t *header = http_server_alloc_header(priv_decoder, HTTP_RESPONSE_HEADER_VIA, &$2);
 		if(!header)
@@ -579,7 +581,7 @@ response_header_via:
 	;
 
 response_header_warning:
-	TOKEN_SERVER_HEADER_WARNING TOKEN_SERVER_HEADER_VALUE
+	TOKEN_SERVER_HEADER_WARNING response_header_value
 	{
 		http_response_header_t *header = http_server_alloc_header(priv_decoder, HTTP_RESPONSE_HEADER_WARNING, &$2);
 		if(!header)
@@ -592,7 +594,7 @@ response_header_warning:
 	;
 
 response_header_mime_version:
-	TOKEN_SERVER_HEADER_MIME_VERSION TOKEN_SERVER_HEADER_VALUE
+	TOKEN_SERVER_HEADER_MIME_VERSION response_header_value
 	{
 		http_response_header_t *header = http_server_alloc_header(priv_decoder, HTTP_RESPONSE_HEADER_MIME_VERSION, &$2);
 		if(!header)
@@ -605,7 +607,7 @@ response_header_mime_version:
 	;
 
 response_header_allow:
-	TOKEN_SERVER_HEADER_ALLOW TOKEN_SERVER_HEADER_VALUE
+	TOKEN_SERVER_HEADER_ALLOW response_header_value
 	{
 		http_response_header_t *header = http_server_alloc_header(priv_decoder, HTTP_RESPONSE_HEADER_ALLOW, &$2);
 		if(!header)
@@ -618,7 +620,7 @@ response_header_allow:
 	;
 
 response_header_content_encoding:
-	TOKEN_SERVER_HEADER_CONTENT_ENCODING TOKEN_SERVER_HEADER_VALUE
+	TOKEN_SERVER_HEADER_CONTENT_ENCODING response_header_value
 	{
 		http_response_header_t *header = http_server_alloc_header(priv_decoder, HTTP_RESPONSE_HEADER_CONTENT_ENCODING, &$2);
 		if(!header)
@@ -631,7 +633,7 @@ response_header_content_encoding:
 	;
 
 response_header_content_language:
-	TOKEN_SERVER_HEADER_CONTENT_LANGUAGE TOKEN_SERVER_HEADER_VALUE
+	TOKEN_SERVER_HEADER_CONTENT_LANGUAGE response_header_value
 	{
 		http_response_header_t *header = http_server_alloc_header(priv_decoder, HTTP_RESPONSE_HEADER_CONTENT_LANGUAGE, &$2);
 		if(!header)
@@ -644,7 +646,7 @@ response_header_content_language:
 	;
 
 response_header_content_length:
-	TOKEN_SERVER_HEADER_CONTENT_LENGTH TOKEN_SERVER_HEADER_VALUE
+	TOKEN_SERVER_HEADER_CONTENT_LENGTH response_header_value
 	{
 		http_response_header_t *header = http_server_alloc_header(priv_decoder, HTTP_RESPONSE_HEADER_CONTENT_LENGTH, &$2);
 		if(!header)
@@ -657,7 +659,7 @@ response_header_content_length:
 	;
 
 response_header_content_location:
-	TOKEN_SERVER_HEADER_CONTENT_LOCATION TOKEN_SERVER_HEADER_VALUE
+	TOKEN_SERVER_HEADER_CONTENT_LOCATION response_header_value
 	{
 		http_response_header_t *header = http_server_alloc_header(priv_decoder, HTTP_RESPONSE_HEADER_CONTENT_LOCATION, &$2);
 		if(!header)
@@ -670,7 +672,7 @@ response_header_content_location:
 	;
 
 response_header_content_md5:
-	TOKEN_SERVER_HEADER_CONTENT_MD5 TOKEN_SERVER_HEADER_VALUE
+	TOKEN_SERVER_HEADER_CONTENT_MD5 response_header_value
 	{
 		http_response_header_t *header = http_server_alloc_header(priv_decoder, HTTP_RESPONSE_HEADER_CONTENT_MD5, &$2);
 		if(!header)
@@ -683,7 +685,7 @@ response_header_content_md5:
 	;
 
 response_header_content_range:
-	TOKEN_SERVER_HEADER_CONTENT_RANGE TOKEN_SERVER_HEADER_VALUE
+	TOKEN_SERVER_HEADER_CONTENT_RANGE response_header_value
 	{
 		http_response_header_t *header = http_server_alloc_header(priv_decoder, HTTP_RESPONSE_HEADER_CONTENT_RANGE, &$2);
 		if(!header)
@@ -696,7 +698,7 @@ response_header_content_range:
 	;
 
 response_header_content_type:
-	TOKEN_SERVER_HEADER_CONTENT_TYPE TOKEN_SERVER_HEADER_VALUE
+	TOKEN_SERVER_HEADER_CONTENT_TYPE response_header_value
 	{
 		http_response_header_t *header = http_server_alloc_header(priv_decoder, HTTP_RESPONSE_HEADER_CONTENT_TYPE, &$2);
 		if(!header)
@@ -709,7 +711,7 @@ response_header_content_type:
 	;
 
 response_header_etag:
-	TOKEN_SERVER_HEADER_ETAG TOKEN_SERVER_HEADER_VALUE
+	TOKEN_SERVER_HEADER_ETAG response_header_value
 	{
 		http_response_header_t *header = http_server_alloc_header(priv_decoder, HTTP_RESPONSE_HEADER_ETAG, &$2);
 		if(!header)
@@ -722,7 +724,7 @@ response_header_etag:
 	;
 
 response_header_expires:
-	TOKEN_SERVER_HEADER_EXPIRES TOKEN_SERVER_HEADER_VALUE
+	TOKEN_SERVER_HEADER_EXPIRES response_header_value
 	{
 		http_response_header_t *header = http_server_alloc_header(priv_decoder, HTTP_RESPONSE_HEADER_EXPIRES, &$2);
 		if(!header)
@@ -735,7 +737,7 @@ response_header_expires:
 	;
 
 response_header_last_modified:
-	TOKEN_SERVER_HEADER_LAST_MODIFIED TOKEN_SERVER_HEADER_VALUE
+	TOKEN_SERVER_HEADER_LAST_MODIFIED response_header_value
 	{
 		http_response_header_t *header = http_server_alloc_header(priv_decoder, HTTP_RESPONSE_HEADER_LAST_MODIFIED, &$2);
 		if(!header)
@@ -748,7 +750,7 @@ response_header_last_modified:
 	;
 
 response_header_content_base:
-	TOKEN_SERVER_HEADER_CONTENT_BASE TOKEN_SERVER_HEADER_VALUE
+	TOKEN_SERVER_HEADER_CONTENT_BASE response_header_value
 	{
 		http_response_header_t *header = http_server_alloc_header(priv_decoder, HTTP_RESPONSE_HEADER_CONTENT_BASE, &$2);
 		if(!header)
@@ -761,7 +763,7 @@ response_header_content_base:
 	;
 
 response_header_content_version:
-	TOKEN_SERVER_HEADER_CONTENT_VERSION TOKEN_SERVER_HEADER_VALUE
+	TOKEN_SERVER_HEADER_CONTENT_VERSION response_header_value
 	{
 		http_response_header_t *header = http_server_alloc_header(priv_decoder, HTTP_RESPONSE_HEADER_CONTENT_VERSION, &$2);
 		if(!header)
@@ -774,7 +776,7 @@ response_header_content_version:
 	;
 
 response_header_derived_from:
-	TOKEN_SERVER_HEADER_DERIVED_FROM TOKEN_SERVER_HEADER_VALUE
+	TOKEN_SERVER_HEADER_DERIVED_FROM response_header_value
 	{
 		http_response_header_t *header = http_server_alloc_header(priv_decoder, HTTP_RESPONSE_HEADER_DERIVED_FROM, &$2);
 		if(!header)
@@ -787,7 +789,7 @@ response_header_derived_from:
 	;
 
 response_header_link:
-	TOKEN_SERVER_HEADER_LINK TOKEN_SERVER_HEADER_VALUE
+	TOKEN_SERVER_HEADER_LINK response_header_value
 	{
 		http_response_header_t *header = http_server_alloc_header(priv_decoder, HTTP_RESPONSE_HEADER_LINK, &$2);
 		if(!header)
@@ -800,7 +802,7 @@ response_header_link:
 	;
 
 response_header_keep_alive:
-	TOKEN_SERVER_HEADER_KEEP_ALIVE TOKEN_SERVER_HEADER_VALUE
+	TOKEN_SERVER_HEADER_KEEP_ALIVE response_header_value
 	{
 		http_response_header_t *header = http_server_alloc_header(priv_decoder, HTTP_RESPONSE_HEADER_KEEP_ALIVE, &$2);
 		if(!header)
@@ -813,7 +815,7 @@ response_header_keep_alive:
 	;
 
 response_header_uri:
-	TOKEN_SERVER_HEADER_URI TOKEN_SERVER_HEADER_VALUE
+	TOKEN_SERVER_HEADER_URI response_header_value
 	{
 		http_response_header_t *header = http_server_alloc_header(priv_decoder, HTTP_RESPONSE_HEADER_URI, &$2);
 		if(!header)
@@ -826,7 +828,7 @@ response_header_uri:
 	;
 
 response_header_accept_ranges:
-	TOKEN_SERVER_HEADER_ACCEPT_RANGES TOKEN_SERVER_HEADER_VALUE
+	TOKEN_SERVER_HEADER_ACCEPT_RANGES response_header_value
 	{
 		http_response_header_t *header = http_server_alloc_header(priv_decoder, HTTP_RESPONSE_HEADER_ACCEPT_RANGES, &$2);
 		if(!header)
@@ -839,7 +841,7 @@ response_header_accept_ranges:
 	;
 
 response_header_age:
-	TOKEN_SERVER_HEADER_AGE TOKEN_SERVER_HEADER_VALUE
+	TOKEN_SERVER_HEADER_AGE response_header_value
 	{
 		http_response_header_t *header = http_server_alloc_header(priv_decoder, HTTP_RESPONSE_HEADER_AGE, &$2);
 		if(!header)
@@ -852,7 +854,7 @@ response_header_age:
 	;
 
 response_header_location:
-	TOKEN_SERVER_HEADER_LOCATION TOKEN_SERVER_HEADER_VALUE
+	TOKEN_SERVER_HEADER_LOCATION response_header_value
 	{
 		http_response_header_t *header = http_server_alloc_header(priv_decoder, HTTP_RESPONSE_HEADER_LOCATION, &$2);
 		if(!header)
@@ -865,7 +867,7 @@ response_header_location:
 	;
 
 response_header_retry_after:
-	TOKEN_SERVER_HEADER_RETRY_AFTER TOKEN_SERVER_HEADER_VALUE
+	TOKEN_SERVER_HEADER_RETRY_AFTER response_header_value
 	{
 		http_response_header_t *header = http_server_alloc_header(priv_decoder, HTTP_RESPONSE_HEADER_RETRY_AFTER, &$2);
 		if(!header)
@@ -878,7 +880,7 @@ response_header_retry_after:
 	;
 
 response_header_server:
-	TOKEN_SERVER_HEADER_SERVER TOKEN_SERVER_HEADER_VALUE
+	TOKEN_SERVER_HEADER_SERVER response_header_value
 	{
 		http_response_header_t *header = http_server_alloc_header(priv_decoder, HTTP_RESPONSE_HEADER_SERVER, &$2);
 		if(!header)
@@ -891,7 +893,7 @@ response_header_server:
 	;
 
 response_header_vary:
-	TOKEN_SERVER_HEADER_VARY TOKEN_SERVER_HEADER_VALUE
+	TOKEN_SERVER_HEADER_VARY response_header_value
 	{
 		http_response_header_t *header = http_server_alloc_header(priv_decoder, HTTP_RESPONSE_HEADER_VARY, &$2);
 		if(!header)
@@ -904,7 +906,7 @@ response_header_vary:
 	;
 
 response_header_www_authenticate:
-	TOKEN_SERVER_HEADER_WWW_AUTHENTICATE TOKEN_SERVER_HEADER_VALUE
+	TOKEN_SERVER_HEADER_WWW_AUTHENTICATE response_header_value
 	{
 		http_response_header_t *header = http_server_alloc_header(priv_decoder, HTTP_RESPONSE_HEADER_WWW_AUTHENTICATE, &$2);
 		if(!header)
@@ -917,7 +919,7 @@ response_header_www_authenticate:
 	;
 
 response_header_set_cookie2:
-	TOKEN_SERVER_HEADER_SET_COOKIE2 TOKEN_SERVER_HEADER_VALUE
+	TOKEN_SERVER_HEADER_SET_COOKIE2 response_header_value
 	{
 		http_response_header_t *header = http_server_alloc_header(priv_decoder, HTTP_RESPONSE_HEADER_SET_COOKIE2, &$2);
 		if(!header)
@@ -930,7 +932,7 @@ response_header_set_cookie2:
 	;
 
 response_header_set_cookie:
-	TOKEN_SERVER_HEADER_SET_COOKIE TOKEN_SERVER_HEADER_VALUE
+	TOKEN_SERVER_HEADER_SET_COOKIE response_header_value
 	{
 		http_response_header_t *header = http_server_alloc_header(priv_decoder, HTTP_RESPONSE_HEADER_SET_COOKIE, &$2);
 		if(!header)
@@ -943,7 +945,7 @@ response_header_set_cookie:
 	;
 
 response_header_x_powered_by:
-	TOKEN_SERVER_HEADER_X_POWERED_BY TOKEN_SERVER_HEADER_VALUE
+	TOKEN_SERVER_HEADER_X_POWERED_BY response_header_value
 	{
 		http_response_header_t *header = http_server_alloc_header(priv_decoder, HTTP_RESPONSE_HEADER_X_POWERED_BY, &$2);
 		if(!header)
@@ -956,7 +958,7 @@ response_header_x_powered_by:
 	;
 
 response_header_proxy_authenticate:
-	TOKEN_SERVER_HEADER_PROXY_AUTHENTICATE TOKEN_SERVER_HEADER_VALUE
+	TOKEN_SERVER_HEADER_PROXY_AUTHENTICATE response_header_value
 	{
 		http_response_header_t *header = http_server_alloc_header(priv_decoder, HTTP_RESPONSE_HEADER_PROXY_AUTHENTICATE, &$2);
 		if(!header)
@@ -965,6 +967,18 @@ response_header_proxy_authenticate:
 			YYABORT;
 		}
 		$$ = header;
+	}
+	;
+
+response_header_value:
+	empty
+	{
+		$$.buf = NULL;
+		$$.len = 0;
+	}
+	| TOKEN_SERVER_HEADER_VALUE
+	{
+		$$ = $1;
 	}
 	;
 
@@ -1060,10 +1074,22 @@ response_chunk:
 	;
 
 response_chunk_header:
-	TOKEN_SERVER_BODY_CHUNK_SIZE TOKEN_SERVER_BODY_CHUNK_EXTENSION
+	TOKEN_SERVER_BODY_CHUNK_SIZE response_chunk_extension_opt
 	{
 		$$.chunk_size = $1;
 		$$.chunk_extension = $2;
+	}
+	;
+
+response_chunk_extension_opt:
+	empty
+	{
+		$$.buf = NULL;
+		$$.len = 0;
+	}
+	| TOKEN_SERVER_BODY_CHUNK_EXTENSION
+	{
+		$$ = $1;
 	}
 	;
 
