@@ -158,6 +158,7 @@ int http_cmd_pair_id;
 							TOKEN_CLINET_FIRST_URI
 							TOKEN_CLIENT_BODY_PART
 							TOKEN_CLIENT_BODY_CHUNK_TAILER
+							TOKEN_CLIENT_BODY_CHUNK_HEADER
 %type <version>				request_line_version
 %type <body>				request_body
 %type <string_list>			request_normal_body
@@ -166,7 +167,6 @@ int http_cmd_pair_id;
 %type <chunk>				request_chunk
 %type <chunk_list>			request_chunk_list
 %type <chunk_header>		request_chunk_header
-							TOKEN_CLIENT_BODY_CHUNK_HEADER
 %type <chunk_body>			request_chunk_body
 %type <header>				request_header
 							request_header_cache_control
@@ -252,7 +252,7 @@ int http_cmd_pair_id;
 %destructor
 {
 	http_client_free_string(priv_decoder, &$$);
-}<string>
+}request_line_uri request_header_value
 
 %destructor
 {
@@ -1559,7 +1559,11 @@ request_chunk:
 request_chunk_header:
 	TOKEN_CLIENT_BODY_CHUNK_HEADER
 	{
-		$$ = $1;
+		if(http_client_parse_chunk_header(priv_decoder, &$1, &$$))
+		{
+			http_debug(debug_http_client_parser, "failed to parse chunk header\n");
+			YYABORT;
+		}
 	}
 	;
 

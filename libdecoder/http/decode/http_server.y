@@ -112,7 +112,6 @@
 %type <chunk>			response_chunk
 %type <chunk_list>		response_chunk_list
 %type <chunk_header>	response_chunk_header
-						TOKEN_SERVER_BODY_CHUNK_HEADER
 %type <chunk_body>		response_chunk_body
 %type <version>			response_line_version
 %type <code>			response_line_code
@@ -123,6 +122,7 @@
 						TOKEN_SERVER_HEADER_VALUE
 						TOKEN_SERVER_BODY_PART
 						TOKEN_SERVER_BODY_CHUNK_TAILER
+						TOKEN_SERVER_BODY_CHUNK_HEADER
 %type <header>			response_header
 						response_header_cache_control
 						response_header_connection
@@ -187,7 +187,7 @@
 %destructor
 {
 	http_server_free_string(priv_decoder, &$$);
-}<string>
+}response_line_message response_header_value
 
 %destructor
 {
@@ -1134,7 +1134,11 @@ response_chunk:
 response_chunk_header:
 	TOKEN_SERVER_BODY_CHUNK_HEADER
 	{
-		$$ = $1;
+		if(http_client_parse_chunk_header(priv_decoder, &$1, &$$))
+		{
+			http_debug(debug_http_server_parser, "failed to chunk header\n");
+			YYABORT;
+		}
 	}
 	;
 
