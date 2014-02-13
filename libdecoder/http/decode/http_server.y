@@ -307,7 +307,13 @@ response_line_code:
 response_line_message:
 	TOKEN_SERVER_FIRST_VALUE
 	{
-		$$ = $1;
+		http_string_t dup_string = {NULL, 0};
+		if(!http_server_alloc_string(priv_decoder, $1.buf, $1.len, &dup_string))
+		{
+			http_debug(debug_http_server_parser, "alloc first line failed\n");
+			YYABORT;
+		}
+		$$ = dup_string;
 	}
 	;
 
@@ -1005,7 +1011,13 @@ response_header_value:
 	}
 	| TOKEN_SERVER_HEADER_VALUE
 	{
-		$$ = $1;
+		http_string_t dup_string = {NULL, 0};
+		if(!http_server_alloc_string(priv_decoder, $1.buf, $1.len, &dup_string))
+		{
+			http_debug(debug_http_server_parser, "alloc header value failed\n");
+			YYABORT;
+		}
+		$$ = dup_string;
 	}
 	;
 
@@ -1042,10 +1054,18 @@ response_body:
 response_normal_body:
 	TOKEN_SERVER_BODY_PART
 	{
-		http_string_list_part_t *ret = http_server_alloc_string_list_part(priv_decoder, &$1);
+		http_string_t dup_string = {NULL, 0};
+		if(!http_server_alloc_string(priv_decoder, $1.buf, $1.len, &dup_string))
+		{
+			http_debug(debug_http_server_parser, "alloc normal body value failed\n");
+			YYABORT;
+		}
+
+		http_string_list_part_t *ret = http_server_alloc_string_list_part(priv_decoder, &dup_string);
 		if(!ret)
 		{
 			http_debug(debug_http_server_parser, "failed to alloc normal body data part\n");
+			http_server_free_string(priv_decoder, &dup_string);
 			YYABORT;
 		}
 		STAILQ_INIT(&$$);
@@ -1053,10 +1073,18 @@ response_normal_body:
 	}
 	| response_normal_body TOKEN_SERVER_BODY_PART
 	{
-		http_string_list_part_t *ret = http_server_alloc_string_list_part(priv_decoder, &$2);
+		http_string_t dup_string = {NULL, 0};
+		if(!http_server_alloc_string(priv_decoder, $2.buf, $2.len, &dup_string))
+		{
+			http_debug(debug_http_server_parser, "alloc normal body value failed\n");
+			YYABORT;
+		}
+
+		http_string_list_part_t *ret = http_server_alloc_string_list_part(priv_decoder, &dup_string);
 		if(!ret)
 		{
 			http_debug(debug_http_server_parser, "failed to alloc normal body data part\n");
+			http_server_free_string(priv_decoder, &dup_string);
 			YYABORT;
 		}
 		STAILQ_INSERT_TAIL(&$1, ret, next);
@@ -1117,10 +1145,18 @@ response_chunk_data:
 	}
 	| response_chunk_data TOKEN_SERVER_BODY_PART
 	{
-		http_string_list_part_t *ret = http_server_alloc_string_list_part(priv_decoder, &$2);
+		http_string_t dup_string = {NULL, 0};
+		if(!http_server_alloc_string(priv_decoder, $2.buf, $2.len, &dup_string))
+		{
+			http_debug(debug_http_server_parser, "alloc chunk body data failed\n");
+			YYABORT;
+		}
+
+		http_string_list_part_t *ret = http_server_alloc_string_list_part(priv_decoder, &dup_string);
 		if(!ret)
 		{
 			http_debug(debug_http_server_parser, "failed to alloc chunk data part\n");
+			http_server_free_string(priv_decoder, &dup_string);
 			YYABORT;
 		}
 		STAILQ_INSERT_TAIL(&$1, ret, next);
@@ -1135,10 +1171,18 @@ response_chunk_tailer_list:
 	}
 	| response_chunk_tailer_list TOKEN_SERVER_BODY_CHUNK_TAILER
 	{
-		http_string_list_part_t *ret = http_server_alloc_string_list_part(priv_decoder, &$2);
+		http_string_t dup_string = {NULL, 0};
+		if(!http_server_alloc_string(priv_decoder, $2.buf, $2.len, &dup_string))
+		{
+			http_debug(debug_http_server_parser, "alloc chunk tailer value failed\n");
+			YYABORT;
+		}
+
+		http_string_list_part_t *ret = http_server_alloc_string_list_part(priv_decoder, &dup_string);
 		if(!ret)
 		{
 			http_debug(debug_http_server_parser, "failed to alloc chunk tailer part\n");
+			http_server_free_string(priv_decoder, &dup_string);
 			YYABORT;
 		}
 		STAILQ_INSERT_TAIL(&$1, ret, next);

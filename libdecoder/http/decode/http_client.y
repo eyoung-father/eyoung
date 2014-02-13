@@ -125,7 +125,6 @@ int http_cmd_pair_id;
 
 %token TOKEN_CLIENT_BODY_PART
 %token TOKEN_CLIENT_BODY_CHUNK_HEADER
-%token TOKEN_CLIENT_BODY_CHUNK_EXTENSION
 %token TOKEN_CLIENT_BODY_CHUNK_TAILER
 %token TOKEN_CLIENT_BODY_END
 
@@ -158,7 +157,6 @@ int http_cmd_pair_id;
 							TOKEN_CLIENT_HEADER_VALUE
 							TOKEN_CLINET_FIRST_URI
 							TOKEN_CLIENT_BODY_PART
-							TOKEN_CLIENT_BODY_CHUNK_EXTENSION
 							TOKEN_CLIENT_BODY_CHUNK_TAILER
 %type <version>				request_line_version
 %type <body>				request_body
@@ -465,7 +463,11 @@ request_line_method:
 request_line_uri: 
 	TOKEN_CLINET_FIRST_URI
 	{
-		$$ = $1;
+		if(!http_client_alloc_string(priv_decoder, $1.buf, $1.len, &$$))
+		{
+			http_debug(debug_http_client_parser, "failed to duplicate uri value\n");
+			YYABORT;
+		}
 	}
 	;
 
@@ -1437,7 +1439,11 @@ request_header_value:
 	}
 	| TOKEN_CLIENT_HEADER_VALUE
 	{
-		$$ = $1;
+		if(!http_client_alloc_string(priv_decoder, $1.buf, $1.len, &$$))
+		{
+			http_debug(debug_http_client_parser, "failed to duplicate header value\n");
+			YYABORT;
+		}
 	}
 
 request_body:
@@ -1473,10 +1479,18 @@ request_body:
 request_normal_body:
 	TOKEN_CLIENT_BODY_PART
 	{
-		http_string_list_part_t *ret = http_client_alloc_string_list_part(priv_decoder, &$1);
+		http_string_t dup_part = {NULL, 0};
+		if(!http_client_alloc_string(priv_decoder, $1.buf, $1.len, &dup_part))
+		{
+			http_debug(debug_http_client_parser, "failed to duplicate normal body part value\n");
+			YYABORT;
+		}
+
+		http_string_list_part_t *ret = http_client_alloc_string_list_part(priv_decoder, &dup_part);
 		if(!ret)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc normal body data part\n");
+			http_client_free_string(priv_decoder, &dup_part);
 			YYABORT;
 		}
 		STAILQ_INIT(&$$);
@@ -1484,10 +1498,18 @@ request_normal_body:
 	}
 	| request_normal_body TOKEN_CLIENT_BODY_PART
 	{
-		http_string_list_part_t *ret = http_client_alloc_string_list_part(priv_decoder, &$2);
+		http_string_t dup_part = {NULL, 0};
+		if(!http_client_alloc_string(priv_decoder, $2.buf, $2.len, &dup_part))
+		{
+			http_debug(debug_http_client_parser, "failed to duplicate normal body part value\n");
+			YYABORT;
+		}
+
+		http_string_list_part_t *ret = http_client_alloc_string_list_part(priv_decoder, &dup_part);
 		if(!ret)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc normal body data part\n");
+			http_client_free_string(priv_decoder, &dup_part);
 			YYABORT;
 		}
 		STAILQ_INSERT_TAIL(&$1, ret, next);
@@ -1548,10 +1570,18 @@ request_chunk_data:
 	}
 	| request_chunk_data TOKEN_CLIENT_BODY_PART
 	{
-		http_string_list_part_t *ret = http_client_alloc_string_list_part(priv_decoder, &$2);
+		http_string_t dup_part = {NULL, 0};
+		if(!http_client_alloc_string(priv_decoder, $2.buf, $2.len, &dup_part))
+		{
+			http_debug(debug_http_client_parser, "failed to duplicate chunk body part value\n");
+			YYABORT;
+		}
+
+		http_string_list_part_t *ret = http_client_alloc_string_list_part(priv_decoder, &dup_part);
 		if(!ret)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc chunk data part\n");
+			http_client_free_string(priv_decoder, &dup_part);
 			YYABORT;
 		}
 		STAILQ_INSERT_TAIL(&$1, ret, next);
@@ -1566,10 +1596,18 @@ request_chunk_tailer_list:
 	}
 	| request_chunk_tailer_list TOKEN_CLIENT_BODY_CHUNK_TAILER
 	{
-		http_string_list_part_t *ret = http_client_alloc_string_list_part(priv_decoder, &$2);
+		http_string_t dup_part = {NULL, 0};
+		if(!http_client_alloc_string(priv_decoder, $2.buf, $2.len, &dup_part))
+		{
+			http_debug(debug_http_client_parser, "failed to duplicate chunk tailer\n");
+			YYABORT;
+		}
+
+		http_string_list_part_t *ret = http_client_alloc_string_list_part(priv_decoder, &dup_part);
 		if(!ret)
 		{
 			http_debug(debug_http_client_parser, "failed to alloc chunk tailer part\n");
+			http_client_free_string(priv_decoder, &dup_part);
 			YYABORT;
 		}
 		STAILQ_INSERT_TAIL(&$1, ret, next);
@@ -1633,9 +1671,9 @@ void http_client_register(http_decoder_t *decoder)
 			continue;
 		yytid[YYNTOKENS + index] = ey_engine_find_event(engine, name);
 		if(yytid[YYNTOKENS + index] >= 0)
-			http_debug(debug_http_server_parser, "client event id of %s is %d\n", name, yytid[YYNTOKENS + index]);
+			http_debug(debug_http_client_parser, "client event id of %s is %d\n", name, yytid[YYNTOKENS + index]);
 		else
-			http_debug(debug_http_server_parser, "failed to register client event %s\n", name);
+			http_debug(debug_http_client_parser, "failed to register client event %s\n", name);
 	}
 
 	http_cmd_pair_id = ey_engine_find_event(engine, "cmd_pair");
