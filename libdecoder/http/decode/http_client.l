@@ -187,19 +187,23 @@ WORD	[^ \r\n\t]+
 }
 
 <HTTP_CLIENT_BODY_NORMAL>{
-
+.											{RETURN(-1);}
 }
 
 <HTTP_CLIENT_BODY_TRUNK_HEADER>{
-
+[^\r\n]+{NEWLINE}							{/*TODO*/}
+.											{RETURN(-1);}
 }
 
 <HTTP_CLIENT_BODY_TRUNK_BODY>{
-
+{NEWLINE}									{GOTO(HTTP_CLIENT_BODY_TRUNK_HEADER);}
+.											{RETURN(-1);}
 }
 
 <HTTP_CLIENT_BODY_TRUNK_TAILER>{
-
+[^\r\n]+{NEWLINE}							{RETURN(TOKEN_CLIENT_BODY_CHUNK_TAILER);}
+{NEWLINE}									{GOTO(INITIAL); RETURN(TOKEN_CLIENT_BODY_END);}
+.											{RETURN(-1);}
 }
 
 %%

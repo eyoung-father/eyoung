@@ -124,9 +124,10 @@ int http_cmd_pair_id;
 %token TOKEN_CLIENT_HEADER_TERM
 
 %token TOKEN_CLIENT_BODY_PART
-%token TOKEN_CLIENT_BODY_CHUNK_SIZE
+%token TOKEN_CLIENT_BODY_CHUNK_HEADER
 %token TOKEN_CLIENT_BODY_CHUNK_EXTENSION
 %token TOKEN_CLIENT_BODY_CHUNK_TAILER
+%token TOKEN_CLIENT_BODY_END
 
 %union
 {
@@ -144,7 +145,6 @@ int http_cmd_pair_id;
 	http_chunk_body_list_t chunk_list;
 	http_chunk_body_t chunk_body;
 	http_chunk_body_header_t chunk_header;
-	size_t chunk_size;
 }
 
 %type <request_list>		request_list
@@ -155,7 +155,6 @@ int http_cmd_pair_id;
 %type <method>				request_line_method
 %type <string>				request_line_uri
 							request_header_value
-							request_chunk_extension_opt
 							TOKEN_CLIENT_HEADER_VALUE
 							TOKEN_CLINET_FIRST_URI
 							TOKEN_CLIENT_BODY_PART
@@ -169,8 +168,8 @@ int http_cmd_pair_id;
 %type <chunk>				request_chunk
 %type <chunk_list>			request_chunk_list
 %type <chunk_header>		request_chunk_header
+							TOKEN_CLIENT_BODY_CHUNK_HEADER
 %type <chunk_body>			request_chunk_body
-%type <chunk_size>			TOKEN_CLIENT_BODY_CHUNK_SIZE
 %type <header>				request_header
 							request_header_cache_control
 							request_header_connection
@@ -1536,20 +1535,7 @@ request_chunk:
 	;
 
 request_chunk_header:
-	TOKEN_CLIENT_BODY_CHUNK_SIZE request_chunk_extension_opt
-	{
-		$$.chunk_size = $1;
-		$$.chunk_extension = $2;
-	}
-	;
-
-request_chunk_extension_opt:
-	empty
-	{
-		$$.buf = NULL;
-		$$.len = 0;
-	}
-	| TOKEN_CLIENT_BODY_CHUNK_EXTENSION
+	TOKEN_CLIENT_BODY_CHUNK_HEADER
 	{
 		$$ = $1;
 	}

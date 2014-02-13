@@ -78,13 +78,12 @@
 %token TOKEN_SERVER_HEADER_TERM
 
 %token TOKEN_SERVER_BODY_PART
-%token TOKEN_SERVER_BODY_CHUNK_SIZE
-%token TOKEN_SERVER_BODY_CHUNK_EXTENSION
+%token TOKEN_SERVER_BODY_CHUNK_HEADER
 %token TOKEN_SERVER_BODY_CHUNK_TAILER
+%token TOKEN_SERVER_BODY_END
 
 %union
 {
-	size_t chunk_size;
 	http_version_t version;
 	http_response_code_t code;
 	http_string_t string;
@@ -113,18 +112,16 @@
 %type <chunk>			response_chunk
 %type <chunk_list>		response_chunk_list
 %type <chunk_header>	response_chunk_header
+						TOKEN_SERVER_BODY_CHUNK_HEADER
 %type <chunk_body>		response_chunk_body
-%type <chunk_size>		TOKEN_SERVER_BODY_CHUNK_SIZE
 %type <version>			response_line_version
 %type <code>			response_line_code
 						TOKEN_SERVER_FIRST_CODE
 %type <string>			response_line_message
-						response_chunk_extension_opt
 						response_header_value
 						TOKEN_SERVER_FIRST_VALUE
 						TOKEN_SERVER_HEADER_VALUE
 						TOKEN_SERVER_BODY_PART
-						TOKEN_SERVER_BODY_CHUNK_EXTENSION
 						TOKEN_SERVER_BODY_CHUNK_TAILER
 %type <header>			response_header
 						response_header_cache_control
@@ -1107,20 +1104,7 @@ response_chunk:
 	;
 
 response_chunk_header:
-	TOKEN_SERVER_BODY_CHUNK_SIZE response_chunk_extension_opt
-	{
-		$$.chunk_size = $1;
-		$$.chunk_extension = $2;
-	}
-	;
-
-response_chunk_extension_opt:
-	empty
-	{
-		$$.buf = NULL;
-		$$.len = 0;
-	}
-	| TOKEN_SERVER_BODY_CHUNK_EXTENSION
+	TOKEN_SERVER_BODY_CHUNK_HEADER
 	{
 		$$ = $1;
 	}
