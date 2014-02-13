@@ -194,8 +194,38 @@
 
 %destructor
 {
+	http_server_free_string_list(priv_decoder, &$$);
+}<string_list>
+
+%destructor
+{
 	http_server_free_header(priv_decoder, $$);
 }<header>
+
+%destructor
+{
+	http_server_free_chunk_body_part(priv_decoder, $$);
+}<chunk>
+
+%destructor
+{
+	http_server_free_chunk_body_list(priv_decoder, &$$);
+}<chunk_list>
+
+%destructor
+{
+	http_server_free_chunk_body(priv_decoder, &$$);
+}<chunk_body>
+
+%destructor
+{
+	http_server_free_string(priv_decoder, &$$.chunk_extension);
+}<chunk_header>
+
+%destructor
+{
+	http_server_free_body(priv_decoder, $$);
+}<body>
 
 %debug
 %verbose
@@ -1042,6 +1072,9 @@ response_chunk_body:
 	{
 		STAILQ_INIT(&$$.chunk_list);
 		STAILQ_INIT(&$$.chunk_tailer);
+
+		STAILQ_CONCAT(&$$.chunk_list, &$1);
+		STAILQ_CONCAT(&$$.chunk_tailer, &$2);
 	}
 	;
 
