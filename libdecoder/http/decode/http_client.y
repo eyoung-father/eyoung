@@ -4,6 +4,7 @@
 #include <assert.h>
 #include "http.h"
 #include "http_private.h"
+#include "http_client_lex.h"
 
 #ifdef YY_REDUCTION_CALLBACK
 #undef YY_REDUCTION_CALLBACK

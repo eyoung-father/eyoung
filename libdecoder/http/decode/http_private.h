@@ -6,8 +6,6 @@
 #include "http_type.h"
 #include "http_client_parser.h"
 #include "http_server_parser.h"
-#include "http_client_lex.h"
-#include "http_server_lex.h"
 
 struct yy_buffer_state;
 extern struct yy_buffer_state* http_client_scan_stream(const char *new_buf, size_t new_buf_len, http_data_t *priv);
@@ -110,6 +108,10 @@ extern void http_free_body(http_decoder_t *decoder, http_body_t *body, int from_
 extern int http_parse_chunk_header(http_decoder_t *decoder, http_string_t *line, http_chunk_body_header_t *header, int from_client);
 #define http_client_parse_chunk_header(decoder,line,header) http_parse_chunk_header(decoder,line,header,1)
 #define http_server_parse_chunk_header(decoder,line,header) http_parse_chunk_header(decoder,line,header,0)
+
+extern int http_prepare_string(http_decoder_t *decoder, char *line, size_t length, http_string_t *string, int no_newline, int from_client);
+#define http_client_prepare_string(decoder,line,length,string,no_newline) http_prepare_string(decoder,line,length,string,no_newline,1)
+#define http_server_prepare_string(decoder,line,length,string,no_newline) http_prepare_string(decoder,line,length,string,no_newline,0)
 
 /*
  * FOR REQUEST

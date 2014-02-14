@@ -3,6 +3,7 @@
 #include <string.h>
 #include "http.h"
 #include "http_client_parser.h"
+#include "http_private.h"
 
 static int save_client_stream_context(yyscan_t yyscanner, int from_default);
 
@@ -182,7 +183,17 @@ WORD	[^ \r\n\t]+
 }
 
 <HTTP_CLIENT_HEADER_VALUE>{
-[^\r\n]*{NEWLINE}							{GOTO(HTTP_CLIENT_HEADER_NAME); RETURN(TOKEN_CLIENT_HEADER_VALUE);}
+[^\r\n]*{NEWLINE}							{
+												http_data_t *priv_data = (http_data_t *)yyget_extra(yyg);
+												http_decoder_t *decoder = (http_decoder_t*)priv_data->decoder;
+												if(http_client_prepare_string(decoder, yytext, yyleng, &yylval->string, 1))
+												{
+													http_debug(debug_http_client_lexer, "prepare header value failed\n");
+													RETURN(-1);
+												}
+												GOTO(HTTP_CLIENT_HEADER_NAME);
+												RETURN(TOKEN_CLIENT_HEADER_VALUE);
+											}
 .											{RETURN(-1);}
 }
 
@@ -191,7 +202,16 @@ WORD	[^ \r\n\t]+
 }
 
 <HTTP_CLIENT_BODY_TRUNK_HEADER>{
-[^\r\n]+{NEWLINE}							{/*TODO*/}
+[^\r\n]+{NEWLINE}							{
+												http_data_t *priv_data = (http_data_t *)yyget_extra(yyg);
+												http_decoder_t *decoder = (http_decoder_t*)priv_data->decoder;
+												if(http_client_prepare_string(decoder, yytext, yyleng, &yylval->string, 1))
+												{
+													http_debug(debug_http_client_lexer, "prepare chunk header value failed\n");
+													RETURN(-1);
+												}
+												/*TODO*/
+											}
 .											{RETURN(-1);}
 }
 

@@ -194,6 +194,7 @@ http_data_t* http_alloc_priv_data(http_decoder_t *decoder, int greedy)
 	}
 
 	memset(data, 0, sizeof(*data));
+	data->decoder = (http_handler_t)decoder;
 
 	/*init client*/
 	data->request_parser.parser = client_parser;

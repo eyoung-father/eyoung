@@ -129,7 +129,7 @@ int http_parse_chunk_header(http_decoder_t *decoder, http_string_t *line, http_c
 {
 	int need_debug = (from_client?debug_http_client_lexer:debug_http_server_lexer);
 	char *end = NULL;
-	if(!line || line->len<2 || !header)
+	if(!line || !line->len || !line->buf || !header)
 	{
 		http_debug(need_debug, "bad paramter\n");
 		return -1;
@@ -157,13 +157,41 @@ int http_parse_chunk_header(http_decoder_t *decoder, http_string_t *line, http_c
 	if(*end)
 	{
 		int chunk_ext_len = line->len - (end-line->buf);
-		if(line->buf[line->len-2] == '\r')
-			chunk_ext_len -= 1;
 		if(!http_alloc_string(decoder, end, chunk_ext_len, &header->chunk_extension, from_client))
 		{
 			http_debug(need_debug, "alloc chunk extension failed\n");
 			return -1;
 		}
+	}
+
+	return 0;
+}
+
+int http_prepare_string(http_decoder_t *decoder, char *line, size_t length, http_string_t *string, int no_newline, int from_client)
+{
+	int need_debug = (from_client?debug_http_client_lexer:debug_http_server_lexer);
+	if(!string || !line || !length)
+	{
+		http_debug(need_debug, "bad parameter in %s\n", __FUNCTION__);
+		return -1;
+	}
+	
+	string->buf = line;
+	string->len = length;
+	
+	if(no_newline)
+	{
+		if(line[length-1] != '\n')
+		{
+			http_debug(need_debug, "last char is not \\n\n");
+			return -1;
+		}
+		length--;
+
+		if(length && line[length-1] == '\r')
+			length--;
+
+		string->len = length;
 	}
 
 	return 0;
