@@ -11,7 +11,7 @@ extern int debug_http_detect;
 extern int http_debug(int flag, char *format, ...);
 extern int http_abnormal(int flag, char *format, ...);
 extern int http_attack(int flag, char *format, ...);
-extern int http_parse_integer(char *str, int *error);
+extern size_t http_parse_integer(const char *str, int mode, int *error);
 extern int http_client_error(void *this_priv, const char *format, ...);
 extern int http_server_error(void *this_priv, const char *format, ...);
 extern char* http_string_trim(const char *old_string, size_t old_len, size_t *new_len);

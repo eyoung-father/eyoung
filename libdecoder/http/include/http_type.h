@@ -739,6 +739,8 @@ typedef struct http_parser
 	int saved_len;
 	char last_frag;
 	char greedy;
+	char chunked;
+	size_t length;
 }http_parser_t;
 
 /*
