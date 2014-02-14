@@ -360,3 +360,30 @@ void http_server_lex_fast_init(yyscan_t yyscanner)
 	memset(yyg, 0, sizeof(*yyg));
 	yy_init_globals(yyscanner);
 }
+
+int http_server_lex_body_mode(yyscan_t scanner)
+{
+	/*TODO*/
+	return 0;
+}
+
+static int http_server_normal_body_lex(HTTP_SERVER_STYPE *val, yyscan_t scanner)
+{
+	/*TODO*/
+	return 0;
+}
+
+static int http_server_chunk_body_lex(HTTP_SERVER_STYPE *val, yyscan_t scanner)
+{
+	/*TODO*/
+	return 0;
+}
+
+int http_server_body_lex(HTTP_SERVER_STYPE *val, yyscan_t scanner)
+{
+	/*TODO*/
+	if(1)
+		return http_server_normal_body_lex(val, scanner);
+	else
+		return http_server_chunk_body_lex(val, scanner);
+}

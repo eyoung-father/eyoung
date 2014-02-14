@@ -23,6 +23,8 @@
 #define priv_decoder															\
 	((http_decoder_t*)(((http_data_t*)priv_data)->decoder))
 
+extern int http_server_lex_body_mode(yyscan_t scanner);
+extern int http_server_body_lex(HTTP_SERVER_STYPE *val, yyscan_t scanner);
 %}
 
 %token TOKEN_SERVER_CONTINUE
@@ -1215,7 +1217,10 @@ int parse_http_server_stream(http_data_t *priv, const char *buf, size_t buf_len,
 	while(1)
 	{
 		memset(&value, 0, sizeof(value));
-		token = http_server_lex(&value, lexier);
+		if(http_server_lex_body_mode(lexier))
+			token = http_server_body_lex(&value, lexier);
+		else
+			token = http_server_lex(&value, lexier);
 		if(token == TOKEN_SERVER_CONTINUE)
 			break;
 		parser_ret = http_server_push_parse(parser, token, &value, (void*)priv);

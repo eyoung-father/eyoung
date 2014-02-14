@@ -24,6 +24,9 @@
 	((http_decoder_t*)(((http_data_t*)priv_data)->decoder))
 
 int http_cmd_pair_id;
+
+extern int http_client_lex_body_mode(yyscan_t scanner);
+extern int http_client_body_lex(HTTP_CLIENT_STYPE *val, yyscan_t scanner);
 %}
 %token TOKEN_CLIENT_CONTINUE
 
@@ -1645,7 +1648,10 @@ int parse_http_client_stream(http_data_t *priv, const char *buf, size_t buf_len,
 	while(1)
 	{
 		memset(&value, 0, sizeof(value));
-		token = http_client_lex(&value, lexier);
+		if(http_client_lex_body_mode(lexier))
+			token = http_client_body_lex(&value, lexier);
+		else
+			token = http_client_lex(&value, lexier);
 		if(token == TOKEN_CLIENT_CONTINUE)
 			break;
 		parser_ret = http_client_push_parse(parser, token, &value, (void*)priv);

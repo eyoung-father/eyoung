@@ -391,3 +391,30 @@ static int save_client_stream_context(yyscan_t yyscanner, int from_default)
 	http_debug(debug_http_client_lexer, "Save stream context, string: %s, len: %d\n", yytext, len);
 	return 1;
 }
+
+int http_client_lex_body_mode(yyscan_t scanner)
+{
+	/*TODO*/
+	return 0;
+}
+
+static int http_client_normal_body_lex(HTTP_CLIENT_STYPE *val, yyscan_t scanner)
+{
+	/*TODO*/
+	return 0;
+}
+
+static int http_client_chunk_body_lex(HTTP_CLIENT_STYPE *val, yyscan_t scanner)
+{
+	/*TODO*/
+	return 0;
+}
+
+int http_client_body_lex(HTTP_CLIENT_STYPE *val, yyscan_t scanner)
+{
+	/*TODO*/
+	if(1)
+		return http_client_normal_body_lex(val, scanner);
+	else
+		return http_client_chunk_body_lex(val, scanner);
+}
