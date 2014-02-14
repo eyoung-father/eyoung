@@ -1,10 +1,12 @@
 %{
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include "http.h"
 #include "http_client_parser.h"
 #include "http_private.h"
 
+extern char *strcasestr (const char *__haystack, const char *__needle);
 static int save_client_stream_context(yyscan_t yyscanner, int from_default);
 
 #define YY_USER_ACTION								\
@@ -69,6 +71,8 @@ static int save_client_stream_context(yyscan_t yyscanner, int from_default);
 %x HTTP_CLIENT_BODY_TRUNK_BODY
 %x HTTP_CLIENT_BODY_TRUNK_END
 %x HTTP_CLIENT_BODY_TRUNK_TAILER
+%x HTTP_CLIENT_CONTENT_LENGTH_HEADER_VALUE
+%x HTTP_CLIENT_TRANSFER_ENCODING_HEADER_VALUE
 
 SPACE	[ \t]*
 SPACE1	[ \t]+
@@ -130,7 +134,7 @@ WORD	[^ \r\n\t]+
 {SPACE}"DATE"{SPACE}:{SPACE}				{GOTO(HTTP_CLIENT_HEADER_VALUE); RETURN(TOKEN_CLIENT_HEADER_DATE);}
 {SPACE}"PRAGMA"{SPACE}:{SPACE}				{GOTO(HTTP_CLIENT_HEADER_VALUE); RETURN(TOKEN_CLIENT_HEADER_PRAGMA);}
 {SPACE}"TRAILER"{SPACE}:{SPACE}				{GOTO(HTTP_CLIENT_HEADER_VALUE); RETURN(TOKEN_CLIENT_HEADER_TRAILER);}
-{SPACE}"TRANSFER-ENCODING"{SPACE}:{SPACE}	{GOTO(HTTP_CLIENT_HEADER_VALUE); RETURN(TOKEN_CLIENT_HEADER_TRANSFER_ENCODING);}
+{SPACE}"TRANSFER-ENCODING"{SPACE}:{SPACE}	{GOTO(HTTP_CLIENT_TRANSFER_ENCODING_HEADER_VALUE); RETURN(TOKEN_CLIENT_HEADER_TRANSFER_ENCODING);}
 {SPACE}"UPGRADE"{SPACE}:{SPACE}				{GOTO(HTTP_CLIENT_HEADER_VALUE); RETURN(TOKEN_CLIENT_HEADER_UPGRADE);}
 {SPACE}"VIA"{SPACE}:{SPACE}					{GOTO(HTTP_CLIENT_HEADER_VALUE); RETURN(TOKEN_CLIENT_HEADER_VIA);}
 {SPACE}"WARNING"{SPACE}:{SPACE}				{GOTO(HTTP_CLIENT_HEADER_VALUE); RETURN(TOKEN_CLIENT_HEADER_WARNING);}
@@ -138,7 +142,7 @@ WORD	[^ \r\n\t]+
 {SPACE}"ALLOW"{SPACE}:{SPACE}				{GOTO(HTTP_CLIENT_HEADER_VALUE); RETURN(TOKEN_CLIENT_HEADER_ALLOW);}
 {SPACE}"CONTENT-ENCODING"{SPACE}:{SPACE}	{GOTO(HTTP_CLIENT_HEADER_VALUE); RETURN(TOKEN_CLIENT_HEADER_CONTENT_ENCODING);}
 {SPACE}"CONTENT-LANGUAGE"{SPACE}:{SPACE}	{GOTO(HTTP_CLIENT_HEADER_VALUE); RETURN(TOKEN_CLIENT_HEADER_CONTENT_LANGUAGE);}
-{SPACE}"CONTENT-LENGTH"{SPACE}:{SPACE}		{GOTO(HTTP_CLIENT_HEADER_VALUE); RETURN(TOKEN_CLIENT_HEADER_CONTENT_LENGTH);}
+{SPACE}"CONTENT-LENGTH"{SPACE}:{SPACE}		{GOTO(HTTP_CLIENT_CONTENT_LENGTH_HEADER_VALUE); RETURN(TOKEN_CLIENT_HEADER_CONTENT_LENGTH);}
 {SPACE}"CONTENT-LOCATION"{SPACE}:{SPACE}	{GOTO(HTTP_CLIENT_HEADER_VALUE); RETURN(TOKEN_CLIENT_HEADER_CONTENT_LOCATION);}
 {SPACE}"CONTENT-MD5"{SPACE}:{SPACE}			{GOTO(HTTP_CLIENT_HEADER_VALUE); RETURN(TOKEN_CLIENT_HEADER_CONTENT_MD5);}
 {SPACE}"CONTENT-RANGE"{SPACE}:{SPACE}		{GOTO(HTTP_CLIENT_HEADER_VALUE); RETURN(TOKEN_CLIENT_HEADER_CONTENT_RANGE);}
@@ -178,7 +182,54 @@ WORD	[^ \r\n\t]+
 {SPACE}"X-FLASH-VERSION"{SPACE}:{SPACE}		{GOTO(HTTP_CLIENT_HEADER_VALUE); RETURN(TOKEN_CLIENT_HEADER_X_FLASH_VERSION);}
 {SPACE}"PROXY-AUTHORIZATION"{SPACE}:{SPACE}	{GOTO(HTTP_CLIENT_HEADER_VALUE); RETURN(TOKEN_CLIENT_HEADER_PROXY_AUTHORIZATION);}
 {SPACE}[a-zA-Z\-_]+{SPACE}:{SPACE}			{GOTO(HTTP_CLIENT_HEADER_VALUE); RETURN(TOKEN_CLIENT_HEADER_UNKOWN);}
-{NEWLINE}									{/*TODO*/GOTO(HTTP_CLIENT_BODY_NORMAL); RETURN(TOKEN_CLIENT_HEADER_TERM);}
+{NEWLINE}									{
+												if(http_client_lexer_is_chunk_body(yyg))
+													GOTO(HTTP_CLIENT_BODY_TRUNK_HEADER);
+												else 
+													GOTO(HTTP_CLIENT_BODY_NORMAL);
+												RETURN(TOKEN_CLIENT_HEADER_TERM);
+											}
+.											{RETURN(-1);}
+}
+
+<HTTP_CLIENT_CONTENT_LENGTH_HEADER_VALUE>{
+[^\r\n]*{NEWLINE}							{
+												http_data_t *priv_data = (http_data_t *)yyget_extra(yyg);
+												http_decoder_t *decoder = (http_decoder_t*)priv_data->decoder;
+												if(http_client_prepare_string(decoder, yytext, yyleng, &yylval->string, 1))
+												{
+													http_debug(debug_http_client_lexer, "prepare content-length header value failed\n");
+													RETURN(-1);
+												}
+
+												int error=0;
+												size_t length = http_parse_integer(yytext, 10, &error);
+												if(error)
+												{
+													http_debug(debug_http_client_lexer, "parse content-length value failed\n");
+													RETURN(-1);
+												}
+												http_client_lexer_set_content_length(yyg, length);
+												GOTO(HTTP_CLIENT_HEADER_NAME);
+												RETURN(TOKEN_CLIENT_HEADER_VALUE);
+											}
+.											{RETURN(-1);}
+}
+
+<HTTP_CLIENT_TRANSFER_ENCODING_HEADER_VALUE>{
+[^\r\n]*{NEWLINE}							{
+												http_data_t *priv_data = (http_data_t *)yyget_extra(yyg);
+												http_decoder_t *decoder = (http_decoder_t*)priv_data->decoder;
+												if(http_client_prepare_string(decoder, yytext, yyleng, &yylval->string, 1))
+												{
+													http_debug(debug_http_client_lexer, "prepare header value failed\n");
+													RETURN(-1);
+												}
+												if(strcasestr(yytext, "chunked"))
+													http_client_lexer_set_chunked_body(yyg);
+												GOTO(HTTP_CLIENT_HEADER_NAME);
+												RETURN(TOKEN_CLIENT_HEADER_VALUE);
+											}
 .											{RETURN(-1);}
 }
 
@@ -210,7 +261,20 @@ WORD	[^ \r\n\t]+
 													http_debug(debug_http_client_lexer, "prepare chunk header value failed\n");
 													RETURN(-1);
 												}
-												/*TODO*/
+
+												int error=0;
+												size_t length = http_parse_integer(yytext, 16, &error);
+												if(error)
+												{
+													http_debug(debug_http_client_lexer, "parse chunk length value failed\n");
+													RETURN(-1);
+												}
+												http_client_lexer_set_chunk_length(yyg, length);
+												if(length)
+													GOTO(HTTP_CLIENT_BODY_TRUNK_BODY);
+												else
+													GOTO(HTTP_CLIENT_BODY_TRUNK_TAILER);
+												RETURN(TOKEN_CLIENT_BODY_CHUNK_HEADER);
 											}
 .											{RETURN(-1);}
 }
@@ -222,7 +286,7 @@ WORD	[^ \r\n\t]+
 
 <HTTP_CLIENT_BODY_TRUNK_TAILER>{
 [^\r\n]+{NEWLINE}							{RETURN(TOKEN_CLIENT_BODY_CHUNK_TAILER);}
-{NEWLINE}									{GOTO(INITIAL); RETURN(TOKEN_CLIENT_BODY_END);}
+{NEWLINE}									{GOTO(INITIAL); http_client_lexer_init_body_info(yyg); RETURN(TOKEN_CLIENT_BODY_END);}
 .											{RETURN(-1);}
 }
 

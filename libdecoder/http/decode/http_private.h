@@ -113,6 +113,31 @@ extern int http_prepare_string(http_decoder_t *decoder, char *line, size_t lengt
 #define http_client_prepare_string(decoder,line,length,string,no_newline) http_prepare_string(decoder,line,length,string,no_newline,1)
 #define http_server_prepare_string(decoder,line,length,string,no_newline) http_prepare_string(decoder,line,length,string,no_newline,0)
 
+extern void http_lexer_init_body_info(void *scanner, int from_client);
+#define http_client_lexer_init_body_info(lex) http_lexer_init_body_info(lex,1)
+#define http_server_lexer_init_body_info(lex) http_lexer_init_body_info(lex,0)
+
+extern void http_lexer_set_length(void *scanner, size_t length, int from_client);
+#define http_client_lexer_set_content_length(lex,len) http_lexer_set_length(lex,len,1)
+#define http_server_lexer_set_content_length(lex,len) http_lexer_set_length(lex,len,0)
+#define http_client_lexer_set_chunk_length(lex,len) http_lexer_set_length(lex,len,1)
+#define http_server_lexer_set_chunk_length(lex,len) http_lexer_set_length(lex,len,0)
+
+extern size_t http_lexer_get_length(void *scanner, int from_client);
+#define http_client_lexer_get_content_length(lex) http_lexer_get_length(lex,1)
+#define http_server_lexer_get_content_length(lex) http_lexer_get_length(lex,0)
+#define http_client_lexer_get_chunk_length(lex) http_lexer_get_length(lex,1)
+#define http_server_lexer_get_chunk_length(lex) http_lexer_get_length(lex,0)
+
+extern void http_lexer_set_chunked_body(void *scanner, int from_client);
+#define http_client_lexer_set_chunked_body(lex) http_lexer_set_chunked_body(lex,1)
+#define http_server_lexer_set_chunked_body(lex) http_lexer_set_chunked_body(lex,0)
+
+extern int http_lexer_is_chunked_body(void *scanner, int from_client);
+#define http_client_lexer_is_chunk_body(lex) http_lexer_is_chunked_body(lex,1)
+#define http_server_lexer_is_chunk_body(lex) http_lexer_is_chunked_body(lex,0)
+
+
 /*
  * FOR REQUEST
  * */

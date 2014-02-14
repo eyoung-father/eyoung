@@ -1,9 +1,12 @@
 %{
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "http.h"
 #include "http_server_parser.h"
+#include "http_private.h"
 
+extern char *strcasestr (const char *__haystack, const char *__needle);
 static int save_server_stream_context(yyscan_t yyscanner, int from_default);
 
 #define YY_USER_ACTION								\
@@ -44,6 +47,7 @@ static int save_server_stream_context(yyscan_t yyscanner, int from_default);
 	}while(0)
 
 %}
+
 %option header-file="http_server_lex.h"
 %option outfile="http_server_lex.c"
 %option prefix="http_server_"
@@ -67,6 +71,8 @@ static int save_server_stream_context(yyscan_t yyscanner, int from_default);
 %x HTTP_SERVER_BODY_TRUNK_BODY
 %x HTTP_SERVER_BODY_TRUNK_END
 %x HTTP_SERVER_BODY_TRUNK_TAILER
+%x HTTP_SERVER_CONTENT_LENGTH_HEADER_VALUE
+%x HTTP_SERVER_TRANSFER_ENCODING_HEADER_VALUE
 
 SPACE	[ \t]*
 SPACE1	[ \t]+
@@ -133,12 +139,72 @@ NUMBER	[1-9][0-9][0-9]
 {SPACE}"X-POWERED-BY"{SPACE}:{SPACE}		{GOTO(HTTP_SERVER_HEADER_VALUE); RETURN(TOKEN_SERVER_HEADER_X_POWERED_BY);}
 {SPACE}"PROXY-AUTHENTICATE"{SPACE}:{SPACE}	{GOTO(HTTP_SERVER_HEADER_VALUE); RETURN(TOKEN_SERVER_HEADER_PROXY_AUTHENTICATE);}
 {SPACE}[a-zA-Z\-_]+{SPACE}:{SPACE}			{GOTO(HTTP_SERVER_HEADER_VALUE); RETURN(TOKEN_SERVER_HEADER_UNKOWN);}
-{NEWLINE}									{/*TODO*/GOTO(HTTP_SERVER_BODY_NORMAL); RETURN(TOKEN_SERVER_HEADER_TERM);}
+{NEWLINE}									{
+												if(http_server_lexer_is_chunk_body(yyg))
+													GOTO(HTTP_SERVER_BODY_TRUNK_HEADER);
+												else
+													GOTO(HTTP_SERVER_BODY_NORMAL); 
+												RETURN(TOKEN_SERVER_HEADER_TERM);
+											}
+.											{RETURN(-1);}
+}
+
+<HTTP_SERVER_CONTENT_LENGTH_HEADER_VALUE>{
+[^\r\n]*{NEWLINE}							{
+												http_data_t *priv_data = (http_data_t *)yyget_extra(yyg);
+												http_decoder_t *decoder = (http_decoder_t*)priv_data->decoder;
+												if(http_server_prepare_string(decoder, yytext, yyleng, &yylval->string, 1))
+												{
+													http_debug(debug_http_server_lexer, "prepare content-length header value failed\n");
+													RETURN(-1);
+												}
+
+												int error=0;
+												size_t length = http_parse_integer(yytext, 10, &error);
+												if(error)
+												{
+													http_debug(debug_http_server_lexer, "parse content-length value failed\n");
+													RETURN(-1);
+												}
+												http_server_lexer_set_content_length(yyg, length);
+												GOTO(HTTP_SERVER_HEADER_NAME);
+												RETURN(TOKEN_SERVER_HEADER_VALUE);
+											}
+.											{RETURN(-1);}
+}
+
+
+<HTTP_SERVER_TRANSFER_ENCODING_HEADER_VALUE>{
+[^\r\n]*{NEWLINE}							{
+												http_data_t *priv_data = (http_data_t *)yyget_extra(yyg);
+												http_decoder_t *decoder = (http_decoder_t*)priv_data->decoder;
+												if(http_server_prepare_string(decoder, yytext, yyleng, &yylval->string, 1))
+												{
+													http_debug(debug_http_server_lexer, "prepare header value failed\n");
+													RETURN(-1);
+												}
+												if(strcasestr(yytext, "chunked"))
+													http_server_lexer_set_chunked_body(yyg);
+												GOTO(HTTP_SERVER_HEADER_NAME);
+												RETURN(TOKEN_SERVER_HEADER_VALUE);
+												GOTO(HTTP_SERVER_HEADER_NAME);
+												RETURN(TOKEN_SERVER_HEADER_VALUE);
+											}
 .											{RETURN(-1);}
 }
 
 <HTTP_SERVER_HEADER_VALUE>{
-[^\r\n]*{NEWLINE}							{GOTO(HTTP_SERVER_HEADER_NAME); RETURN(TOKEN_SERVER_HEADER_VALUE);}
+[^\r\n]*{NEWLINE}							{
+												http_data_t *priv_data = (http_data_t *)yyget_extra(yyg);
+												http_decoder_t *decoder = (http_decoder_t*)priv_data->decoder;
+												if(http_server_prepare_string(decoder, yytext, yyleng, &yylval->string, 1))
+												{
+													http_debug(debug_http_server_lexer, "prepare header value failed\n");
+													RETURN(-1);
+												}
+												GOTO(HTTP_SERVER_HEADER_NAME);
+												RETURN(TOKEN_SERVER_HEADER_VALUE);
+											}
 .											{RETURN(-1);}
 }
 
@@ -147,7 +213,29 @@ NUMBER	[1-9][0-9][0-9]
 }
 
 <HTTP_SERVER_BODY_TRUNK_HEADER>{
-[^\r\n]+{NEWLINE}							{/*TODO*/}
+[^\r\n]+{NEWLINE}							{
+												http_data_t *priv_data = (http_data_t *)yyget_extra(yyg);
+												http_decoder_t *decoder = (http_decoder_t*)priv_data->decoder;
+												if(http_server_prepare_string(decoder, yytext, yyleng, &yylval->string, 1))
+												{
+													http_debug(debug_http_server_lexer, "prepare chunk header value failed\n");
+													RETURN(-1);
+												}
+
+												int error=0;
+												size_t length = http_parse_integer(yytext, 16, &error);
+												if(error)
+												{
+													http_debug(debug_http_server_lexer, "parse chunk length value failed\n");
+													RETURN(-1);
+												}
+												http_server_lexer_set_chunk_length(yyg, length);
+												if(length)
+													GOTO(HTTP_SERVER_BODY_TRUNK_BODY);
+												else
+													GOTO(HTTP_SERVER_BODY_TRUNK_TAILER);
+												RETURN(TOKEN_SERVER_BODY_CHUNK_HEADER);
+											}
 .											{RETURN(-1);}
 }
 
@@ -158,7 +246,7 @@ NUMBER	[1-9][0-9][0-9]
 
 <HTTP_SERVER_BODY_TRUNK_TAILER>{
 [^\r\n]+{NEWLINE}							{RETURN(TOKEN_SERVER_BODY_CHUNK_TAILER);}
-{NEWLINE}									{GOTO(INITIAL); RETURN(TOKEN_SERVER_BODY_END);}
+{NEWLINE}									{GOTO(INITIAL); http_server_lexer_init_body_info(yyg); RETURN(TOKEN_SERVER_BODY_END);}
 .											{RETURN(-1);}
 }
 

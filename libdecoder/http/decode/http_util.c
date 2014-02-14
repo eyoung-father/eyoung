@@ -4,8 +4,11 @@
 #include <errno.h>
 #include <ctype.h>
 #include <string.h>
+#include <assert.h>
 #include "http.h"
 #include "http_private.h"
+#include "http_client_lex.h"
+#include "http_server_lex.h"
 
 int debug_http_mem=1;
 int debug_http_client_lexer=1;
@@ -53,20 +56,14 @@ int http_attack(int flag, char *format, ...)
 	return ret;
 }
 
-int http_parse_integer(char *str, int *error)
+size_t http_parse_integer(const char *str, int mode, int *error)
 {
 	char *end = NULL;
 	errno = 0;
-	long ret = strtol(str, &end, 10);
+	long ret = strtol(str, &end, mode);
 	*error = 0;
 
-	if(end)
-	{
-		*error = EINVAL;
-		return ret;
-	}
-
-	if(!ret)
+	if(errno)
 	{
 		*error = errno;
 		return ret;
@@ -195,4 +192,130 @@ int http_prepare_string(http_decoder_t *decoder, char *line, size_t length, http
 	}
 
 	return 0;
+}
+
+void http_lexer_set_body_length(void *scanner, size_t length, int from_client)
+{
+	yyscan_t yyscanner = (yyscan_t)scanner;
+	http_data_t *priv = NULL;
+	http_parser_t *parser = NULL;
+	if(from_client)
+	{
+		priv = (http_data_t*)http_client_get_extra(yyscanner);
+		assert(priv != NULL);
+
+		parser = &priv->request_parser;
+		assert(parser != NULL);
+	}
+	else
+	{
+		priv = (http_data_t*)http_server_get_extra(yyscanner);
+		assert(priv != NULL);
+
+		parser = &priv->response_parser;
+		assert(parser != NULL);
+	}
+	
+	parser->length = length;
+}
+
+size_t http_lexer_get_body_length(void *scanner, size_t length, int from_client)
+{
+	yyscan_t yyscanner = (yyscan_t)scanner;
+	http_data_t *priv = NULL;
+	http_parser_t *parser = NULL;
+	if(from_client)
+	{
+		priv = (http_data_t*)http_client_get_extra(yyscanner);
+		assert(priv != NULL);
+
+		parser = &priv->request_parser;
+		assert(parser != NULL);
+	}
+	else
+	{
+		priv = (http_data_t*)http_server_get_extra(yyscanner);
+		assert(priv != NULL);
+
+		parser = &priv->response_parser;
+		assert(parser != NULL);
+	}
+	
+	return parser->length;
+}
+
+int http_lexer_is_chunked_body(void *scanner, int from_client)
+{
+	yyscan_t yyscanner = (yyscan_t)scanner;
+	http_data_t *priv = NULL;
+	http_parser_t *parser = NULL;
+	if(from_client)
+	{
+		priv = (http_data_t*)http_client_get_extra(yyscanner);
+		assert(priv != NULL);
+
+		parser = &priv->request_parser;
+		assert(parser != NULL);
+	}
+	else
+	{
+		priv = (http_data_t*)http_server_get_extra(yyscanner);
+		assert(priv != NULL);
+
+		parser = &priv->response_parser;
+		assert(parser != NULL);
+	}
+	
+	return parser->chunked != 0;
+}
+
+void http_lexer_init_body_info(void *scanner, int from_client)
+{
+	yyscan_t yyscanner = (yyscan_t)scanner;
+	http_data_t *priv = NULL;
+	http_parser_t *parser = NULL;
+	if(from_client)
+	{
+		priv = (http_data_t*)http_client_get_extra(yyscanner);
+		assert(priv != NULL);
+
+		parser = &priv->request_parser;
+		assert(parser != NULL);
+	}
+	else
+	{
+		priv = (http_data_t*)http_server_get_extra(yyscanner);
+		assert(priv != NULL);
+
+		parser = &priv->response_parser;
+		assert(parser != NULL);
+	}
+	
+	parser->length = 0;
+	parser->chunked = 0;
+}
+
+void http_lexer_set_chunked_body(void *scanner, int from_client)
+{
+	yyscan_t yyscanner = (yyscan_t)scanner;
+	http_data_t *priv = NULL;
+	http_parser_t *parser = NULL;
+	if(from_client)
+	{
+		priv = (http_data_t*)http_client_get_extra(yyscanner);
+		assert(priv != NULL);
+
+		parser = &priv->request_parser;
+		assert(parser != NULL);
+	}
+	else
+	{
+		priv = (http_data_t*)http_server_get_extra(yyscanner);
+		assert(priv != NULL);
+
+		parser = &priv->response_parser;
+		assert(parser != NULL);
+	}
+	
+	parser->chunked = 1;
 }
