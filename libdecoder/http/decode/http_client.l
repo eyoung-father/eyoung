@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
 #include "http.h"
 #include "http_client_parser.h"
 #include "http_private.h"
@@ -394,27 +395,53 @@ static int save_client_stream_context(yyscan_t yyscanner, int from_default)
 
 int http_client_lex_body_mode(yyscan_t scanner)
 {
-	/*TODO*/
-	return 0;
-}
+	struct yyguts_t *yyg = (struct yyguts_t*)scanner;
+	int state = YY_START;
+	http_data_t *priv_data = (http_data_t*)http_client_get_extra(scanner);
+	http_parser_t *parser = &priv_data->request_parser;
+	if(state == HTTP_CLIENT_BODY_NORMAL)
+	{
+		assert(!parser->chunked);
+		return 1;
+	}
 
-static int http_client_normal_body_lex(HTTP_CLIENT_STYPE *val, yyscan_t scanner)
-{
-	/*TODO*/
-	return 0;
-}
-
-static int http_client_chunk_body_lex(HTTP_CLIENT_STYPE *val, yyscan_t scanner)
-{
-	/*TODO*/
+	if(state == HTTP_CLIENT_BODY_TRUNK_BODY)
+	{
+		assert(parser->chunked);
+		return (parser->length != 0);
+	}
 	return 0;
 }
 
 int http_client_body_lex(HTTP_CLIENT_STYPE *val, yyscan_t scanner)
 {
-	/*TODO*/
-	if(1)
-		return http_client_normal_body_lex(val, scanner);
-	else
-		return http_client_chunk_body_lex(val, scanner);
+	struct yyguts_t *yyg = (struct yyguts_t*)scanner;
+	YY_BUFFER_STATE buffer = YY_CURRENT_BUFFER;
+	http_data_t *priv_data = (http_data_t*)http_client_get_extra(scanner);
+	http_parser_t *parser = &priv_data->request_parser;
+	size_t left = buffer->yy_buf_size - (yyg->yy_c_buf_p - buffer->yy_ch_buf);
+	size_t need = parser->length;
+	size_t read = need;
+	http_string_t *string = &val->string;
+	http_decoder_t *decoder = (http_decoder_t*)priv_data->decoder;
+
+	if(need>left)
+		read = left;
+
+	if(read == 0)
+	{
+		assert(parser->chunked == 0);
+		http_debug(debug_http_client_lexer, "read all data, return TOKEN_CLIENT_BODY_END\n");
+		GOTO(INITIAL);
+		return TOKEN_CLIENT_BODY_END;
+	}
+	
+	http_debug(debug_http_client_lexer, "will read %d bytes in this buffer state\n", read);
+	buffer->yy_buf_pos = yyg->yy_c_buf_p;
+	*buffer->yy_buf_pos = yyg->yy_hold_char;
+	http_client_prepare_string(decoder, buffer->yy_buf_pos, read, string, 0);
+	buffer->yy_buf_pos += read;
+	parser->length -= read;
+	yy_load_buffer_state(scanner);
+	return TOKEN_CLIENT_BODY_PART;
 }
