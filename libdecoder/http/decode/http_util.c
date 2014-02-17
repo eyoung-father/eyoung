@@ -194,7 +194,7 @@ int http_prepare_string(http_decoder_t *decoder, char *line, size_t length, http
 	return 0;
 }
 
-void http_lexer_set_body_length(void *scanner, size_t length, int from_client)
+void http_lexer_set_length(void *scanner, size_t length, int from_client)
 {
 	yyscan_t yyscanner = (yyscan_t)scanner;
 	http_data_t *priv = NULL;
@@ -219,7 +219,7 @@ void http_lexer_set_body_length(void *scanner, size_t length, int from_client)
 	parser->length = length;
 }
 
-size_t http_lexer_get_body_length(void *scanner, size_t length, int from_client)
+size_t http_lexer_get_length(void *scanner, int from_client)
 {
 	yyscan_t yyscanner = (yyscan_t)scanner;
 	http_data_t *priv = NULL;
