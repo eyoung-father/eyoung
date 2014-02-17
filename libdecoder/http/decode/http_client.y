@@ -23,7 +23,7 @@
 #define priv_decoder											\
 	((http_decoder_t*)(((http_data_t*)priv_data)->decoder))
 
-int http_cmd_pair_id;
+int http_transaction_pair_id;
 
 extern int http_client_lex_body_mode(yyscan_t scanner);
 extern int http_client_body_lex(HTTP_CLIENT_STYPE *val, yyscan_t scanner);
@@ -141,7 +141,6 @@ extern int http_client_body_lex(HTTP_CLIENT_STYPE *val, yyscan_t scanner);
 	http_request_header_list_t header_list;
 	http_body_t *body;
 	http_request_t *request;
-	http_request_list_t request_list;
 	http_string_t string;
 	http_string_list_t string_list;
 	http_chunk_body_part_t *chunk;
@@ -150,7 +149,6 @@ extern int http_client_body_lex(HTTP_CLIENT_STYPE *val, yyscan_t scanner);
 	http_chunk_body_header_t chunk_header;
 }
 
-%type <request_list>		request_list
 %type <request>				request
 %type <first_line>			request_line
 %type <header_list>			request_headers
@@ -250,11 +248,6 @@ extern int http_client_body_lex(HTTP_CLIENT_STYPE *val, yyscan_t scanner);
 
 %destructor
 {
-	http_client_free_request_list(priv_decoder, &$$);
-}<request_list>
-
-%destructor
-{
 	http_client_free_string(priv_decoder, &$$);
 }request_line_uri request_header_value
 
@@ -302,12 +295,17 @@ extern int http_client_body_lex(HTTP_CLIENT_STYPE *val, yyscan_t scanner);
 request_list:
 	empty
 	{
-		STAILQ_INIT(&$$);
+		http_data_t *data = (http_data_t *)priv_data;
+		STAILQ_INIT(&data->request_list);
 	}
 	| request_list request
 	{
-		STAILQ_INSERT_TAIL(&$1, $2, next);
-		STAILQ_CONCAT(&$$, &$1);
+		http_data_t *data = (http_data_t *)priv_data;
+		STAILQ_INSERT_TAIL(&data->request_list, $2, next);
+	}
+	TOKEN_CLIENT_BODY_END
+	{
+		/*do nothing*/
 	}
 	;
 
@@ -1687,6 +1685,6 @@ void http_client_register(http_decoder_t *decoder)
 			http_debug(debug_http_client_parser, "failed to register client event %s\n", name);
 	}
 
-	http_cmd_pair_id = ey_engine_find_event(engine, "cmd_pair");
+	http_transaction_pair_id = ey_engine_find_event(engine, "transaction_pair");
 }
 #undef priv_decoder

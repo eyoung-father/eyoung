@@ -96,14 +96,12 @@ extern int http_server_body_lex(HTTP_SERVER_STYPE *val, yyscan_t scanner);
 	http_response_header_list_t header_list;
 	http_body_t *body;
 	http_response_t *response;
-	http_response_list_t response_list;
 	http_chunk_body_part_t *chunk;
 	http_chunk_body_list_t chunk_list;
 	http_chunk_body_t chunk_body;
 	http_chunk_body_header_t chunk_header;
 }
 
-%type <response_list>	response_list
 %type <response>		response
 %type <first_line>		response_line
 %type <header_list>		response_headers
@@ -166,11 +164,6 @@ extern int http_server_body_lex(HTTP_SERVER_STYPE *val, yyscan_t scanner);
 						response_header_x_powered_by
 						response_header_proxy_authenticate
 						response_header_unkown
-
-%destructor
-{
-	http_server_free_response_list(priv_decoder, &$$);
-}<response_list>;
 
 %destructor
 {
@@ -241,12 +234,33 @@ extern int http_server_body_lex(HTTP_SERVER_STYPE *val, yyscan_t scanner);
 response_list:
 	empty
 	{
-		STAILQ_INIT(&$$);
+		http_data_t *data = (http_data_t *)priv_data;
+		STAILQ_INIT(&data->response_list);
 	}
 	| response_list response
 	{
-		STAILQ_INSERT_TAIL(&$1, $2, next);
-		STAILQ_CONCAT(&$$, &$1);
+		http_data_t *data = (http_data_t *)priv_data;
+		STAILQ_INSERT_TAIL(&data->response_list, $2, next);
+
+		int r = http_add_transaction(priv_decoder, data);
+		if(r<0)
+		{
+			http_debug(debug_http_detect, "find attack in http transaction\n");
+			return -1;
+		}
+		else if(r>0)
+		{
+			http_debug(debug_http_mem, "add http transaction failed\n");
+			return -1;
+		}
+		else
+		{
+			http_debug(debug_http_server_parser, "add http transaction successfully\n");
+		}
+	}
+	TOKEN_SERVER_BODY_END
+	{
+		/*do nothing*/
 	}
 	;
 

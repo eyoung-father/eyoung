@@ -38,7 +38,7 @@ typedef struct http_decoder
 	ey_slab_t http_response_slab;
 
 	ey_slab_t http_data_slab;
-	ey_slab_t http_cmd_slab;
+	ey_slab_t http_transaction_slab;
 }http_decoder_t;
 
 extern void http_server_register(http_decoder_t *decoder);
@@ -54,9 +54,10 @@ extern void http_mem_finit(http_decoder_t *decoder);
 extern http_data_t* http_alloc_priv_data(http_decoder_t *decoder, int greedy);
 extern void http_free_priv_data(http_decoder_t *decoder, http_data_t *priv_data);
 
-extern http_cmd_t* http_alloc_cmd(http_decoder_t *decoder, http_request_t *request, http_response_t *response);
-extern void http_free_cmd(http_decoder_t *decoder, http_cmd_t *cmd);
-extern void http_free_cmd_list(http_decoder_t *decoder, http_cmd_list_t *cmd_list);
+extern int http_add_transaction(http_decoder_t *decoder, http_data_t *priv_data);
+extern http_transaction_t* http_alloc_transaction(http_decoder_t *decoder, http_request_t *request, http_response_t *response);
+extern void http_free_transaction(http_decoder_t *decoder, http_transaction_t *transaction);
+extern void http_free_transaction_list(http_decoder_t *decoder, http_transaction_list_t *transaction_list);
 
 /*
  * FOR COMMON DATA

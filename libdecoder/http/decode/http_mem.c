@@ -9,7 +9,7 @@
 #include "http_client_lex.h"
 #include "http_server_lex.h"
 
-extern int http_cmd_pair_id;
+extern int http_transaction_pair_id;
 
 int http_mem_init(http_decoder_t *decoder)
 {
@@ -20,10 +20,10 @@ int http_mem_init(http_decoder_t *decoder)
 		return -1;
 	}
 
-	decoder->http_cmd_slab = http_zinit("http command", sizeof(http_cmd_t));
-	if(!decoder->http_cmd_slab)
+	decoder->http_transaction_slab = http_zinit("http transaction", sizeof(http_transaction_t));
+	if(!decoder->http_transaction_slab)
 	{
-		http_debug(debug_http_mem, "init http_cmd_slab failed\n");
+		http_debug(debug_http_mem, "init http_transaction_slab failed\n");
 		return -1;
 	}
 		
@@ -133,7 +133,7 @@ int http_mem_init(http_decoder_t *decoder)
 void http_mem_finit(http_decoder_t *decoder)
 {
 	http_zfinit(decoder->http_data_slab);
-	http_zfinit(decoder->http_cmd_slab);
+	http_zfinit(decoder->http_transaction_slab);
 
 	http_fzfinit(decoder->http_request_value_fslab);
 	http_zfinit(decoder->http_request_first_line_slab);
@@ -211,7 +211,7 @@ http_data_t* http_alloc_priv_data(http_decoder_t *decoder, int greedy)
 	http_server_set_extra((void*)data, server_lexier);
 
 	/*init session*/
-	STAILQ_INIT(&data->cmd_list);
+	STAILQ_INIT(&data->transaction_list);
 	return data;
 
 failed:
@@ -251,43 +251,43 @@ void http_free_priv_data(http_decoder_t *decoder, http_data_t *data)
 		http_free(data->response_parser.saved);
 	http_server_free_response_list(decoder, &data->response_list);
 
-	http_free_cmd_list(decoder, &data->cmd_list);
+	http_free_transaction_list(decoder, &data->transaction_list);
 
 	/*free private data self*/
 	http_zfree(decoder->http_data_slab, data);
 }
 
-http_cmd_t* http_alloc_cmd(http_decoder_t *decoder, http_request_t *request, http_response_t *response)
+http_transaction_t* http_alloc_transaction(http_decoder_t *decoder, http_request_t *request, http_response_t *response)
 {
-	http_cmd_t *cmd = (http_cmd_t*)http_zalloc(decoder->http_cmd_slab);
-	if(!cmd)
+	http_transaction_t *transaction = (http_transaction_t*)http_zalloc(decoder->http_transaction_slab);
+	if(!transaction)
 	{
-		http_debug(debug_http_mem, "alloc http cmd failed\n");
+		http_debug(debug_http_mem, "alloc http transaction failed\n");
 		return NULL;
 	}
-	memset(cmd, 0, sizeof(*cmd));
-	cmd->request = request;
-	cmd->response = response;
-	return cmd;
+	memset(transaction, 0, sizeof(*transaction));
+	transaction->request = request;
+	transaction->response = response;
+	return transaction;
 }
 
-void http_free_cmd(http_decoder_t *decoder, http_cmd_t *cmd)
+void http_free_transaction(http_decoder_t *decoder, http_transaction_t *transaction)
 {
-	if(!cmd)
+	if(!transaction)
 		return;
-	http_client_free_request(decoder, cmd->request);
-	http_server_free_response(decoder, cmd->response);
-	http_zfree(decoder->http_cmd_slab, cmd);
+	http_client_free_request(decoder, transaction->request);
+	http_server_free_response(decoder, transaction->response);
+	http_zfree(decoder->http_transaction_slab, transaction);
 }
 
-void http_free_cmd_list(http_decoder_t *decoder, http_cmd_list_t *cmd_list)
+void http_free_transaction_list(http_decoder_t *decoder, http_transaction_list_t *transaction_list)
 {
-	if(!cmd_list)
+	if(!transaction_list)
 		return;
 	
-	http_cmd_t *cmd,*tmp;
-	STAILQ_FOREACH_SAFE(cmd, cmd_list, next, tmp)
-		http_free_cmd(decoder, cmd);
+	http_transaction_t *transaction,*tmp;
+	STAILQ_FOREACH_SAFE(transaction, transaction_list, next, tmp)
+		http_free_transaction(decoder, transaction);
 }
 
 http_request_t* http_client_alloc_request(http_decoder_t *decoder,
@@ -661,4 +661,31 @@ void http_free_body(http_decoder_t *decoder, http_body_t *body, int from_client)
 		http_zfree(decoder->http_request_body_slab, body);
 	else
 		http_zfree(decoder->http_response_body_slab, body);
+}
+
+int http_add_transaction(http_decoder_t *decoder, http_data_t *priv_data)
+{
+	http_response_t *res = STAILQ_FIRST(&priv_data->response_list);
+	http_request_t *req = STAILQ_FIRST(&priv_data->request_list);
+	assert(res != NULL);
+
+	http_transaction_t *transaction = http_alloc_transaction(decoder, req, res);
+	if(!transaction)
+	{
+		http_debug(debug_http_mem, "failed to alloc transaction\n");
+		return 1;
+	}
+
+	if(res)
+		STAILQ_REMOVE_HEAD(&priv_data->response_list, next);
+	if(req)
+		STAILQ_REMOVE_HEAD(&priv_data->request_list, next);
+	STAILQ_INSERT_TAIL(&priv_data->transaction_list, transaction, next);
+
+	if(http_element_detect(priv_data, "transaction_pair", http_transaction_pair_id, &transaction, NULL, 0) < 0)
+	{
+		http_debug(debug_http_detect, "find attack\n");
+		return -1;
+	}
+	return 0;
 }

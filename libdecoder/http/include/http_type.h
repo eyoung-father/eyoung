@@ -717,15 +717,15 @@ typedef STAILQ_HEAD(http_response_list, http_response) http_response_list_t;
 /*
  * http session command
  */
-typedef struct http_cmd
+typedef struct http_transaction
 {
 	http_request_t *request;
 	http_response_t *response;
 
-	STAILQ_ENTRY(http_cmd) next;
-}http_cmd_t;
+	STAILQ_ENTRY(http_transaction) next;
+}http_transaction_t;
 
-typedef STAILQ_HEAD(http_cmd_list, http_cmd) http_cmd_list_t;
+typedef STAILQ_HEAD(http_transaction_list, http_transaction) http_transaction_list_t;
 
 /*
  * http parser
@@ -760,6 +760,6 @@ typedef struct http_data
 	http_response_list_t response_list;
 
 	/*http session*/
-	http_cmd_list_t cmd_list;
+	http_transaction_list_t transaction_list;
 }http_data_t;
 #endif
