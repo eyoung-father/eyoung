@@ -295,13 +295,25 @@ struct yy_buffer_state* http_server_scan_stream(const char *new_buf, size_t new_
 	buf[_yybytes_len] = buf[_yybytes_len+1] = YY_END_OF_BUFFER_CHAR;
 	http_debug(debug_http_server_lexer, "[HTTP SERVER]: %s\n", buf);
 
-	b = http_server_scan_buffer(buf, n, scanner);
+	//b = http_server_scan_buffer(buf, n, scanner);
+	b = (YY_BUFFER_STATE)http_server_alloc(sizeof(struct yy_buffer_state), scanner);
 	if ( ! b )
 	{
-		http_debug(debug_http_server_lexer, "bad buffer in http_server_scan_bytes()\n");
+		http_debug(debug_http_server_lexer, "failed to alloc server buffer state\n");
 		http_server_free(buf, scanner);
 		return NULL;
 	}
+
+	b->yy_buf_size = n - 2;	/* "- 2" to take care of EOB's */
+	b->yy_buf_pos = b->yy_ch_buf = buf;
+	b->yy_is_our_buffer = 0;
+	b->yy_input_file = 0;
+	b->yy_n_chars = b->yy_buf_size;
+	b->yy_is_interactive = 0;
+	b->yy_at_bol = 1;
+	b->yy_fill_buffer = 0;
+	b->yy_buffer_status = YY_BUFFER_NEW;
+	http_server_switch_to_buffer(b, scanner);
 
 	b->yy_is_our_buffer = 1;
 
