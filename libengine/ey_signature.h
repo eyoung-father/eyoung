@@ -99,7 +99,7 @@ typedef struct ey_code
 	{
 		char *raw_code;
 		char *filename;
-		struct ey_event *event;
+		int event;
 		struct
 		{
 			char *function;

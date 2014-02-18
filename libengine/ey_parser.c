@@ -81,8 +81,9 @@ static int ey_output_import_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *import)
 
 static int ey_output_event_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *event)
 {
+	ey_event_t *ev = ey_event_array(eng) + event->event;
 	fprintf(fp, "#line %d \"%s\"\n", event->location.first_line, event->location.filename);
-	fprintf(fp, "typedef %s *%s;\n", event->event->define, event->event->name);
+	fprintf(fp, "typedef %s *%s;\n", ev->define, ev->name);
 	return 0;
 }
 

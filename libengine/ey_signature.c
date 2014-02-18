@@ -201,7 +201,7 @@ ey_code_t *ey_alloc_code(ey_engine_t *eng, ey_location_t *location, void *code, 
 			break;
 		case EY_CODE_EVENT:
 		default:
-			ret->event = (ey_event_t*)code;
+			ret->event = ((ey_event_t*)code)->event_id;
 			break;
 	}
 	return ret;
@@ -234,8 +234,7 @@ void ey_free_code(ey_engine_t *eng, ey_code_t *code)
 			break;
 		case EY_CODE_EVENT:
 		default:
-			if(code->event) 
-				ey_free_event(eng, code->event);
+			ey_free_event(eng, ey_event_array(eng) + code->event);
 			break;
 	}
 	engine_fzfree(ey_parser_fslab(eng), code);
