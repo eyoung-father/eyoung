@@ -29,6 +29,7 @@ static int ey_elf_read(ey_engine_t *eng, void *lib_handle, const char *libname, 
 	Elf_Data *rodata_data = NULL;
 	GElf_Shdr rodata_shdr;
 	size_t n, shstrndx, index=0, rodata_index=0, sz=0;
+	int ret = -1;
 	
 	if (elf_version(EV_CURRENT) == EV_NONE)
 	{
@@ -85,6 +86,7 @@ static int ey_elf_read(ey_engine_t *eng, void *lib_handle, const char *libname, 
 	if(!rodata_index)
 	{
 		engine_parser_error("get .rodata section failed\n");
+		ret = 0;
 		goto failed;
 	}
 	
@@ -163,7 +165,7 @@ failed:
 		elf_end(e);
 	if(fd>=0)
 		close(fd);
-	return -1;
+	return ret;
 }
 
 typedef struct read_arg
@@ -210,7 +212,7 @@ int ey_elf_read_init(ey_engine_t *eng, void *lib_handle, const char *libname, in
 	
 	if(ey_elf_read(eng, lib_handle, libname, EY_INIT_SECTION, read_nit, (void*)&arg))
 	{
-		engine_parser_error("read library %s init section failed\n");
+		engine_parser_error("read library %s init section failed\n", libname);
 		return -1;
 	}
 
@@ -245,7 +247,7 @@ int ey_elf_read_finit(ey_engine_t *eng, void *lib_handle, const char *libname, f
 	
 	if(ey_elf_read(eng, lib_handle, libname, EY_FINIT_SECTION, read_nit, (void*)&arg))
 	{
-		engine_parser_error("read library %s finit section failed\n");
+		engine_parser_error("read library %s finit section failed\n", libname);
 		return -1;
 	}
 
