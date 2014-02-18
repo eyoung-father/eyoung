@@ -47,6 +47,18 @@ static int save_client_stream_context(yyscan_t yyscanner, int from_default);
 		BEGIN s;									\
 	}while(0)
 
+#ifdef YY_FATAL_ERROR
+#undef YY_FATAL_ERROR
+#endif
+#define YY_FATAL_ERROR(msg)							\
+	do												\
+	{												\
+		http_debug(debug_http_client_lexer,			\
+			"line %d get fatal error: %s\n",		\
+			__LINE__, msg);							\
+		*(int*)0 = 0;								\
+		yy_fatal_error(msg, yyscanner);				\
+	}while(0)
 %}
 
 %option header-file="http_client_lex.h"
