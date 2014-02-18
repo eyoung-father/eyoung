@@ -9,7 +9,7 @@
 #include "libengine.h"
 #include "http.h"
 
-static int parse_http_file(http_handler_t decoder, const char *filename)
+int parse_http_file(http_handler_t decoder, const char *filename)
 {
 	char *line = NULL;
 	size_t len = 0;
@@ -98,17 +98,17 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "Usage: http_parser <signature_file> <message_file>\n");
 		return -1;
 	}
-	debug_http_server_lexer = 0;
-	debug_http_server_parser = 0;
-	debug_http_client_lexer = 0;
-	debug_http_client_parser = 0;
-	debug_http_mem = 0;
+	debug_http_server_lexer = 1;
+	debug_http_server_parser = 1;
+	debug_http_client_lexer = 1;
+	debug_http_client_parser = 1;
+	debug_http_mem = 1;
 	debug_http_detect = 1;
-	debug_engine_parser = 0;
-	debug_engine_lexier = 0;
-	debug_engine_init = 0;
-	debug_engine_compiler = 0;
-	debug_engine_runtime = 0;
+	debug_engine_parser = 1;
+	debug_engine_lexier = 1;
+	debug_engine_init = 1;
+	debug_engine_compiler = 1;
+	debug_engine_runtime = 1;
 	
 	engine = ey_engine_create("http");
 	if(!engine)
@@ -133,7 +133,7 @@ int main(int argc, char *argv[])
 		goto failed;
 	}
 
-	ret = parse_http_file(decoder, argv[2]);
+	//ret = parse_http_file(decoder, argv[2]);
 
 failed:
 	if(decoder)

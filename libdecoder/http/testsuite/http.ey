@@ -1,0 +1,188 @@
+%{
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <assert.h>
+#include <ctype.h>
+#include "http.h"
+#include "http_detect.h"
+
+#define ENTER_FUNC	fprintf(stderr, "\n=============ENTER %s=============\n", __FUNCTION__)
+#define EXIT_FUNC	fprintf(stderr, "=============EXIT %s=============\n\n", __FUNCTION__)
+%}
+
+%output "http.eyc"
+%file-init "http_init"
+%import "libhttp_detect.so"
+
+/*
+ * CLIENT EVENT
+ * */
+%event "request_list"						"void"
+%event "request"							"http_request_t *"
+%event "request_line"						"http_request_first_line_t *"
+%event "request_headers"					"http_request_header_list_t"
+%event "request_header_list"				"http_request_header_list_t"
+%event "request_line_method"				"http_request_method_t"
+%event "request_line_uri"					"http_string_t"
+%event "request_header_value"				"http_string_t"
+%event "request_line_version"				"http_version_t"
+%event "request_body"						"http_body_t *"
+%event "request_normal_body"				"http_string_list_t"
+%event "request_chunk_tailer_list"			"http_string_list_t"
+%event "request_chunk_data"					"http_string_list_t"
+%event "request_chunk"						"http_chunk_body_part_t *"
+%event "request_chunk_list"					"http_chunk_body_list_t"
+%event "request_chunk_header"				"http_chunk_body_header_t"
+%event "request_chunk_body"					"http_chunk_body_t"
+%event "request_header"						"http_request_header_t *"
+%event "request_header_cache_control"		"http_request_header_t *"
+%event "request_header_connection"			"http_request_header_t *"
+%event "request_header_date"				"http_request_header_t *"
+%event "request_header_pragma"				"http_request_header_t *"
+%event "request_header_trailer"				"http_request_header_t *"
+%event "request_header_transfer_encoding"	"http_request_header_t *"
+%event "request_header_upgrade"				"http_request_header_t *"
+%event "request_header_via"					"http_request_header_t *"
+%event "request_header_warning"				"http_request_header_t *"
+%event "request_header_mime_version"		"http_request_header_t *"
+%event "request_header_allow"				"http_request_header_t *"
+%event "request_header_content_encoding"	"http_request_header_t *"
+%event "request_header_content_language"	"http_request_header_t *"
+%event "request_header_content_length"		"http_request_header_t *"
+%event "request_header_content_location"	"http_request_header_t *"
+%event "request_header_content_md5"			"http_request_header_t *"
+%event "request_header_content_range"		"http_request_header_t *"
+%event "request_header_content_type"		"http_request_header_t *"
+%event "request_header_etag"				"http_request_header_t *"
+%event "request_header_expires"				"http_request_header_t *"
+%event "request_header_last_modified"		"http_request_header_t *"
+%event "request_header_content_base"		"http_request_header_t *"
+%event "request_header_content_version"		"http_request_header_t *"
+%event "request_header_derived_from"		"http_request_header_t *"
+%event "request_header_link"				"http_request_header_t *"
+%event "request_header_keep_alive"			"http_request_header_t *"
+%event "request_header_uri"					"http_request_header_t *"
+%event "request_header_accept_charset"		"http_request_header_t *"
+%event "request_header_accept_encoding"		"http_request_header_t *"
+%event "request_header_accept_language"		"http_request_header_t *"
+%event "request_header_accept"				"http_request_header_t *"
+%event "request_header_authorization"		"http_request_header_t *"
+%event "request_header_except"				"http_request_header_t *"
+%event "request_header_from"				"http_request_header_t *"
+%event "request_header_host"				"http_request_header_t *"
+%event "request_header_if_match"			"http_request_header_t *"
+%event "request_header_if_modified_since"	"http_request_header_t *"
+%event "request_header_if_none_match"		"http_request_header_t *"
+%event "request_header_if_range"			"http_request_header_t *"
+%event "request_header_if_unmodified_since"	"http_request_header_t *"
+%event "request_header_max_forwards"		"http_request_header_t *"
+%event "request_header_proxy_authorization"	"http_request_header_t *"
+%event "request_header_range"				"http_request_header_t *"
+%event "request_header_referer"				"http_request_header_t *"
+%event "request_header_te"					"http_request_header_t *"
+%event "request_header_user_agent"			"http_request_header_t *"
+%event "request_header_cookie2"				"http_request_header_t *"
+%event "request_header_cookie"				"http_request_header_t *"
+%event "request_header_ua_pixels"			"http_request_header_t *"
+%event "request_header_ua_color"			"http_request_header_t *"
+%event "request_header_ua_os"				"http_request_header_t *"
+%event "request_header_ua_cpu"				"http_request_header_t *"
+%event "request_header_x_flash_version"		"http_request_header_t *"
+%event "request_header_unkown"				"http_request_header_t *"
+
+
+%event "response"							"http_response_t *"
+%event "response_line"						"http_response_first_line_t *"
+%event "response_headers"					"http_response_header_list_t"
+%event "response_header_list"				"http_response_header_list_t"
+%event "response_body"						"http_body_t *"
+%event "response_normal_body"				"http_string_list_t"
+%event "response_chunk_tailer_list"			"http_string_list_t"
+%event "response_chunk_data"				"http_string_list_t"
+%event "response_chunk"						"http_chunk_body_part_t *"
+%event "response_chunk_list"				"http_chunk_body_list_t"
+%event "response_chunk_header"				"http_chunk_body_header_t"
+%event "response_chunk_body"				"http_chunk_body_t"
+%event "response_line_version"				"http_version_t"
+%event "response_line_code"					"http_response_code_t"
+%event "response_line_message"				"http_string_t"
+%event "response_header_value"				"http_string_t"
+%event "response_header"					"http_response_header_t *"
+%event "response_header_cache_control"		"http_response_header_t *"
+%event "response_header_connection"			"http_response_header_t *"
+%event "response_header_date"				"http_response_header_t *"
+%event "response_header_pragma"				"http_response_header_t *"
+%event "response_header_trailer"			"http_response_header_t *"
+%event "response_header_transfer_encoding"	"http_response_header_t *"
+%event "response_header_upgrade"			"http_response_header_t *"
+%event "response_header_via"				"http_response_header_t *"
+%event "response_header_warning"			"http_response_header_t *"
+%event "response_header_mime_version"		"http_response_header_t *"
+%event "response_header_allow"				"http_response_header_t *"
+%event "response_header_content_encoding"	"http_response_header_t *"
+%event "response_header_content_language"	"http_response_header_t *"
+%event "response_header_content_length"		"http_response_header_t *"
+%event "response_header_content_location"	"http_response_header_t *"
+%event "response_header_content_md5"		"http_response_header_t *"
+%event "response_header_content_range"		"http_response_header_t *"
+%event "response_header_content_type"		"http_response_header_t *"
+%event "response_header_etag"				"http_response_header_t *"
+%event "response_header_expires"			"http_response_header_t *"
+%event "response_header_last_modified"		"http_response_header_t *"
+%event "response_header_content_base"		"http_response_header_t *"
+%event "response_header_content_version"	"http_response_header_t *"
+%event "response_header_derived_from"		"http_response_header_t *"
+%event "response_header_link"				"http_response_header_t *"
+%event "response_header_keep_alive"			"http_response_header_t *"
+%event "response_header_uri"				"http_response_header_t *"
+%event "response_header_accept_ranges"		"http_response_header_t *"
+%event "response_header_age"				"http_response_header_t *"
+%event "response_header_location"			"http_response_header_t *"
+%event "response_header_retry_after"		"http_response_header_t *"
+%event "response_header_server"				"http_response_header_t *"
+%event "response_header_vary"				"http_response_header_t *"
+%event "response_header_www_authenticate"	"http_response_header_t *"
+%event "response_header_set_cookie2"		"http_response_header_t *"
+%event "response_header_set_cookie"			"http_response_header_t *"
+%event "response_header_x_powered_by"		"http_response_header_t *"
+%event "response_header_proxy_authenticate"	"http_response_header_t *"
+%event "response_header_unkown"				"http_response_header_t *"
+
+%%
+
+%%
+int http_work_init_user(engine_work_t *work)
+{
+	ENTER_FUNC;
+	fprintf(stderr, ">>>>>>>>>>>>>>>>>%s return 0\n", __FUNCTION__);
+	EXIT_FUNC;
+	return 0;
+}
+
+int http_work_finit_user(engine_work_t *work)
+{
+	ENTER_FUNC;
+	fprintf(stderr, ">>>>>>>>>>>>>>>>>%s return 0\n", __FUNCTION__);
+	EXIT_FUNC;
+	return 0;
+}
+
+int http_finit(engine_t eng)
+{
+	ENTER_FUNC;
+	fprintf(stderr, ">>>>>>>>>>>>>>>>>%s return 0\n", __FUNCTION__);
+	EXIT_FUNC;
+	return 0;
+}
+
+int http_init(engine_t eng)
+{
+	ENTER_FUNC;
+	ey_add_file_finit(eng, http_finit);
+	ey_set_userdefine_work_init(eng, http_work_init_user);
+	ey_set_userdefine_work_finit(eng, http_work_finit_user);
+	fprintf(stderr, ">>>>>>>>>>>>>>>>>%s return 0\n", __FUNCTION__);
+	EXIT_FUNC;
+	return 0;
+}
