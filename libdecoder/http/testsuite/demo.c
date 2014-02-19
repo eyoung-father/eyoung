@@ -104,8 +104,8 @@ int main(int argc, char *argv[])
 	debug_http_client_parser = 1;
 	debug_http_mem = 1;
 	debug_http_detect = 1;
-	debug_engine_parser = 1;
-	debug_engine_lexier = 1;
+	debug_engine_parser = 0;
+	debug_engine_lexier = 0;
 	debug_engine_init = 1;
 	debug_engine_compiler = 1;
 	debug_engine_runtime = 1;
@@ -133,7 +133,7 @@ int main(int argc, char *argv[])
 		goto failed;
 	}
 
-	//ret = parse_http_file(decoder, argv[2]);
+	ret = parse_http_file(decoder, argv[2]);
 
 failed:
 	if(decoder)
