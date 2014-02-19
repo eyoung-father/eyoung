@@ -108,7 +108,18 @@ NUMBER	[1-9][0-9][0-9]
 }
 
 <HTTP_SERVER_FIRST_MESSAGE>{
-[^\r\n]*{NEWLINE}							{GOTO(HTTP_SERVER_HEADER_NAME); RETURN(TOKEN_SERVER_FIRST_VALUE);}
+[^\r\n]*{NEWLINE}							{
+												http_data_t *priv_data = (http_data_t *)yyget_extra(yyg);
+												http_decoder_t *decoder = (http_decoder_t*)priv_data->decoder;
+												if(http_server_prepare_string(decoder, yytext, yyleng, &yylval->string, 1))
+												{
+													http_debug(debug_http_server_lexer, "prepare response line message failed\n");
+													RETURN(-1);
+												}
+
+												GOTO(HTTP_SERVER_HEADER_NAME); 
+												RETURN(TOKEN_SERVER_FIRST_VALUE);
+											}
 .											{RETURN(-1);}
 }
 
