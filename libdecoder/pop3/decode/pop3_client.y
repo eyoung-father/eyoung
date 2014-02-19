@@ -547,8 +547,7 @@ request_args:
 			pop3_debug(debug_pop3_client_parser, "failed to alloc req arg\n");
 			YYABORT;
 		}
-		STAILQ_INSERT_TAIL(&$1, arg, next);
-		STAILQ_CONCAT(&$$, &$1);
+		STAILQ_INSERT_TAIL(&$$, arg, next);
 	}
 	;
 %%

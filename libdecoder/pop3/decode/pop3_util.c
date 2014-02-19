@@ -57,19 +57,13 @@ int pop3_parse_integer(char *str, int *error)
 	long ret = strtol(str, &end, 10);
 	*error = 0;
 
-	if(end)
+	if(end && *end)
 	{
 		*error = EINVAL;
 		return ret;
 	}
 
-	if(!ret)
-	{
-		*error = errno;
-		return ret;
-	}
-
-	/*integer overflow?*/
+	*error = errno;
 	return ret;
 }
 
