@@ -221,6 +221,7 @@ positive_response_lines: TOKEN_SERVER_STRING TOKEN_SERVER_NEWLINE
 			pop3_free(data);
 			YYABORT;
 		}
+		$$ = $1;
 		STAILQ_INSERT_TAIL(&$$, line, next);
 	}
 	;

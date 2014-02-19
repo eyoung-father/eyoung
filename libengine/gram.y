@@ -211,9 +211,9 @@ prologue_list:
 	}
 	| prologue_list prologue
 	{
-		if($2)
-			TAILQ_INSERT_TAIL(&$1, $2, link);
 		$$ = $1;
+		if($2)
+			TAILQ_INSERT_TAIL(&$$, $2, link);
 	}
 	;
 
@@ -386,8 +386,8 @@ signatures:
 	}
 	| signatures signature
 	{
-		TAILQ_INSERT_TAIL(&$1, $2, link);
 		$$ = $1;
+		TAILQ_INSERT_TAIL(&$$, $2, link);
 	}
 	;
 
@@ -433,8 +433,8 @@ signature_pipe_list:
 	}
 	| signature_pipe_list TOKEN_PIPE signature_rhs_list
 	{
-		TAILQ_INSERT_TAIL(&$1, $3, link);
 		$$ = $1;
+		TAILQ_INSERT_TAIL(&$$, $3, link);
 	}
 	;
 
@@ -452,8 +452,8 @@ signature_rhs_list:
 	}
 	| signature_rhs_list signature_rhs
 	{
-		TAILQ_INSERT_TAIL(&$1->rhs_item_list, $2, link);
 		$$ = $1;
+		TAILQ_INSERT_TAIL(&$$->rhs_item_list, $2, link);
 	}
 	;
 
