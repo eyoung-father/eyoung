@@ -19,6 +19,7 @@
  * CLIENT EVENT
  * */
 %event "request_list"						"void"
+%event "request_empty"						"void"
 %event "request"							"http_request_t *"
 %event "request_line"						"http_request_first_line_t *"
 %event "request_headers"					"http_request_header_list_t"
@@ -92,6 +93,8 @@
 %event "request_header_unkown"				"http_request_header_t *"
 
 
+%event "response_list"						"void"
+%event "response_empty"						"void"
 %event "response"							"http_response_t *"
 %event "response_line"						"http_response_first_line_t *"
 %event "response_headers"					"http_response_header_list_t"

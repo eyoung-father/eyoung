@@ -232,7 +232,7 @@ extern int http_server_body_lex(HTTP_SERVER_STYPE *val, yyscan_t scanner);
 %start response_list
 %%
 response_list:
-	empty
+	response_empty
 	{
 		http_data_t *data = (http_data_t *)priv_data;
 		STAILQ_INIT(&data->response_list);
@@ -264,7 +264,7 @@ response_list:
 	}
 	;
 
-empty:
+response_empty:
 	{
 	}
 	;
@@ -343,7 +343,7 @@ response_headers:
 	;
 
 response_header_list:
-	empty
+	response_empty
 	{
 		STAILQ_INIT(&$$);
 	}
@@ -1021,7 +1021,7 @@ response_header_proxy_authenticate:
 	;
 
 response_header_value:
-	empty
+	response_empty
 	{
 		$$.buf = NULL;
 		$$.len = 0;
@@ -1039,7 +1039,7 @@ response_header_value:
 	;
 
 response_body:
-	empty
+	response_empty
 	{
 		$$ = NULL;
 	}
@@ -1160,7 +1160,7 @@ response_chunk_header:
 	;
 
 response_chunk_data:
-	empty
+	response_empty
 	{
 		STAILQ_INIT(&$$);
 	}
@@ -1186,7 +1186,7 @@ response_chunk_data:
 	;
 
 response_chunk_tailer_list:
-	empty
+	response_empty
 	{
 		STAILQ_INIT(&$$);
 	}

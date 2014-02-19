@@ -293,7 +293,7 @@ extern int http_client_body_lex(HTTP_CLIENT_STYPE *val, yyscan_t scanner);
 %start request_list
 %%
 request_list:
-	empty
+	request_empty
 	{
 		http_data_t *data = (http_data_t *)priv_data;
 		STAILQ_INIT(&data->request_list);
@@ -501,7 +501,7 @@ request_headers:
 	;
 
 request_header_list:
-	empty
+	request_empty
 	{
 		STAILQ_INIT(&$$);
 	}
@@ -1434,7 +1434,7 @@ request_header_x_flash_version:
 	;
 
 request_header_value:
-	empty
+	request_empty
 	{
 		$$.buf = NULL;
 		$$.len = 0;
@@ -1449,7 +1449,7 @@ request_header_value:
 	}
 
 request_body:
-	empty
+	request_empty
 	{
 		$$ = NULL;
 	}
@@ -1570,7 +1570,7 @@ request_chunk_header:
 	;
 
 request_chunk_data:
-	empty
+	request_empty
 	{
 		STAILQ_INIT(&$$);
 	}
@@ -1596,7 +1596,7 @@ request_chunk_data:
 	;
 
 request_chunk_tailer_list:
-	empty
+	request_empty
 	{
 		STAILQ_INIT(&$$);
 	}
@@ -1621,7 +1621,7 @@ request_chunk_tailer_list:
 	}
 	;
 
-empty:
+request_empty:
 	{
 	}
 	;
