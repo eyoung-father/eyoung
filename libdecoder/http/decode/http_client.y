@@ -507,8 +507,7 @@ request_header_list:
 	}
 	| request_header_list request_header
 	{
-		STAILQ_INSERT_TAIL(&$1, $2, next);
-		STAILQ_CONCAT(&$$, &$1);
+		STAILQ_INSERT_TAIL(&$$, $2, next);
 	}
 	;
 
@@ -1514,8 +1513,7 @@ request_normal_body:
 			http_client_free_string(priv_decoder, &dup_part);
 			YYABORT;
 		}
-		STAILQ_INSERT_TAIL(&$1, ret, next);
-		STAILQ_CONCAT(&$$, &$1);
+		STAILQ_INSERT_TAIL(&$$, ret, next);
 	}
 	;
 
@@ -1538,8 +1536,7 @@ request_chunk_list:
 	}
 	| request_chunk_list request_chunk
 	{
-		STAILQ_INSERT_TAIL(&$1, $2, next);
-		STAILQ_CONCAT(&$$, &$1);
+		STAILQ_INSERT_TAIL(&$$, $2, next);
 	}
 	;
 
@@ -1590,8 +1587,7 @@ request_chunk_data:
 			http_client_free_string(priv_decoder, &dup_part);
 			YYABORT;
 		}
-		STAILQ_INSERT_TAIL(&$1, ret, next);
-		STAILQ_CONCAT(&$$, &$1);
+		STAILQ_INSERT_TAIL(&$$, ret, next);
 	}
 	;
 
@@ -1616,8 +1612,7 @@ request_chunk_tailer_list:
 			http_client_free_string(priv_decoder, &dup_part);
 			YYABORT;
 		}
-		STAILQ_INSERT_TAIL(&$1, ret, next);
-		STAILQ_CONCAT(&$$, &$1);
+		STAILQ_INSERT_TAIL(&$$, ret, next);
 	}
 	;
 

@@ -349,8 +349,7 @@ response_header_list:
 	}
 	| response_header_list response_header
 	{
-		STAILQ_INSERT_TAIL(&$1, $2, next);
-		STAILQ_CONCAT(&$$, &$1);
+		STAILQ_INSERT_TAIL(&$$, $2, next);
 	}
 	;
 
@@ -1104,8 +1103,7 @@ response_normal_body:
 			http_server_free_string(priv_decoder, &dup_string);
 			YYABORT;
 		}
-		STAILQ_INSERT_TAIL(&$1, ret, next);
-		STAILQ_CONCAT(&$$, &$1);
+		STAILQ_INSERT_TAIL(&$$, ret, next);
 	}
 	;
 
@@ -1128,8 +1126,7 @@ response_chunk_list:
 	}
 	| response_chunk_list response_chunk
 	{
-		STAILQ_INSERT_TAIL(&$1, $2, next);
-		STAILQ_CONCAT(&$$, &$1);
+		STAILQ_INSERT_TAIL(&$$, $2, next);
 	}
 	;
 
@@ -1180,8 +1177,7 @@ response_chunk_data:
 			http_server_free_string(priv_decoder, &dup_string);
 			YYABORT;
 		}
-		STAILQ_INSERT_TAIL(&$1, ret, next);
-		STAILQ_CONCAT(&$$, &$1);
+		STAILQ_INSERT_TAIL(&$$, ret, next);
 	}
 	;
 
@@ -1206,8 +1202,7 @@ response_chunk_tailer_list:
 			http_server_free_string(priv_decoder, &dup_string);
 			YYABORT;
 		}
-		STAILQ_INSERT_TAIL(&$1, ret, next);
-		STAILQ_CONCAT(&$$, &$1);
+		STAILQ_INSERT_TAIL(&$$, ret, next);
 	}
 	;
 %%
