@@ -454,6 +454,11 @@ int http_client_body_lex(HTTP_CLIENT_STYPE *val, yyscan_t scanner)
 
 	if(read == 0)
 	{
+		if(need > 0)
+		{
+			http_debug(debug_http_client_lexer, "no data left in this buffer, return TOKEN_CLIENT_CONTINUE\n");
+			return TOKEN_CLIENT_CONTINUE;
+		}
 		assert(parser->chunked == 0);
 		http_debug(debug_http_client_lexer, "read all data, return TOKEN_CLIENT_BODY_END\n");
 		GOTO(INITIAL);
