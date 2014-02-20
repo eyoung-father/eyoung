@@ -152,6 +152,8 @@
 %event "response_header_proxy_authenticate"	"http_response_header_t *"
 %event "response_header_unkown"				"http_response_header_t *"
 
+%event "transaction_pair"					"http_transaction_t *"
+
 %%
 1:request;
 %%
