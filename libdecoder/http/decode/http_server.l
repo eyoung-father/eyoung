@@ -103,7 +103,19 @@ NUMBER	[1-9][0-9][0-9]
 }
 
 <HTTP_SERVER_FIRST_CODE>{
-{NUMBER}{SPACE1}							{GOTO(HTTP_SERVER_FIRST_MESSAGE); RETURN(TOKEN_SERVER_FIRST_CODE);}
+{NUMBER}{SPACE1}							{
+												int error=0;
+												size_t code = http_parse_integer(yytext, 10, &error);
+												if(error)
+												{
+													http_debug(debug_http_server_lexer, "parse server response code failed\n");
+													RETURN(-1);
+												}
+												http_debug(debug_http_server_lexer, "we get response code: %d\n", code);
+												yylval->code = code;
+												GOTO(HTTP_SERVER_FIRST_MESSAGE); 
+												RETURN(TOKEN_SERVER_FIRST_CODE);
+											}
 .											{RETURN(-1);}
 }
 
