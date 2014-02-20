@@ -1,10 +1,10 @@
-1.msg:
+req-1.msg:
 	simple http get request
-2.msg:
+req-2.msg:
 	simple http post request with normal body defined by content-length
-3.msg:
+req-3.msg:
 	simple http post request with normal body defined by content-length, but body is spilted into TWO parts
-4.msg:
+req-4.msg:
 	http request pipe-line
-5.msg:
+req-5.msg:
 	http CHUNKED request
