@@ -8,3 +8,18 @@ req-4.msg:
 	http request pipe-line
 req-5.msg:
 	http CHUNKED request
+req-6.msg:
+	http CHUNKED request with chunk tailer
+
+res-1.msg:
+	simple http get response
+res-2.msg:
+	simple http post response with normal body defined by content-length
+res-3.msg:
+	simple http post response with normal body defined by content-length, but body is spilted into TWO parts
+res-4.msg:
+	http response pipe-line
+res-5.msg:
+	http CHUNKED response
+res-6.msg:
+	http CHUNKED response with chunk tailer
