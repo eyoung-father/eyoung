@@ -190,6 +190,7 @@ NUMBER	[1-9][0-9][0-9]
 													http_debug(debug_http_server_lexer, "parse content-length value failed\n");
 													RETURN(-1);
 												}
+												http_debug(debug_http_server_lexer, "we get content-length: %d\n", length);
 												http_server_lexer_set_content_length(yyg, length);
 												GOTO(HTTP_SERVER_HEADER_NAME);
 												RETURN(TOKEN_SERVER_HEADER_VALUE);
@@ -208,7 +209,10 @@ NUMBER	[1-9][0-9][0-9]
 													RETURN(-1);
 												}
 												if(strcasestr(yytext, "chunked"))
+												{
+													http_debug(debug_http_server_lexer, "we get chunked body\n");
 													http_server_lexer_set_chunked_body(yyg);
+												}
 												GOTO(HTTP_SERVER_HEADER_NAME);
 												RETURN(TOKEN_SERVER_HEADER_VALUE);
 												GOTO(HTTP_SERVER_HEADER_NAME);
@@ -253,6 +257,7 @@ NUMBER	[1-9][0-9][0-9]
 													http_debug(debug_http_server_lexer, "parse chunk length value failed\n");
 													RETURN(-1);
 												}
+												http_debug(debug_http_server_lexer, "we get chunked body length: %d\n", length);
 												http_server_lexer_set_chunk_length(yyg, length);
 												if(length)
 													GOTO(HTTP_SERVER_BODY_TRUNK_BODY);
