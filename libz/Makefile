@@ -1,0 +1,10 @@
+TOP_DIR = ..
+MODULE_TOP_DIR = .
+BUILD_TYPE = dynlib
+BUILD_NAME = libz
+CFLAGS_LOCAL = -D_LARGEFILE64_SOURCE=1 -DHAVE_HIDDEN -DPIC
+SUB_MOD =
+SUB_DIR = 
+
+include $(TOP_DIR)/script/compile.mk
+
