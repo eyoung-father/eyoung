@@ -33,7 +33,7 @@ static void zlib_debug(int flag, const char *format, ...)
 	va_end(ap);
 }
 
-static void *ey_zlib_alloc(void *arg, unsigned int n, unsigned int size)
+static void *do_zlib_alloc(void *arg, unsigned int n, unsigned int size)
 {
 	assert(arg != NULL);
 	ey_zlib_private_t *priv_data = (ey_zlib_private_t*)arg;
@@ -41,7 +41,7 @@ static void *ey_zlib_alloc(void *arg, unsigned int n, unsigned int size)
 	return priv_data->memory_handler.malloc(total_len);
 }
 
-static void ey_zlib_free(void *arg, void *ptr)
+static void do_zlib_free(void *arg, void *ptr)
 {
 	assert(arg != NULL);
 	ey_zlib_private_t *priv_data = (ey_zlib_private_t*)arg;
@@ -49,7 +49,7 @@ static void ey_zlib_free(void *arg, void *ptr)
 		priv_data->memory_handler.free(ptr);
 }
 
-static int ey_zlib_zstream_init(z_stream *sp, ey_zlib_format_t fmt)
+static int do_zlib_zstream_init(z_stream *sp, ey_zlib_format_t fmt)
 {
 	if(!sp)
 	{
@@ -105,7 +105,7 @@ static int ey_zlib_zstream_init(z_stream *sp, ey_zlib_format_t fmt)
 	return 0;
 }
 
-static void ey_zlib_zstream_finit(z_stream *sp, ey_zlib_format_t fmt)
+static void do_zlib_zstream_finit(z_stream *sp, ey_zlib_format_t fmt)
 {
 	if(!sp)
 	{
@@ -171,10 +171,10 @@ ey_zlib_t ey_zlib_create(memory_handler_t *mm, ey_zlib_format_t fmt, void *arg)
 	ret->create_arg = arg;
 
 	sp = &ret->zstream;
-	sp->zalloc = ey_zlib_alloc;
-	sp->zfree = ey_zlib_free;
+	sp->zalloc = do_zlib_alloc;
+	sp->zfree = do_zlib_free;
 	sp->opaque = ret;
-	if(ey_zlib_zstream_init(sp, fmt))
+	if(do_zlib_zstream_init(sp, fmt))
 	{
 		zlib_debug(debug_zlib_basic, "init zstream for fmt %d failed\n", fmt);
 		sp = NULL;
@@ -188,7 +188,7 @@ ey_zlib_t ey_zlib_create(memory_handler_t *mm, ey_zlib_format_t fmt, void *arg)
 
 failed:
 	if(sp)
-		ey_zlib_zstream_finit(sp, fmt);
+		do_zlib_zstream_finit(sp, fmt);
 
 	if(ret)
 		ey_zfree(zlib_slab, ret);
@@ -205,7 +205,7 @@ void ey_zlib_destroy(ey_zlib_t z)
 	z_stream *sp = &priv_data->zstream;
 	ey_zlib_format_t fmt = priv_data->format;
 
-	ey_zlib_zstream_finit(sp, fmt);
+	do_zlib_zstream_finit(sp, fmt);
 	ey_zfree(zlib_slab, priv_data);
 }
 
@@ -220,21 +220,10 @@ const char *ey_zlib_errstr(ey_zlib_t z)
 	return priv_data->err_msg;
 }
 
-int ey_zlib_stream_pack(ey_zlib_t z, char *i_buf, size_t i_len, ey_zlib_callback cb, void *arg)
+static int do_deflate(ey_zlib_private_t *z, char *i_buf, size_t i_len, ey_zlib_callback cb, void *arg)
 {
-	/*TODO:*/
-	return 0;
-}
-
-static int do_gunzip(ey_zlib_private_t *z, char *i_buf, size_t i_len, ey_zlib_callback cb, void *arg)
-{
-	return 0;
-}
-
-static int do_inflate(ey_zlib_private_t *z, char *i_buf, size_t i_len, ey_zlib_callback cb, void *arg)
-{
-	#define MAX_OUT_BUFFER 8192
-	char out_buffer[MAX_OUT_BUFFER];
+	#define MAX_DEFLATE_OUT_BUFFER 8192
+	char out_buffer[MAX_DEFLATE_OUT_BUFFER];
 	z_stream *sp = &z->zstream;
 	int r, olen;
 
@@ -242,7 +231,88 @@ static int do_inflate(ey_zlib_private_t *z, char *i_buf, size_t i_len, ey_zlib_c
 	sp->next_in = i_buf;
 	do
 	{
-		sp->avail_out = MAX_OUT_BUFFER;
+		sp->avail_out = MAX_DEFLATE_OUT_BUFFER;
+		sp->next_out = out_buffer;
+		r = deflate(sp, i_len ? Z_NO_FLUSH : Z_FINISH);
+		if(r != Z_STREAM_END && r != Z_OK)
+		{
+			z->err_msg = sp->msg;
+			zlib_debug(debug_zlib_basic, "deflate return %d\n", r);
+			return -1;
+		}
+
+		olen = MAX_DEFLATE_OUT_BUFFER - sp->avail_out;
+		if(olen)
+		{
+			r = cb(out_buffer, olen, arg);
+			zlib_debug(debug_zlib_basic, "deflate callback return %d\n", r);
+			if(r != 0)
+				return -1;
+		}
+	}while(sp->avail_out != 0);
+
+	return 0;
+}
+static int do_gzip(ey_zlib_private_t *z, char *i_buf, size_t i_len, ey_zlib_callback cb, void *arg)
+{
+	/*TODO:*/
+	return 0;
+}
+
+int ey_zlib_stream_pack(ey_zlib_t z, char *i_buf, size_t i_len, ey_zlib_callback cb, void *arg)
+{
+	if(!z || !cb || !i_buf || !i_len)
+	{
+		zlib_debug(debug_zlib_basic, "bad parameter in ey_zlib_stream_pack\n");
+		return -1;
+	}
+	
+	ey_zlib_private_t *zp = (ey_zlib_private_t*)z;
+	ey_zlib_format_t format = zp->format;
+	zp->err_msg = NULL;
+	if(format == EY_ZLIB_FORMAT_DEFLATE_PACK)
+	{
+		if(do_deflate(zp, i_buf, i_len, cb, arg))
+		{
+			zlib_debug(debug_zlib_basic, "find error in deflate: %s\n", zp->err_msg?zp->err_msg:"unkown error");
+			return -1;
+		}
+		zlib_debug(debug_zlib_basic, "deflate %d bytes successfully\n", i_len);
+	}
+	else if(format == EY_ZLIB_FORMAT_GZIP_PACK)
+	{
+		if(do_gzip(zp, i_buf, i_len, cb, arg))
+		{
+			zlib_debug(debug_zlib_basic, "find error in gzip: %s\n", zp->err_msg?zp->err_msg:"unkown error");
+			return -1;
+		}
+		zlib_debug(debug_zlib_basic, "gzip %d bytes successfully\n", i_len);
+	}
+	else
+	{
+		assert(0);
+	}
+	return 0;
+}
+
+static int do_gunzip(ey_zlib_private_t *z, char *i_buf, size_t i_len, ey_zlib_callback cb, void *arg)
+{
+	/*TODO:*/
+	return 0;
+}
+
+static int do_inflate(ey_zlib_private_t *z, char *i_buf, size_t i_len, ey_zlib_callback cb, void *arg)
+{
+	#define MAX_INFLATE_OUT_BUFFER 8192
+	char out_buffer[MAX_INFLATE_OUT_BUFFER];
+	z_stream *sp = &z->zstream;
+	int r, olen;
+
+	sp->avail_in = i_len;
+	sp->next_in = i_buf;
+	do
+	{
+		sp->avail_out = MAX_INFLATE_OUT_BUFFER;
 		sp->next_out = out_buffer;
 		r = inflate(sp, Z_NO_FLUSH);
 		if(r != Z_STREAM_END && r != Z_OK)
@@ -252,7 +322,7 @@ static int do_inflate(ey_zlib_private_t *z, char *i_buf, size_t i_len, ey_zlib_c
 			return -1;
 		}
 
-		olen = MAX_OUT_BUFFER - sp->avail_out;
+		olen = MAX_INFLATE_OUT_BUFFER - sp->avail_out;
 		if(olen)
 		{
 			r = cb(out_buffer, olen, arg);
@@ -269,7 +339,7 @@ int ey_zlib_stream_unpack(ey_zlib_t z, char *i_buf, size_t i_len, ey_zlib_callba
 {
 	if(!z || !cb || !i_buf || !i_len)
 	{
-		zlib_debug(debug_zlib_basic, "bad parameter in ey_zlib_unpack\n");
+		zlib_debug(debug_zlib_basic, "bad parameter in ey_zlib_stream_unpack\n");
 		return -1;
 	}
 	
