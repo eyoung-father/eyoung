@@ -220,14 +220,83 @@ const char *ey_zlib_errstr(ey_zlib_t z)
 	return priv_data->err_msg;
 }
 
-int ey_zlib_pack(ey_zlib_t z, char *i_buf, size_t i_len, ey_zlib_callback cb, void *arg)
+int ey_zlib_stream_pack(ey_zlib_t z, char *i_buf, size_t i_len, ey_zlib_callback cb, void *arg)
 {
 	/*TODO:*/
 	return 0;
 }
 
-int ey_zlib_unpack(ey_zlib_t z, char *i_buf, size_t i_len, ey_zlib_callback cb, void *arg)
+static int do_gunzip(ey_zlib_private_t *z, char *i_buf, size_t i_len, ey_zlib_callback cb, void *arg)
 {
-	/*TODO:*/
+	return 0;
+}
+
+static int do_inflate(ey_zlib_private_t *z, char *i_buf, size_t i_len, ey_zlib_callback cb, void *arg)
+{
+	#define MAX_OUT_BUFFER 8192
+	char out_buffer[MAX_OUT_BUFFER];
+	z_stream *sp = &z->zstream;
+	int r, olen;
+
+	sp->avail_in = i_len;
+	sp->next_in = i_buf;
+	do
+	{
+		sp->avail_out = MAX_OUT_BUFFER;
+		sp->next_out = out_buffer;
+		r = inflate(sp, Z_NO_FLUSH);
+		if(r != Z_STREAM_END && r != Z_OK)
+		{
+			z->err_msg = sp->msg;
+			zlib_debug(debug_zlib_basic, "inflate return %d\n", r);
+			return -1;
+		}
+
+		olen = MAX_OUT_BUFFER - sp->avail_out;
+		if(olen)
+		{
+			r = cb(out_buffer, olen, arg);
+			zlib_debug(debug_zlib_basic, "inflate callback return %d\n", r);
+			if(r != 0)
+				return -1;
+		}
+	}while(sp->avail_out != 0);
+
+	return 0;
+}
+
+int ey_zlib_stream_unpack(ey_zlib_t z, char *i_buf, size_t i_len, ey_zlib_callback cb, void *arg)
+{
+	if(!z || !cb || !i_buf || !i_len)
+	{
+		zlib_debug(debug_zlib_basic, "bad parameter in ey_zlib_unpack\n");
+		return -1;
+	}
+	
+	ey_zlib_private_t *zp = (ey_zlib_private_t*)z;
+	ey_zlib_format_t format = zp->format;
+	zp->err_msg = NULL;
+	if(format == EY_ZLIB_FORMAT_DEFLATE_UNPACK)
+	{
+		if(do_inflate(zp, i_buf, i_len, cb, arg))
+		{
+			zlib_debug(debug_zlib_basic, "find error in inflate: %s\n", zp->err_msg?zp->err_msg:"unkown error");
+			return -1;
+		}
+		zlib_debug(debug_zlib_basic, "inflate %d bytes successfully\n", i_len);
+	}
+	else if(format == EY_ZLIB_FORMAT_GZIP_UNPACK)
+	{
+		if(do_gunzip(zp, i_buf, i_len, cb, arg))
+		{
+			zlib_debug(debug_zlib_basic, "find error in gunzip: %s\n", zp->err_msg?zp->err_msg:"unkown error");
+			return -1;
+		}
+		zlib_debug(debug_zlib_basic, "gunzip %d bytes successfully\n", i_len);
+	}
+	else
+	{
+		assert(0);
+	}
 	return 0;
 }
