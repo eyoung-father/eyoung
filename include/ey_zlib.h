@@ -14,7 +14,7 @@ typedef enum ey_zlib_format
 }ey_zlib_format_t;
 
 struct memory_handler;
-extern ey_zlib_t ey_zlib_create(struct memory_handler *mm, size_t ilen, size_t olen, ey_zlib_format_t fmt, void *arg);
+extern ey_zlib_t ey_zlib_create(struct memory_handler *mm, ey_zlib_format_t fmt, void *arg);
 extern void ey_zlib_destroy(ey_zlib_t z);
 
 typedef int (*ey_zlib_callback)(ey_zlib_t z, char *o_buf, size_t o_len, void *arg);

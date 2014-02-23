@@ -9,14 +9,10 @@
 #include "zlib.h"
 #include "zutil.h"
 
-#define DEFAULT_INPUT_LENGTH	1024
-#define DEFAULT_OUTPUT_LENGTH	2048
 typedef struct ey_zlib_private
 {
 	memory_handler_t memory_handler;
 	ey_zlib_format_t format;
-	size_t input_length;
-	size_t output_length;
 	void *create_arg;
 	void *runtime_arg;
 	char *err_msg;
@@ -140,20 +136,14 @@ static void ey_zlib_zstream_finit(z_stream *sp, ey_zlib_format_t fmt)
 	zlib_debug(debug_zlib_basic, "finit successfully\n");
 }
 
-ey_zlib_t ey_zlib_create(memory_handler_t *mm, size_t ilen, size_t olen, ey_zlib_format_t fmt, void *arg)
+ey_zlib_t ey_zlib_create(memory_handler_t *mm, ey_zlib_format_t fmt, void *arg)
 {
 	memory_handler_t mm_handler = {ey_malloc,ey_realloc,ey_free,ey_calloc};
-	char *i_buf = NULL;
-	char *o_buf = NULL;
 	ey_zlib_private_t *ret = NULL;
 	z_stream *sp = NULL;
 	
 	if(!mm)
 		mm = &mm_handler;
-	if(ilen < DEFAULT_INPUT_LENGTH)
-		ilen = DEFAULT_INPUT_LENGTH;
-	if(olen < DEFAULT_OUTPUT_LENGTH)
-		olen = DEFAULT_OUTPUT_LENGTH;
 	
 	assert(	fmt==EY_ZLIB_FORMAT_GZIP_PACK		|| 
 			fmt==EY_ZLIB_FORMAT_GZIP_UNPACK		|| 
@@ -192,26 +182,6 @@ ey_zlib_t ey_zlib_create(memory_handler_t *mm, size_t ilen, size_t olen, ey_zlib
 	}
 	ret->format = fmt;
 
-	i_buf = (char*)mm->malloc(ilen);
-	if(!i_buf)
-	{
-		zlib_debug(debug_zlib_basic, "alloc input buffer failed\n");
-		goto failed;
-	}
-	ret->input_length = ilen;
-	sp->next_in = i_buf;
-	sp->avail_in = 0;
-
-	o_buf = (char*)mm->malloc(olen);
-	if(!o_buf)
-	{
-		zlib_debug(debug_zlib_basic, "alloc output buffer failed\n");
-		goto failed;
-	}
-	ret->output_length = olen;
-	sp->next_out = o_buf;
-	sp->avail_out = olen;
-	
 	/*now we can return successfully*/
 	zlib_debug(debug_zlib_basic, "create ey_zlib successfully\n");
 	return ret;
@@ -219,12 +189,6 @@ ey_zlib_t ey_zlib_create(memory_handler_t *mm, size_t ilen, size_t olen, ey_zlib
 failed:
 	if(sp)
 		ey_zlib_zstream_finit(sp, fmt);
-
-	if(o_buf)
-		mm->free(o_buf);
-
-	if(i_buf)
-		mm->free(i_buf);
 
 	if(ret)
 		ey_zfree(zlib_slab, ret);
@@ -238,15 +202,10 @@ void ey_zlib_destroy(ey_zlib_t z)
 		return;
 	
 	ey_zlib_private_t *priv_data = (ey_zlib_private_t*)z;
-	memory_handler_t *mm = &priv_data->memory_handler;
 	z_stream *sp = &priv_data->zstream;
 	ey_zlib_format_t fmt = priv_data->format;
-	char *i_buf = sp->next_in;
-	char *o_buf = sp->next_out;
 
 	ey_zlib_zstream_finit(sp, fmt);
-	mm->free(o_buf);
-	mm->free(i_buf);
 	ey_zfree(zlib_slab, priv_data);
 }
 
