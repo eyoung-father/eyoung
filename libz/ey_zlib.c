@@ -7,6 +7,7 @@
 #include "ey_memory.h"
 #include "ey_zlib.h"
 #include "zlib.h"
+#include "zutil.h"
 
 #define DEFAULT_INPUT_LENGTH	1024
 #define DEFAULT_OUTPUT_LENGTH	2048
@@ -50,6 +51,93 @@ static void ey_zlib_free(void *arg, void *ptr)
 	ey_zlib_private_t *priv_data = (ey_zlib_private_t*)arg;
 	if(ptr)
 		priv_data->memory_handler.free(ptr);
+}
+
+static int ey_zlib_zstream_init(z_stream *sp, ey_zlib_format_t fmt)
+{
+	if(!sp)
+	{
+		zlib_debug(debug_zlib_basic, "null z_stream, init failed\n");
+		return -1;
+	}
+	
+	switch(fmt)
+	{
+		case EY_ZLIB_FORMAT_GZIP_UNPACK:
+		{
+			if(inflateInit2(sp, MAX_WBITS + 16) != Z_OK)
+			{
+				zlib_debug(debug_zlib_basic, "init GZIP format uncompress failed: %s\n", sp->msg?sp->msg:"unkown reason");
+				return -1;
+			}
+			break;
+		}
+		case EY_ZLIB_FORMAT_DEFLATE_UNPACK:
+		{
+			if(inflateInit(sp) != Z_OK)
+			{
+				zlib_debug(debug_zlib_basic, "init DEFLATE format uncompress failed: %s\n", sp->msg?sp->msg:"unkown reason");
+				return -1;
+			}
+			break;
+		}
+		case EY_ZLIB_FORMAT_DEFLATE_PACK:
+		{
+			if(deflateInit(sp, Z_DEFAULT_COMPRESSION) != Z_OK)
+			{
+				zlib_debug(debug_zlib_basic, "init DEFLATE format compress failed: %s\n", sp->msg?sp->msg:"unkown reason");
+				return -1;
+			}
+			break;
+		}
+		case EY_ZLIB_FORMAT_GZIP_PACK:
+		{
+			if(deflateInit2(sp, Z_DEFAULT_COMPRESSION, Z_DEFLATED, MAX_WBITS + 16, DEF_MEM_LEVEL, Z_DEFAULT_STRATEGY) != Z_OK)
+			{
+				zlib_debug(debug_zlib_basic, "init GZIP format compress failed: %s\n", sp->msg?sp->msg:"unkown reason");
+				return -1;
+			}
+			break;
+		}
+		default:
+		{
+			zlib_debug(debug_zlib_basic, "unkown format\n");
+			return -1;
+		}
+	}
+	zlib_debug(debug_zlib_basic, "init successfully\n");
+	return 0;
+}
+
+static void ey_zlib_zstream_finit(z_stream *sp, ey_zlib_format_t fmt)
+{
+	if(!sp)
+	{
+		zlib_debug(debug_zlib_basic, "null z_stream, finit failed\n");
+		return;
+	}
+	
+	switch(fmt)
+	{
+		case EY_ZLIB_FORMAT_GZIP_UNPACK:
+		case EY_ZLIB_FORMAT_DEFLATE_UNPACK:
+		{
+			inflateEnd(sp);
+			break;
+		}
+		case EY_ZLIB_FORMAT_DEFLATE_PACK:
+		case EY_ZLIB_FORMAT_GZIP_PACK:
+		{
+			deflateEnd(sp);
+			break;
+		}
+		default:
+		{
+			zlib_debug(debug_zlib_basic, "unkown format\n");
+			return;
+		}
+	}
+	zlib_debug(debug_zlib_basic, "finit successfully\n");
 }
 
 ey_zlib_t ey_zlib_create(memory_handler_t *mm, size_t ilen, size_t olen, ey_zlib_format_t fmt, void *arg)
@@ -96,7 +184,12 @@ ey_zlib_t ey_zlib_create(memory_handler_t *mm, size_t ilen, size_t olen, ey_zlib
 	sp->zalloc = ey_zlib_alloc;
 	sp->zfree = ey_zlib_free;
 	sp->opaque = ret;
-	/*TODO: zstream init*/
+	if(ey_zlib_zstream_init(sp, fmt))
+	{
+		zlib_debug(debug_zlib_basic, "init zstream for fmt %d failed\n", fmt);
+		sp = NULL;
+		goto failed;
+	}
 	ret->format = fmt;
 
 	i_buf = (char*)mm->malloc(ilen);
@@ -125,12 +218,7 @@ ey_zlib_t ey_zlib_create(memory_handler_t *mm, size_t ilen, size_t olen, ey_zlib
 
 failed:
 	if(sp)
-	{
-		if(fmt==EY_ZLIB_FORMAT_GZIP_PACK || fmt==EY_ZLIB_FORMAT_DEFLATE_PACK)
-			deflateEnd(sp);
-		if(fmt==EY_ZLIB_FORMAT_GZIP_UNPACK || fmt==EY_ZLIB_FORMAT_DEFLATE_UNPACK)
-			inflateEnd(sp);
-	}
+		ey_zlib_zstream_finit(sp, fmt);
 
 	if(o_buf)
 		mm->free(o_buf);
@@ -152,21 +240,11 @@ void ey_zlib_destroy(ey_zlib_t z)
 	ey_zlib_private_t *priv_data = (ey_zlib_private_t*)z;
 	memory_handler_t *mm = &priv_data->memory_handler;
 	z_stream *sp = &priv_data->zstream;
-
+	ey_zlib_format_t fmt = priv_data->format;
 	char *i_buf = sp->next_in;
 	char *o_buf = sp->next_out;
-	assert(i_buf != NULL && o_buf != NULL);
 
-	ey_zlib_format_t fmt = priv_data->format;
-	assert(	fmt==EY_ZLIB_FORMAT_GZIP_PACK		|| 
-			fmt==EY_ZLIB_FORMAT_GZIP_UNPACK		|| 
-			fmt==EY_ZLIB_FORMAT_DEFLATE_PACK	||
-			fmt==EY_ZLIB_FORMAT_DEFLATE_UNPACK);
-	
-	if(fmt==EY_ZLIB_FORMAT_GZIP_PACK || fmt==EY_ZLIB_FORMAT_DEFLATE_PACK)
-		deflateEnd(sp);
-	if(fmt==EY_ZLIB_FORMAT_GZIP_UNPACK || fmt==EY_ZLIB_FORMAT_DEFLATE_UNPACK)
-		inflateEnd(sp);
+	ey_zlib_zstream_finit(sp, fmt);
 	mm->free(o_buf);
 	mm->free(i_buf);
 	ey_zfree(zlib_slab, priv_data);
