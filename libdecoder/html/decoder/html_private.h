@@ -47,4 +47,10 @@ extern void html_free_prot_list(html_decoder_t *decoder, html_node_prot_list_t *
  * */
 extern html_data_t *html_alloc_priv_data(html_decoder_t *decoder, int greedy, int create_dom);
 extern void html_free_priv_data(html_decoder_t *decoder, html_data_t *data);
+
+/*
+ * HTML_STRING_T malloc/free
+ * */
+extern char* html_alloc_string(html_decoder_t *decoder, const char *i_str, size_t i_len, html_string_t *o_str);
+extern void html_free_string(html_decoder_t *decoder, html_string_t *string);
 #endif

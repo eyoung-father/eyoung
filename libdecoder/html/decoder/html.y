@@ -1,14 +1,24 @@
 %{
-#include <stdio.h>
 #include <stdlib.h>
-#include <stdarg.h>
-#include <string.h>
-#include <ctype.h>
-#include "ey_queue.h"
-#include "ey_string.h"
+#include <stdio.h>
+#include <assert.h>
 #include "html.h"
 #include "html_private.h"
 #include "html_lex.h"
+
+#ifdef YY_REDUCTION_CALLBACK
+#undef YY_REDUCTION_CALLBACK
+#endif
+#define YY_REDUCTION_CALLBACK(data,name,id,val)					\
+	do															\
+	{															\
+		if(html_element_detect(data,name,id,val,				\
+			cluster_buffer,cluster_buffer_len)<0)				\
+		{														\
+			html_debug(debug_html_detect, "find attack!\n");	\
+			return -1;											\
+		}														\
+	}while(0)
 
 #define this_priv ((html_data_t*)priv_data)
 #define this_decoder ((html_decoder_t*)(this_priv->decoder))
@@ -400,6 +410,7 @@
 
 %type <string>			html_tag_event_value_ 
 						html_tag_prot_value_
+						html_doc_text
 						SYM_TEXT
 %type <id>				html_tag_name_ 
 						html_tag_event_name_ 
@@ -411,8 +422,6 @@
 %type <prot>			html_tag_event_
 %type <prot_list>		html_tag_prot_event_list_ 
 %type <node_list>		html_doc 
-
-%destructor {if($$) html_free($$);} html_tag_event_value_ html_tag_prot_value_
 
 %debug
 %verbose
@@ -445,20 +454,11 @@ html_doc:
 		$$ = $1;
 		STAILQ_INSERT_TAIL(&$$, $2, sib);
 	}
-	| html_doc SYM_TEXT
+	| html_doc html_doc_text
 	{
 		NOCOPY_BREAK;
 
-		char *value = (char*)html_malloc($2.len + 1);
-		if(!value)
-		{
-			html_debug(debug_html_parser, "alloc doc value failed\n");
-			YYABORT;
-		}
-		memcpy(value, $2.buf, $2.len);
-		value[$2.len] = '\0';
-
-		html_node_t *node = html_alloc_node(this_decoder, this_priv);
+		html_node_t *node = html_alloc_node(this_decoder);
 		if(!node)
 		{
 			html_debug(debug_html_parser, "alloc doc node failed\n");
@@ -467,10 +467,23 @@ html_doc:
 		}
 
 		node->type = SYM_TEXT;
-		node->text = value;
+		node->text = $2;
 
 		$$ = $1;
 		STAILQ_INSERT_TAIL(&$$, node, sib);
+	}
+	;
+
+html_doc_text: 
+	SYM_TEXT
+	{
+		NOCOPY_BREAK;
+
+		$$ = (char*)html_malloc($1.len + 1);
+		if(!$$)
+			YYABORT;
+		memcpy($$, $1.buf, $1.len);
+		$$[$1.len] = '\0';
 	}
 	;
 
@@ -494,7 +507,7 @@ html_tag_begin_:
 	{
 		NOCOPY_BREAK;
 
-		html_node_t *node = html_alloc_node(this_decoder, this_priv);
+		html_node_t *node = html_alloc_node(this_decoder);
 		if(!node)
 		{
 			html_debug(debug_html_parser, "alloc tag node failed\n");
@@ -564,7 +577,7 @@ html_tag_prot_:
 	{
 		NOCOPY_BREAK;
 
-		html_node_prot_t *prot = html_alloc_prot(this_decoder, this_priv);
+		html_node_prot_t *prot = html_alloc_prot(this_decoder);
 		if(!prot)
 		{
 			html_debug(debug_html_parser, "alloc node prot failed\n");
@@ -580,7 +593,7 @@ html_tag_prot_:
 	{
 		NOCOPY_BREAK;
 
-		html_node_prot_t *prot = html_alloc_prot(this_decoder, this_priv);
+		html_node_prot_t *prot = html_alloc_prot(this_decoder);
 		if(!prot)
 		{
 			html_debug(debug_html_parser, "alloc node prot failed\n");
@@ -609,7 +622,7 @@ html_tag_event_:
 	{
 		NOCOPY_BREAK;
 
-		html_node_prot_t *prot = html_alloc_prot(this_decoder, this_priv);
+		html_node_prot_t *prot = html_alloc_prot(this_decoder);
 		if(!prot)
 		{
 			html_debug(debug_html_parser, "alloc node prot failed\n");
@@ -625,7 +638,7 @@ html_tag_event_:
 	{
 		NOCOPY_BREAK;
 
-		html_node_prot_t *prot = html_alloc_prot(this_decoder, this_priv);
+		html_node_prot_t *prot = html_alloc_prot(this_decoder);
 		if(!prot)
 		{
 			html_debug(debug_html_parser, "alloc node prot failed\n");

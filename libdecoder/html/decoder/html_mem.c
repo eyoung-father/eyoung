@@ -206,3 +206,39 @@ void html_free_priv_data(html_decoder_t *decoder, html_data_t *data)
 
 	html_zfree(decoder->html_data_slab, data);
 }
+
+/*
+ * HTML_STRING malloc/free
+ * */
+char* html_alloc_string(html_decoder_t *decoder, const char *i_str, size_t i_len, html_string_t *o_str)
+{
+	if(!o_str)
+	{
+		html_debug(debug_html_mem, "null output html string\n");
+		return NULL;
+	}
+	
+	char *ret = (char*)html_fzalloc(i_len+1, decoder->htmlvalue_fslab);
+	if(ret)
+	{
+		if(i_str)
+			memcpy(ret, i_str, i_len);
+		ret[i_len] = '\0';
+		o_str->buf = ret;
+		o_str->len = i_len;
+	}
+	return ret;
+}
+
+void html_free_string(html_decoder_t *decoder, html_string_t *string)
+{
+	if(!string || !string->buf)
+	{
+		html_debug(debug_html_mem, "null html string to free\n");
+		return;
+	}
+
+	html_fzfree(decoder->html_value_fslab, string->buf);
+	string->buf = NULL;
+	string->len = 0;
+}
