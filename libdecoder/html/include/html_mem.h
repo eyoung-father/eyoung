@@ -5,9 +5,9 @@
 #include "ey_memory.h"
 
 /*KMALLOC/KFREE*/
-#define html_malloc(sz) ey_malloc(sz)
-#define html_realloc(ptr,sz) ey_realloc(ptr,sz)
-#define html_free(p) ey_free(p)
+#define ey_html_malloc(sz) ey_malloc(sz)
+#define ey_html_realloc(ptr,sz) ey_realloc(ptr,sz)
+#define ey_html_free(p) ey_free(p)
 
 /*for slab*/
 #define html_zalloc(slab) ey_zalloc(slab)

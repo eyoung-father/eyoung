@@ -11,24 +11,24 @@ html_work_t html_work_create(html_handler_t handler, int greedy)
 {
 	if(!handler)
 	{
-		html_debug(debug_html_mem, "null html decoder handler\n");
+		ey_html_debug(debug_html_mem, "null html decoder handler\n");
 		return NULL;
 	}
 	
 	html_data_t *priv_data = NULL;
 	html_decoder_t *decoder = (html_decoder_t*)handler;
 	engine_t engine = decoder->engine;
-	priv_data = html_alloc_priv_data(decoder, greedy);
+	priv_data = html_alloc_priv_data(decoder, greedy, 1);
 	if(!priv_data)
 	{
-		html_debug(debug_html_mem, "failed to alloc html private data\n");
+		ey_html_debug(debug_html_mem, "failed to alloc html private data\n");
 		return NULL;
 	}
 
 	engine_work_t *engine_work = ey_engine_work_create(engine);
 	if(!engine_work)
 	{
-		html_debug(debug_html_mem, "failed to alloc engine work\n");
+		ey_html_debug(debug_html_mem, "failed to alloc engine work\n");
 		html_free_priv_data(decoder, priv_data);
 		return NULL;
 	}
@@ -60,17 +60,17 @@ int html_decode_data(html_work_t work, const char *data, size_t data_len, int la
 html_handler_t html_decoder_init(engine_t engine)
 {
 	html_decoder_t *decoder = NULL;
-	decoder = (html_decoder_t*)html_malloc(sizeof(html_decoder_t));
+	decoder = (html_decoder_t*)ey_html_malloc(sizeof(html_decoder_t));
 	if(!decoder)
 	{
-		html_debug(debug_html_mem, "failed to alloc html decoder\n");
+		ey_html_debug(debug_html_mem, "failed to alloc html decoder\n");
 		goto failed;
 	}
 	memset(decoder, 0, sizeof(*decoder));
 
 	if(html_mem_init(decoder))
 	{
-		html_debug(debug_html_mem, "failed to init html decoder mem\n");
+		ey_html_debug(debug_html_mem, "failed to init html decoder mem\n");
 		goto failed;
 	}
 
@@ -90,7 +90,7 @@ void html_decoder_finit(html_handler_t handler)
 	{
 		html_decoder_t *decoder = (html_decoder_t*)handler;
 		html_mem_finit(decoder);
-		html_free(decoder);
+		ey_html_free(decoder);
 	}
 }
 
@@ -99,19 +99,19 @@ int html_element_detect(html_data_t *html_data, const char *event_name, int even
 {
 	if(!event_name)
 	{
-		html_debug(debug_html_detect, "event name is null\n");
+		ey_html_debug(debug_html_detect, "event name is null\n");
 		return 0;
 	}
 
 	if(event_id < 0)
 	{
-		html_debug(debug_html_detect, "event id %d for event %s is illegal\n", event_id, event_name);
+		ey_html_debug(debug_html_detect, "event id %d for event %s is illegal\n", event_id, event_name);
 		return 0;
 	}
 
 	if(!html_data || !event)
 	{
-		html_debug(debug_html_detect, "bad parameter for event %s\n", event_name);
+		ey_html_debug(debug_html_detect, "bad parameter for event %s\n", event_name);
 		return 0;
 	}
 
@@ -120,14 +120,14 @@ int html_element_detect(html_data_t *html_data, const char *event_name, int even
 	engine_work_event_t *work_event = ey_engine_work_create_event(work, event_id, &action);
 	if(!work_event)
 	{
-		html_debug(debug_html_detect, "create event for %s failed\n", event_name);
+		ey_html_debug(debug_html_detect, "create event for %s failed\n", event_name);
 		return 0;
 	}
 
 	ey_engine_work_set_data(work_event, event, cluster_buffer, cluster_buffer_len);
 	ey_engine_work_detect_event(work_event);
 	ey_engine_work_destroy_event(work_event);
-	html_debug(debug_html_detect, "detect %s[%d], get actoin %s\n",
+	ey_html_debug(debug_html_detect, "detect %s[%d], get actoin %s\n",
 		event_name, event_id, ey_engine_action_name(action.action));
 	if(action.action==ENGINE_ACTION_PASS)
 		return 0;

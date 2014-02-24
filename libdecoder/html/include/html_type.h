@@ -3,6 +3,7 @@
 
 #include "ey_queue.h"
 #include "ey_string.h"
+#include "libengine.h"
 #include "html_decode.h"
 
 typedef ey_string_t html_string_t;
@@ -29,7 +30,7 @@ typedef struct html_node
 	struct html_node *parent;
 	html_node_list_t child;
 	html_node_prot_list_t prot;		/*for tag*/
-	TAILQ_ENTRY(html_node) sib;
+	TAILQ_ENTRY(html_node) next;
 }html_node_t;
 
 #define IS_CLOSING_NODE(node)			\

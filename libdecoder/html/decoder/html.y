@@ -15,7 +15,7 @@
 		if(html_element_detect(data,name,id,val,				\
 			cluster_buffer,cluster_buffer_len)<0)				\
 		{														\
-			html_debug(debug_html_detect, "find attack!\n");	\
+			ey_html_debug(debug_html_detect, "find attack!\n");	\
 			return -1;											\
 		}														\
 	}while(0)
@@ -463,7 +463,7 @@ html_init:
 	html_doc
 	{
 		NOCOPY_BREAK;
-		TAILQ_CONCAT(&this_priv->html_root, &$1);
+		TAILQ_CONCAT(&this_priv->html_root, &$1, next);
 	}
 	;
 
@@ -477,7 +477,7 @@ html_doc:
 		NOCOPY_BREAK;
 		
 		$$ = $1;
-		TAILQ_INSERT_TAIL(&$$, $2, sib);
+		TAILQ_INSERT_TAIL(&$$, $2, next);
 	}
 	| html_doc html_doc_text
 	{
@@ -486,8 +486,7 @@ html_doc:
 		html_node_t *node = html_alloc_node(this_decoder);
 		if(!node)
 		{
-			html_debug(debug_html_parser, "alloc doc node failed\n");
-			html_free(value);
+			ey_html_debug(debug_html_parser, "alloc doc node failed\n");
 			YYABORT;
 		}
 
@@ -495,7 +494,7 @@ html_doc:
 		node->text = $2;
 
 		$$ = $1;
-		TAILQ_INSERT_TAIL(&$$, node, sib);
+		TAILQ_INSERT_TAIL(&$$, node, next);
 	}
 	;
 
@@ -506,7 +505,7 @@ html_doc_text:
 
 		if(!html_alloc_string(this_decoder, $1.buf, $1.len, &$$))
 		{
-			html_debug(debug_html_parser, "failed to duplicate doc text value\n");
+			ey_html_debug(debug_html_parser, "failed to duplicate doc text value\n");
 			$1.buf = NULL;
 			$1.len = 0;
 			YYABORT;
@@ -524,7 +523,7 @@ html_tag:
 	{
 		NOCOPY_BREAK;
 
-		TAILQ_CONCAT(&$1->child, &$2);
+		TAILQ_CONCAT(&$1->child, &$2, next);
 		$$ = $1;
 	}
 	;
@@ -537,12 +536,12 @@ html_tag_begin_:
 		html_node_t *node = html_alloc_node(this_decoder);
 		if(!node)
 		{
-			html_debug(debug_html_parser, "alloc tag node failed\n");
+			ey_html_debug(debug_html_parser, "alloc tag node failed\n");
 			YYABORT;
 		}
 
 		node->type = $2;
-		TAILQ_CONCAT(&node->prot, &$3);
+		TAILQ_CONCAT(&node->prot, &$3, next);
 		$$ = node;
 	}
 	;
@@ -607,9 +606,7 @@ html_tag_prot_:
 		html_node_prot_t *prot = html_alloc_prot(this_decoder);
 		if(!prot)
 		{
-			html_debug(debug_html_parser, "alloc node prot failed\n");
-			html_free($3);
-			$3 = NULL;
+			ey_html_debug(debug_html_parser, "alloc node prot failed\n");
 			YYABORT;
 		}
 		prot->type = $1;
@@ -623,7 +620,7 @@ html_tag_prot_:
 		html_node_prot_t *prot = html_alloc_prot(this_decoder);
 		if(!prot)
 		{
-			html_debug(debug_html_parser, "alloc node prot failed\n");
+			ey_html_debug(debug_html_parser, "alloc node prot failed\n");
 			YYABORT;
 		}
 		prot->type = $1;
@@ -638,7 +635,7 @@ html_tag_prot_value_:
 
 		if(!html_alloc_string(this_decoder, $1.buf, $1.len, &$$))
 		{
-			html_debug(debug_html_parser, "failed to duplicate prot value\n");
+			ey_html_debug(debug_html_parser, "failed to duplicate prot value\n");
 			$1.buf = NULL;
 			$1.len = 0;
 			YYABORT;
@@ -654,9 +651,7 @@ html_tag_event_:
 		html_node_prot_t *prot = html_alloc_prot(this_decoder);
 		if(!prot)
 		{
-			html_debug(debug_html_parser, "alloc node prot failed\n");
-			html_free($3);
-			$3 = NULL;
+			ey_html_debug(debug_html_parser, "alloc node prot failed\n");
 			YYABORT;
 		}
 		prot->type = $1;
@@ -670,7 +665,7 @@ html_tag_event_:
 		html_node_prot_t *prot = html_alloc_prot(this_decoder);
 		if(!prot)
 		{
-			html_debug(debug_html_parser, "alloc node prot failed\n");
+			ey_html_debug(debug_html_parser, "alloc node prot failed\n");
 			YYABORT;
 		}
 		prot->type = $1;
@@ -685,7 +680,7 @@ html_tag_event_value_:
 		
 		if(!html_alloc_string(this_decoder, $1.buf, $1.len, &$$))
 		{
-			html_debug(debug_html_parser, "failed to duplicate event value\n");
+			ey_html_debug(debug_html_parser, "failed to duplicate event value\n");
 			$1.buf = NULL;
 			$1.len = 0;
 			YYABORT;
@@ -2095,18 +2090,15 @@ int parse_html_stream(html_data_t *priv, const char *buf, size_t buf_len, int la
 	input = html_scan_stream(buf, buf_len, priv);
 	if(!input)
 	{
-		html_debug(debug_html_parser, "create html stream buffer failed\n");
+		ey_html_debug(debug_html_parser, "create html stream buffer failed\n");
 		return 1;
 	}
 
 	while(1)
 	{
 		memset(&value, 0, sizeof(value));
-		if(html_lex_body_mode(lexier))
-			token = html_body_lex(&value, lexier);
-		else
-			token = html_lex(&value, lexier);
-		if(token == TOKEN_CLIENT_CONTINUE)
+		token = html_lex(&value, lexier);
+		if(token == SYM_LEX_CONTINUE)
 			break;
 		parser_ret = html_push_parse(parser, token, &value, (void*)priv);
 		if(parser_ret != YYPUSH_MORE)
@@ -2116,7 +2108,7 @@ int parse_html_stream(html_data_t *priv, const char *buf, size_t buf_len, int la
 
 	if(parser_ret != YYPUSH_MORE && parser_ret != 0)
 	{
-		html_debug(debug_html_parser, "find error while parsing html stream\n");
+		ey_html_debug(debug_html_parser, "find error while parsing html stream\n");
 		return 2;
 	}
 	return 0;
@@ -2136,9 +2128,9 @@ void html_register(html_decoder_t *decoder)
 			continue;
 		yytid[YYNTOKENS + index] = ey_engine_find_event(engine, name);
 		if(yytid[YYNTOKENS + index] >= 0)
-			html_debug(debug_html_parser, "event id of %s is %d\n", name, yytid[YYNTOKENS + index]);
+			ey_html_debug(debug_html_parser, "event id of %s is %d\n", name, yytid[YYNTOKENS + index]);
 		else
-			html_debug(debug_html_parser, "failed to register event %s\n", name);
+			ey_html_debug(debug_html_parser, "failed to register event %s\n", name);
 	}
 }
 #undef this_priv

@@ -7,31 +7,31 @@
 /*for memory system init*/
 int html_mem_init(html_decoder_t *decoder)
 {
-	decoder->html_data_slab = html_zinit("html data", sizeof(html_data_t), 0, 0, 0);
+	decoder->html_data_slab = html_zinit("html data", sizeof(html_data_t));
 	if(!decoder->html_data_slab)
 	{
-		html_debug(debug_html_mem, "init html private data slab failed\n");
+		ey_html_debug(debug_html_mem, "init html private data slab failed\n");
 		return -1;
 	}
 
-	decoder->html_node_slab = html_zinit("html node", sizeof(html_node_t), 0, 0, 0);
+	decoder->html_node_slab = html_zinit("html node", sizeof(html_node_t));
 	if(!decoder->html_node_slab)
 	{
-		html_debug(debug_html_mem, "init html node slab failed\n");
+		ey_html_debug(debug_html_mem, "init html node slab failed\n");
 		return -1;
 	}
 
-	decoder->html_node_prot_slab = html_zinit("html node prot", sizeof(html_node_prot_t), 0, 0, 0);
+	decoder->html_node_prot_slab = html_zinit("html node prot", sizeof(html_node_prot_t));
 	if(!decoder->html_node_prot_slab)
 	{
-		html_debug(debug_html_mem, "init html node prot slab failed\n");
+		ey_html_debug(debug_html_mem, "init html node prot slab failed\n");
 		return -1;
 	}
 
 	decoder->html_value_fslab = html_fzinit("html value", DEFAULT_VALUE_LENGTH);
 	if(decoder->html_value_fslab)
 	{
-		html_debug(debug_html_mem, "init html value fslab failed\n");
+		ey_html_debug(debug_html_mem, "init html value fslab failed\n");
 		return -1;
 	}
 
@@ -56,7 +56,7 @@ html_node_t* html_alloc_node(html_decoder_t *decoder)
 	html_node_t *ret = (html_node_t*)html_zalloc(decoder->html_node_slab);
 	if(!ret)
 	{
-		html_debug(debug_html_mem, "alloc html node failed\n");
+		ey_html_debug(debug_html_mem, "alloc html node failed\n");
 		return NULL;
 	}
 	
@@ -70,7 +70,7 @@ void html_free_node(html_decoder_t *decoder, html_node_t *node)
 {
 	if(!node)
 	{
-		html_debug(debug_html_mem, "null node in %s\n", __FUNCTION__);
+		ey_html_debug(debug_html_mem, "null node in %s\n", __FUNCTION__);
 		return;
 	}
 
@@ -85,12 +85,12 @@ void html_free_node_list(html_decoder_t *decoder, html_node_list_t *node_list)
 {
 	if(!node_list)
 	{
-		html_debug(debug_html_mem, "null node list in %s\n", __FUNCTION__);
+		ey_html_debug(debug_html_mem, "null node list in %s\n", __FUNCTION__);
 		return;
 	}
 
 	html_node_t *node=NULL, *tmp=NULL;
-	TAILQ_FOREACH_SAFE(node, node_list, sib, tmp)
+	TAILQ_FOREACH_SAFE(node, node_list, next, tmp)
 		html_free_node(decoder, node);
 	TAILQ_INIT(node_list);
 }
@@ -103,7 +103,7 @@ html_node_prot_t* html_alloc_prot(html_decoder_t *decoder)
 	html_node_prot_t *ret = (html_node_prot_t*)html_zalloc(decoder->html_node_prot_slab);
 	if(!ret)
 	{
-		html_debug(debug_html_mem, "alloc html node prot failed\n");
+		ey_html_debug(debug_html_mem, "alloc html node prot failed\n");
 		return NULL;
 	}
 
@@ -115,7 +115,7 @@ void html_free_prot(html_decoder_t *decoder, html_node_prot_t *prot)
 {
 	if(!prot)
 	{
-		html_debug(debug_html_mem, "null prot in %s\n", __FUNCTION__);
+		ey_html_debug(debug_html_mem, "null prot in %s\n", __FUNCTION__);
 		return;
 	}
 	html_free_string(decoder, &prot->value);
@@ -126,13 +126,13 @@ void html_free_prot_list(html_decoder_t *decoder, html_node_prot_list_t *prot_li
 {
 	if(!prot_list)
 	{
-		html_debug(debug_html_mem, "null prot list in %s\n", __FUNCTION__);
+		ey_html_debug(debug_html_mem, "null prot list in %s\n", __FUNCTION__);
 		return;
 	}
 
 	html_node_prot_t *prot=NULL, *tmp=NULL;
 	TAILQ_FOREACH_SAFE(prot, prot_list, next, tmp)
-		html_free_prot(prot);
+		html_free_prot(decoder, prot);
 	TAILQ_INIT(prot_list);
 }
 
@@ -143,25 +143,25 @@ html_data_t *html_alloc_priv_data(html_decoder_t *decoder, int greedy, int creat
 {
 	void *lexier = NULL;
 	void *parser = NULL;
-	htmp_data_t *data = NULL;
+	html_data_t *data = NULL;
 
 	parser = (void*)html_pstate_new();
 	if(!parser)
 	{
-		html_debug(debug_html_mem, "alloc html parser failed\n");
+		ey_html_debug(debug_html_mem, "alloc html parser failed\n");
 		goto failed;
 	}
 
 	if(html_lex_init(&lexier))
 	{
-		html_debug(debug_html_mem, "alloc html lexier failed\n");
+		ey_html_debug(debug_html_mem, "alloc html lexier failed\n");
 		goto failed;
 	}
 
 	data = (html_data_t*)html_zalloc(decoder->html_data_slab);
 	if(!data)
 	{
-		html_debug(debug_html_mem, "alloc html private data failed\n");
+		ey_html_debug(debug_html_mem, "alloc html private data failed\n");
 		goto failed;
 	}
 
@@ -191,7 +191,7 @@ void html_free_priv_data(html_decoder_t *decoder, html_data_t *data)
 {
 	if(!data)
 	{
-		html_debug(debug_html_mem, "null html private data\n");
+		ey_html_debug(debug_html_mem, "null html private data\n");
 		return;
 	}
 	
@@ -200,7 +200,7 @@ void html_free_priv_data(html_decoder_t *decoder, html_data_t *data)
 	if(data->parser.lexier)
 		html_lex_destroy(data->parser.lexier);
 	if(data->parser.saved)
-		html_free(data->parser.saved);
+		ey_html_free(data->parser.saved);
 	html_free_node_list(decoder, &data->html_root);
 
 	html_zfree(decoder->html_data_slab, data);
@@ -213,11 +213,11 @@ char* html_alloc_string(html_decoder_t *decoder, const char *i_str, size_t i_len
 {
 	if(!o_str)
 	{
-		html_debug(debug_html_mem, "null output html string\n");
+		ey_html_debug(debug_html_mem, "null output html string\n");
 		return NULL;
 	}
 	
-	char *ret = (char*)html_fzalloc(i_len+1, decoder->htmlvalue_fslab);
+	char *ret = (char*)html_fzalloc(i_len+1, decoder->html_value_fslab);
 	if(ret)
 	{
 		if(i_str)
@@ -233,7 +233,7 @@ void html_free_string(html_decoder_t *decoder, html_string_t *string)
 {
 	if(!string || !string->buf)
 	{
-		html_debug(debug_html_mem, "null html string to free\n");
+		ey_html_debug(debug_html_mem, "null html string to free\n");
 		return;
 	}
 

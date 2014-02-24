@@ -32,7 +32,7 @@ static int save_stream_context(yyscan_t yyscanner, int from_default);
 #define RETURN(val)										\
 	do													\
 	{													\
-		html_debug(debug_html_lexer,					\
+		ey_html_debug(debug_html_lexer,					\
 			"line %d get token %s\n",					\
 			__LINE__, #val);							\
 		return (val);									\
@@ -41,7 +41,7 @@ static int save_stream_context(yyscan_t yyscanner, int from_default);
 #define GOTO(s)											\
 	do													\
 	{													\
-		html_debug(debug_html_lexer,					\
+		ey_html_debug(debug_html_lexer,					\
 			"line %d goto state %s(%d)\n",				\
 			__LINE__, #s, s);							\
 		BEGIN s;										\
@@ -53,12 +53,13 @@ static int save_stream_context(yyscan_t yyscanner, int from_default);
 #define YY_FATAL_ERROR(msg)								\
 	do													\
 	{													\
-		html_debug(debug_html_lexer,					\
+		ey_html_debug(debug_html_lexer,					\
 			"line %d get fatal error: %s\n",			\
 			__LINE__, msg);								\
 		*(int*)0 = 0;									\
 		yy_fatal_error(msg, yyscanner);					\
 	}while(0)
+
 %}
 
 %option prefix="html_"
@@ -73,7 +74,7 @@ static int save_stream_context(yyscan_t yyscanner, int from_default);
 %option caseless
 %option noinput
 %option ansi-definitions
-%option extra-type="html_priv_data *"
+%option extra-type="html_data_t *"
 
 %x HTML_LEX_COMMENT
 %x HTML_LEX_META
@@ -94,7 +95,7 @@ HTML_CHARSET	[[:space:][:alnum:]\-_:<>=%]
 "<!"			{BEGIN HTML_LEX_META;}
 "</"			{BEGIN HTML_LEX_TAG_NAME; RETURN(SYM_TAG_START_FLAG2);}
 "<"				{BEGIN HTML_LEX_TAG_NAME; RETURN(SYM_TAG_START_FLAG);}
-[^<]+			{yylval->str = yytext; yylval->str_len = yyleng; RETURN(SYM_TEXT);}
+[^<]+			{yylval->string.buf = yytext; yylval->string.len = yyleng; RETURN(SYM_TEXT);}
 }
 
 <HTML_LEX_COMMENT>{
@@ -232,7 +233,7 @@ HTML_CHARSET	[[:space:][:alnum:]\-_:<>=%]
 "XML"			{BEGIN HTML_LEX_PROT_NAME; RETURN(SYM_TAG_XML);}
 "BGSOUND"		{BEGIN HTML_LEX_PROT_NAME; RETURN(SYM_TAG_BGSOUND);}
 "MARQUEE"		{BEGIN HTML_LEX_PROT_NAME; RETURN(SYM_TAG_MARQUEE);}
-[[:alnum:]]*	{BEGIN HTML_LEX_PROT_NAME; yylval->str = yytext; yylval->str_len = yyleng; RETURN(SYM_TAG_USERDATA);}
+[[:alnum:]]*	{BEGIN HTML_LEX_PROT_NAME; yylval->string.buf = yytext; yylval->string.len = yyleng; RETURN(SYM_TAG_USERDATA);}
 .				{RETURN(-1); /*eat others*/}
 }
 
@@ -469,8 +470,8 @@ HTML_CHARSET	[[:space:][:alnum:]\-_:<>=%]
 "LOWSRC"				{RETURN(SYM_PROT_LOWSRC);}
 "BACKGROUND"			{RETURN(SYM_PROT_BACKGROUND);}
 
-[[:alnum:]]*			{CHECK_SENSITIVE; yylval->str = yytext; yylval->str_len = yyleng; RETURN(SYM_PROT_USERDATA);}
-.						{CHECK_SENSITIVE; /*eat others*/}
+[[:alnum:]]*			{yylval->string.buf = yytext; yylval->string.len = yyleng; RETURN(SYM_PROT_USERDATA);}
+.						{/*eat others*/}
 }
 
 <HTML_LEX_PROT_VALUE>{
@@ -482,56 +483,56 @@ HTML_CHARSET	[[:space:][:alnum:]\-_:<>=%]
 }
 
 <HTML_LEX_PROT_VALUE_DQUOTE>{
-[^\"]*\"				{BEGIN HTML_LEX_PROT_NAME; yytext[yyleng-1]=0; yylval->str = yytext; yylval->str_len = yyleng-1; RETURN(SYM_TEXT);}
+[^\"]*\"				{BEGIN HTML_LEX_PROT_NAME; yytext[yyleng-1]=0; yylval->string.buf = yytext; yylval->string.len = yyleng-1; RETURN(SYM_TEXT);}
 .						{RETURN(-1);}
 }
 
 <HTML_LEX_PROT_VALUE_SQUOTE>{
-[^']*'					{BEGIN HTML_LEX_PROT_NAME; yytext[yyleng-1]=0; yylval->str = yytext; yylval->str_len = yyleng-1; RETURN(SYM_TEXT);}
+[^']*'					{BEGIN HTML_LEX_PROT_NAME; yytext[yyleng-1]=0; yylval->string.buf = yytext; yylval->string.len = yyleng-1; RETURN(SYM_TEXT);}
 .						{RETURN(-1);}
 }
 
 <HTML_LEX_PROT_VALUE_RSQUOTE>{
-[^`]*`					{BEGIN HTML_LEX_PROT_NAME; yytext[yyleng-1]=0; yylval->str = yytext; yylval->str_len = yyleng-1; RETURN(SYM_TEXT);}
+[^`]*`					{BEGIN HTML_LEX_PROT_NAME; yytext[yyleng-1]=0; yylval->string.buf = yytext; yylval->string.len = yyleng-1; RETURN(SYM_TEXT);}
 .						{RETURN(-1);}
 }
 
 <HTML_LEX_PROT_VALUE_NOQUOTE>{
-[^[:space:]<>]*			{BEGIN HTML_LEX_PROT_NAME; yylval->str = yytext; yylval->str_len = yyleng; RETURN(SYM_TEXT);}
+[^[:space:]<>]*			{BEGIN HTML_LEX_PROT_NAME; yylval->string.buf = yytext; yylval->string.len = yyleng; RETURN(SYM_TEXT);}
 .						{BEGIN HTML_LEX_PROT_NAME; unput(yytext[0]);}
 }
 
 %%
-void *htmlalloc (yy_size_t sz,yyscan_t yyscanner )
+void *html_alloc (yy_size_t sz,yyscan_t yyscanner )
 {
-	return html_malloc(sz);
+	return ey_html_malloc(sz);
 }
 
-void *htmlrealloc (void *ptr,yy_size_t sz,yyscan_t yyscanner )
+void *html_realloc (void *ptr,yy_size_t sz,yyscan_t yyscanner )
 {
-	return html_realloc(ptr, sz);
+	return ey_html_realloc(ptr, sz);
 }
 
-void htmlfree (void *ptr ,yyscan_t yyscanner )
+void html_free (void *ptr ,yyscan_t yyscanner )
 {
-	html_free(ptr);
+	ey_html_free(ptr);
 }
 
-struct yy_buffer_state* html_scan_stream(const char *new_buf, size_t new_buf_len, html_priv_data *priv)
+struct yy_buffer_state* html_scan_stream(const char *new_buf, size_t new_buf_len, html_data_t *priv)
 {
 	YY_BUFFER_STATE b;
 	char *buf;
 	yy_size_t n, _yybytes_len;
-	char *last_buf = priv->last_string;
-	size_t last_buf_len = priv->last_string_len;
-	yyscan_t scanner = (yyscan_t)priv->lexer;
+	char *last_buf = priv->parser.saved;
+	size_t last_buf_len = priv->parser.saved_len;
+	yyscan_t scanner = (yyscan_t)priv->parser.lexier;
     
 	_yybytes_len = new_buf_len + last_buf_len;
 	n = _yybytes_len + 2;
-	buf = (char *)htmlalloc(n, scanner);
+	buf = (char *)html_alloc(n, scanner);
 	if (!buf)
 	{
-		html_debug(debug_html_lexer, "out of dynamic memory in html_scan_stream()\n");
+		ey_html_debug(debug_html_lexer, "out of dynamic memory in html_scan_stream()\n");
 		return NULL;
 	}
 
@@ -542,23 +543,34 @@ struct yy_buffer_state* html_scan_stream(const char *new_buf, size_t new_buf_len
 		memcpy(buf+last_buf_len, new_buf, new_buf_len);
 
 	buf[_yybytes_len] = buf[_yybytes_len+1] = YY_END_OF_BUFFER_CHAR;
-	html_debug(debug_html_lexer, "[HTML]: %s\n", buf);
+	ey_html_debug(debug_html_lexer, "[HTML]: %s\n", buf);
 
-	b = html_scan_buffer(buf, n, scanner);
+	b = (YY_BUFFER_STATE)html_alloc(sizeof(struct yy_buffer_state), scanner);
 	if ( ! b )
 	{
-		html_debug(debug_html_lexer, "bad buffer in html_scan_bytes()\n");
-		htmlfree(buf, scanner);
+		ey_html_debug(debug_html_lexer, "failed to alloc html buffer state\n");
+		html_free(buf, scanner);
 		return NULL;
 	}
 
+	b->yy_buf_size = n - 2;	/* "- 2" to take care of EOB's */
+	b->yy_buf_pos = b->yy_ch_buf = buf;
+	b->yy_is_our_buffer = 0;
+	b->yy_input_file = 0;
+	b->yy_n_chars = b->yy_buf_size;
+	b->yy_is_interactive = 0;
+	b->yy_at_bol = 1;
+	b->yy_fill_buffer = 0;
+	b->yy_buffer_status = YY_BUFFER_NEW;
+	html_switch_to_buffer(b, scanner);
+
 	b->yy_is_our_buffer = 1;
 
-	if(priv->last_string)
+	if(priv->parser.saved)
 	{
-		htmlfree(priv->last_string, scanner);
-		priv->last_string = NULL;
-		priv->last_string_len = 0;
+		html_free(priv->parser.saved, scanner);
+		priv->parser.saved = NULL;
+		priv->parser.saved_len = 0;
 	}
 	return b;
 }
@@ -566,37 +578,38 @@ struct yy_buffer_state* html_scan_stream(const char *new_buf, size_t new_buf_len
 static int save_stream_context(yyscan_t yyscanner, int from_default)
 {
 	struct yyguts_t * yyg = (struct yyguts_t*)yyscanner;
-	html_priv_data *priv = (html_priv_data*)htmlget_extra(yyg);
+	html_data_t *priv = (html_data_t*)html_get_extra(yyg);
 	int len = 0;
-	if(!priv || priv->last_frag)
+
+	if(priv->parser.saved)
 	{
-		html_debug(debug_html_lexer, "No need to save stream context, priv: %p, last_frag: %d\n",
-			priv, priv?priv->last_frag:0);
-		return 0;
+		html_free(priv->parser.saved, yyg);
+		priv->parser.saved = NULL;
+		priv->parser.saved_len = 0;
 	}
 
-	if(priv->last_string)
+	if(!priv || priv->parser.last_frag || (!from_default && !priv->parser.greedy))
 	{
-		htmlfree(priv->last_string, yyg);
-		priv->last_string = NULL;
-		priv->last_string_len = 0;
+		ey_html_debug(debug_html_lexer, "No need to save stream context, priv: %p, last_frag: %d, from_default: %d\n",
+			priv, priv?priv->parser.last_frag:0, from_default);
+		return 0;
 	}
 
 	len = from_default?yyleng-1:yyleng;
 	if(!len)
 	{
-		html_debug(debug_html_lexer, "Exit save stream context for ZERO length yytext\n");
-		return 0;
+		ey_html_debug(debug_html_lexer, "Exit save stream context for ZERO length yytext\n");
+		return 1;
 	}
 
-	priv->last_string = htmlalloc(len, yyg);
-	if(!priv->last_string)
+	priv->parser.saved = html_alloc(len, yyg);
+	if(!priv->parser.saved)
 	{
-		html_debug(debug_html_lexer, "out of memory while saving context\n");
+		ey_html_debug(debug_html_lexer, "out of memory while saving context\n");
 		return 0;
 	}
-	memcpy(priv->last_string, yytext, len);
-	priv->last_string_len = len;
-	html_debug(debug_html_lexer, "Save stream context, string: %s, len: %d\n", yytext, len);
+	memcpy(priv->parser.saved, yytext, len);
+	priv->parser.saved_len = len;
+	ey_html_debug(debug_html_lexer, "Save stream context, string: %s, len: %d\n", yytext, len);
 	return 1;
 }
