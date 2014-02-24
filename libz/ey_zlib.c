@@ -249,7 +249,7 @@ static int do_deflate(ey_zlib_private_t *z, char *i_buf, size_t i_len, ey_zlib_c
 			if(r != 0)
 				return -1;
 		}
-	}while(sp->avail_out != 0);
+	}while(sp->avail_out == 0);
 
 	return 0;
 }
@@ -330,7 +330,7 @@ static int do_inflate(ey_zlib_private_t *z, char *i_buf, size_t i_len, ey_zlib_c
 			if(r != 0)
 				return -1;
 		}
-	}while(sp->avail_out != 0);
+	}while(sp->avail_out == 0);
 
 	return 0;
 }
