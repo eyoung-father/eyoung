@@ -86,6 +86,7 @@ typedef struct html_data
 	html_node_list_t html_root;
 	html_parser_t parser;
 	int create_dom;
+	int reduced_count;
 }html_data_t;
 
 #endif

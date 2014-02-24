@@ -6,22 +6,26 @@
 #include "html_private.h"
 #include "html_lex.h"
 
+#define this_priv ((html_data_t*)priv_data)
+#define this_decoder ((html_decoder_t*)(this_priv->decoder))
+
 #ifdef YY_REDUCTION_CALLBACK
 #undef YY_REDUCTION_CALLBACK
 #endif
 #define YY_REDUCTION_CALLBACK(data,name,id,val)					\
 	do															\
 	{															\
-		if(html_element_detect(data,name,id,val,				\
-			cluster_buffer,cluster_buffer_len)<0)				\
+		if(!((html_data_t*)data)->create_dom)					\
+		{														\
+			((html_data_t*)data)->reduced_count++;				\
+		}														\
+		else if(html_element_detect((html_data_t*)data,name,	\
+				id,val,cluster_buffer,cluster_buffer_len)<0)	\
 		{														\
 			ey_html_debug(debug_html_detect, "find attack!\n");	\
 			return -1;											\
 		}														\
 	}while(0)
-
-#define this_priv ((html_data_t*)priv_data)
-#define this_decoder ((html_decoder_t*)(this_priv->decoder))
 
 #define NOCOPY_BREAK											\
 {																\
@@ -2132,6 +2136,75 @@ void html_register(html_decoder_t *decoder)
 		else
 			ey_html_debug(debug_html_parser, "failed to register event %s\n", name);
 	}
+}
+
+static void html_print_tabs(int num)
+{
+	if(!debug_html_parser)
+		return;
+
+	int i;
+	for(i=0; i<num; i++)
+		ey_html_debug(1, "  ");
+}
+
+static const char* trans_name(int type)
+{
+	assert(type-255 < YYNTOKENS);
+	const char *tok_name = yytname[type-255];
+
+	if(!strncmp(tok_name, "SYM_TAG_", sizeof("SYM_TAG_")-1))
+		return tok_name + sizeof("SYM_TAG_") - 1;
+	else if(!strncmp(tok_name, "SYM_EVT_", sizeof("SYM_EVT_")-1))
+		return tok_name + sizeof("SYM_EVT_") - 1;
+	else if(!strncmp(tok_name, "SYM_PROT_", sizeof("SYM_PROT_")-1))
+		return tok_name + sizeof("SYM_PROT_") - 1;
+	else
+		return "";
+}
+
+static void html_node_print(html_node_t *node, int tabs)
+{
+	if(!debug_html_parser)
+		return;
+
+	html_print_tabs(tabs);
+	if(node->type == SYM_TEXT)
+	{
+		ey_html_debug(1, "%s\n", node->text.buf?node->text.buf:"");
+		return;
+	}
+	else
+	{
+		ey_html_debug(1, "<%s ", trans_name(node->type));
+		html_node_prot_t *prot = NULL;
+		TAILQ_FOREACH(prot, &node->prot, next)
+			ey_html_debug(1, "%s=\"%s\" ", trans_name(prot->type), prot->value.buf ? prot->value.buf : "");
+		ey_html_debug(1, ">\n");
+
+		html_node_t *child = NULL;
+		TAILQ_FOREACH(child, &node->child, next)
+			html_node_print(child, tabs+1);
+		
+		html_print_tabs(tabs);
+		ey_html_debug(1, "</%s>\n", trans_name(node->type));
+	}
+}
+
+void html_dom_print(html_data_t *priv)
+{
+	if(!priv)
+	{
+		ey_html_debug(debug_html_parser, "null priv data\n");
+		return;
+	}
+
+	if(!debug_html_parser)
+		return;
+
+	html_node_t *node = NULL;
+	TAILQ_FOREACH(node, &priv->html_root, next)
+		html_node_print(node, 0);
 }
 #undef this_priv
 #undef this_decoder

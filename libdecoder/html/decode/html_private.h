@@ -31,6 +31,7 @@ extern void html_mem_finit(html_decoder_t *decoder);
 /*
  * HTML_NODE_T malloc/free
  * */
+extern void html_dom_print(html_data_t *priv);
 extern html_node_t* html_alloc_node(html_decoder_t *decoder);
 extern void html_free_node(html_decoder_t *decoder, html_node_t *node);
 extern void html_free_node_list(html_decoder_t *decoder, html_node_list_t *node_list);
