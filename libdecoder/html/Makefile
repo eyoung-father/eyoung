@@ -1,8 +1,8 @@
 TOP_DIR = ../..
 MODULE_TOP_DIR = .
-BUILD_NAME = libhtml
+BUILD_NAME = 
 SUB_MOD =
-SUB_DIR = decode detect
+SUB_DIR = decoder detect
 BUILD_TYPE = pesudo
 CFLAGS_LOCAL = 
 
