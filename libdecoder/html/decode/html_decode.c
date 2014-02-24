@@ -18,23 +18,26 @@ html_work_t html_work_create(html_handler_t handler, int greedy)
 	html_data_t *priv_data = NULL;
 	html_decoder_t *decoder = (html_decoder_t*)handler;
 	engine_t engine = decoder->engine;
-	priv_data = html_alloc_priv_data(decoder, greedy, 1);
+	priv_data = html_alloc_priv_data(decoder, greedy, engine!=NULL);
 	if(!priv_data)
 	{
 		ey_html_debug(debug_html_mem, "failed to alloc html private data\n");
 		return NULL;
 	}
 
-	engine_work_t *engine_work = ey_engine_work_create(engine);
-	if(!engine_work)
-	{
-		ey_html_debug(debug_html_mem, "failed to alloc engine work\n");
-		html_free_priv_data(decoder, priv_data);
-		return NULL;
-	}
-	priv_data->engine_work = engine_work;
 	priv_data->decoder = handler;
-	engine_work->predefined = (void*)priv_data;
+	if(engine)
+	{
+		engine_work_t *engine_work = ey_engine_work_create(engine);
+		if(!engine_work)
+		{
+			ey_html_debug(debug_html_mem, "failed to alloc engine work\n");
+			html_free_priv_data(decoder, priv_data);
+			return NULL;
+		}
+		priv_data->engine_work = engine_work;
+		engine_work->predefined = (void*)priv_data;
+	}
 	
 	return priv_data;
 }
@@ -73,9 +76,12 @@ html_handler_t html_decoder_init(engine_t engine)
 		ey_html_debug(debug_html_mem, "failed to init html decoder mem\n");
 		goto failed;
 	}
-
-	decoder->engine = engine;
-	html_register(decoder);
+	
+	if(engine)
+	{
+		decoder->engine = engine;
+		html_register(decoder);
+	}
 	return (html_handler_t)decoder;
 
 failed:
