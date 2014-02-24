@@ -15,7 +15,7 @@
 
 #define NOCOPY_BREAK											\
 {																\
-	if(this_priv->no_copy)										\
+	if(!this_priv->create_dom)									\
 		break;													\
 }
 %}

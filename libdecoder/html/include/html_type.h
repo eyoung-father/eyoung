@@ -2,33 +2,33 @@
 #define HTML_TYPE_H 1
 
 #include "ey_queue.h"
+#include "ey_string.h"
 
+typedef ey_string_t html_string_t;
 /*
  * HTML DOM NODE PROT
  * */
 typedef struct html_node_prot
 {
 	int type;
-	char *value;
-	STAILQ_ENTRY(html_node_prot) next;
-	STAILQ_ENTRY(html_node_prot) free_list;
+	html_string_t value;
+	TAILQ_ENTRY(html_node_prot) next;
 }html_node_prot_t;
-typedef STAILQ_HEAD(html_node_prot_list, html_node_prot) html_node_prot_list_t;
+typedef TAILQ_HEAD(html_node_prot_list, html_node_prot) html_node_prot_list_t;
 
 /*
  * HTML DOM NODE
  * */
 struct html_node;
-typedef STAILQ_HEAD(html_node_list, html_node) html_node_list_t;
+typedef TAILQ_HEAD(html_node_list, html_node) html_node_list_t;
 typedef struct html_node
 {
 	int type;
-	char *text;						/*for text between two tags*/
+	html_string_t text;				/*for text between two tags*/
 	struct html_node *parent;
 	html_node_list_t child;
 	html_node_prot_list_t prot;		/*for tag*/
-	STAILQ_ENTRY(html_node) sib;
-	STAILQ_ENTRY(html_node) free_list;
+	TAILQ_ENTRY(html_node) sib;
 }html_node_t;
 
 #define IS_CLOSING_NODE(node)			\
@@ -82,10 +82,8 @@ typedef struct html_data
 	engine_work_t *engine_work;
 
 	html_node_list_t html_root;
-	html_node_list_t free_node;
-	html_node_prot_list_t free_prot;
-
 	html_parser_t parser;
+	int create_dom;
 }html_data_t;
 
 #endif
