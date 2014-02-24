@@ -11,7 +11,7 @@
 #include "html_lex.h"
 
 #define this_priv ((html_data_t*)priv_data)
-#define this_decoder ((http_decoder_t*)(this_priv->decoder))
+#define this_decoder ((html_decoder_t*)(this_priv->decoder))
 
 #define NOCOPY_BREAK											\
 {																\
@@ -280,7 +280,7 @@
 %token SYM_PROT_HIGH					/*	high			*/
 %token SYM_PROT_PING					/*	ping			*/
 %token SYM_PROT_ISMAP					/*	ismap			*/
-%token SYM_PROT_HTTPEQUIV				/*	http-equiv		*/
+%token SYM_PROT_HTTPEQUIV				/*	html-equiv		*/
 %token SYM_PROT_HSPACE					/*	hspace			*/
 %token SYM_PROT_COMPACT					/*	compact			*/
 %token SYM_PROT_LANGUAGE				/*	language		*/
@@ -2038,7 +2038,7 @@ html_tag_prot_name_:
 	}
 	;
 %%
-int parse_html_stream(http_data_t *priv, const char *buf, size_t buf_len, int last_frag)
+int parse_html_stream(html_data_t *priv, const char *buf, size_t buf_len, int last_frag)
 {
 	html_pstate *parser = (html_pstate*)priv->parser.parser;
 	yyscan_t lexier = (yyscan_t)priv->parser.lexier;
@@ -2051,7 +2051,7 @@ int parse_html_stream(http_data_t *priv, const char *buf, size_t buf_len, int la
 	input = html_scan_stream(buf, buf_len, priv);
 	if(!input)
 	{
-		http_debug(debug_html_parser, "create html stream buffer failed\n");
+		html_debug(debug_html_parser, "create html stream buffer failed\n");
 		return 1;
 	}
 
@@ -2072,11 +2072,30 @@ int parse_html_stream(http_data_t *priv, const char *buf, size_t buf_len, int la
 
 	if(parser_ret != YYPUSH_MORE && parser_ret != 0)
 	{
-		http_debug(debug_html_parser, "find error while parsing html stream\n");
+		html_debug(debug_html_parser, "find error while parsing html stream\n");
 		return 2;
 	}
 	return 0;
 }
 
+void html_register(html_decoder_t *decoder)
+{
+	assert(decoder!=NULL);
+	assert(decoder->engine!=NULL);
+
+	engine_t engine = decoder->engine;
+	int index = 0;
+	for(index=0; index<YYNNTS; index++)
+	{
+		const char *name = yytname[YYNTOKENS + index];
+		if(!name || name[0]=='$' || name[0]=='@')
+			continue;
+		yytid[YYNTOKENS + index] = ey_engine_find_event(engine, name);
+		if(yytid[YYNTOKENS + index] >= 0)
+			html_debug(debug_html_parser, "event id of %s is %d\n", name, yytid[YYNTOKENS + index]);
+		else
+			html_debug(debug_html_parser, "failed to register event %s\n", name);
+	}
+}
 #undef this_priv
 #undef this_decoder
