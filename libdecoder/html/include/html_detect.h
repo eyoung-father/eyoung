@@ -9,4 +9,7 @@ typedef int (*xss_preprocess_fn)(int argc, html_string_t *argv, html_string_t **
 extern xss_work_t xss_traning(const char *template, xss_preprocess_fn fn, int argc, html_string_t *argv);
 extern int xss_check(xss_work_t work, int argc, html_string_t *argv);
 extern void xss_untraining(xss_work_t work);
+
+extern int xss_module_init(void *arg);
+extern int xss_module_finit(void *arg);
 #endif
