@@ -1,7 +1,6 @@
 #include <string.h>
-#include "queue.h"
 #include "html.h"
-#include "html_mem.h"
+#include "html_private.h"
 #include "html_parser.h"
 #include "html_lex.h"
 
@@ -132,7 +131,7 @@ void html_free_prot_list(html_decoder_t *decoder, html_node_prot_list_t *prot_li
 	}
 
 	html_node_prot_t *prot=NULL, *tmp=NULL;
-	TAILQ_FOREACH(prot, prot_list, next, tmp)
+	TAILQ_FOREACH_SAFE(prot, prot_list, next, tmp)
 		html_free_prot(prot);
 	TAILQ_INIT(prot_list);
 }

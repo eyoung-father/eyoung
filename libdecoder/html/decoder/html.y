@@ -401,7 +401,7 @@
 %union
 {
 	html_string_t string;
-	enum htmltokentype id;
+	enum html_tokentype id;
 	struct html_node *node;
 	struct html_node_prot *prot;
 	html_node_prot_list_t prot_list;
@@ -423,6 +423,31 @@
 %type <prot_list>		html_tag_prot_event_list_ 
 %type <node_list>		html_doc 
 
+%destructor
+{
+	html_free_string(this_decoder, &$$);
+}<string>
+
+%destructor
+{
+	html_free_node(this_decoder, $$);
+}<node>
+
+%destructor
+{
+	html_free_prot(this_decoder, $$);
+}<prot>
+
+%destructor
+{
+	html_free_prot_list(this_decoder, &$$);
+}<prot_list>
+
+%destructor
+{
+	html_free_node_list(this_decoder, &$$);
+}<node_list>
+
 %debug
 %verbose
 %defines "html_parser.h"
@@ -438,21 +463,21 @@ html_init:
 	html_doc
 	{
 		NOCOPY_BREAK;
-		STAILQ_CONCAT(&this_priv->html_root, &$1);
+		TAILQ_CONCAT(&this_priv->html_root, &$1);
 	}
 	;
 
 html_doc:
 	empty
 	{
-		STAILQ_INIT(&$$);
+		TAILQ_INIT(&$$);
 	}
 	| html_doc html_tag
 	{
 		NOCOPY_BREAK;
 		
 		$$ = $1;
-		STAILQ_INSERT_TAIL(&$$, $2, sib);
+		TAILQ_INSERT_TAIL(&$$, $2, sib);
 	}
 	| html_doc html_doc_text
 	{
@@ -470,7 +495,7 @@ html_doc:
 		node->text = $2;
 
 		$$ = $1;
-		STAILQ_INSERT_TAIL(&$$, node, sib);
+		TAILQ_INSERT_TAIL(&$$, node, sib);
 	}
 	;
 
@@ -479,11 +504,13 @@ html_doc_text:
 	{
 		NOCOPY_BREAK;
 
-		$$ = (char*)html_malloc($1.len + 1);
-		if(!$$)
+		if(!html_alloc_string(this_decoder, $1.buf, $1.len, &$$))
+		{
+			html_debug(debug_html_parser, "failed to duplicate doc text value\n");
+			$1.buf = NULL;
+			$1.len = 0;
 			YYABORT;
-		memcpy($$, $1.buf, $1.len);
-		$$[$1.len] = '\0';
+		}
 	}
 	;
 
@@ -497,7 +524,7 @@ html_tag:
 	{
 		NOCOPY_BREAK;
 
-		STAILQ_CONCAT(&$1->child, &$2);
+		TAILQ_CONCAT(&$1->child, &$2);
 		$$ = $1;
 	}
 	;
@@ -515,7 +542,7 @@ html_tag_begin_:
 		}
 
 		node->type = $2;
-		STAILQ_CONCAT(&node->prot, &$3);
+		TAILQ_CONCAT(&node->prot, &$3);
 		$$ = node;
 	}
 	;
@@ -550,14 +577,14 @@ html_tag_finish_end_:
 html_tag_prot_event_list_:
 	empty
 	{
-		STAILQ_INIT(&$$);
+		TAILQ_INIT(&$$);
 	}
 	| html_tag_prot_event_list_ html_tag_prot_event_
 	{
 		NOCOPY_BREAK;
 
 		$$ = $1;
-		STAILQ_INSERT_TAIL(&$$, $2, next);
+		TAILQ_INSERT_TAIL(&$$, $2, next);
 	}
 	;
 
@@ -609,11 +636,13 @@ html_tag_prot_value_:
 	{
 		NOCOPY_BREAK;
 
-		$$ = (char*)html_malloc($1.len + 1);
-		if(!$$)
+		if(!html_alloc_string(this_decoder, $1.buf, $1.len, &$$))
+		{
+			html_debug(debug_html_parser, "failed to duplicate prot value\n");
+			$1.buf = NULL;
+			$1.len = 0;
 			YYABORT;
-		memcpy($$, $1.buf, $1.len);
-		$$[$1.len] = '\0';
+		}
 	}
 	;
 
@@ -653,12 +682,14 @@ html_tag_event_value_:
 	SYM_TEXT
 	{
 		NOCOPY_BREAK;
-
-		$$ = (char*)html_malloc($1.len + 1);
-		if(!$$)
+		
+		if(!html_alloc_string(this_decoder, $1.buf, $1.len, &$$))
+		{
+			html_debug(debug_html_parser, "failed to duplicate event value\n");
+			$1.buf = NULL;
+			$1.len = 0;
 			YYABORT;
-		memcpy($$, $1.buf, $1.len);
-		$$[$1.len] = '\0';
+		}
 	}
 	;
 

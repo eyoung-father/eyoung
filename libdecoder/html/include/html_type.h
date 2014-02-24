@@ -3,6 +3,7 @@
 
 #include "ey_queue.h"
 #include "ey_string.h"
+#include "html_decode.h"
 
 typedef ey_string_t html_string_t;
 /*

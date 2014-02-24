@@ -1,8 +1,8 @@
 #ifndef HTML_H
 #define HTML_H
 
-#include "http_mem.h"
-#include "http_util.h"
-#include "http_type.h"
-#include "http_decode.h"
+#include "html_mem.h"
+#include "html_util.h"
+#include "html_type.h"
+#include "html_decode.h"
 #endif
