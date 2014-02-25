@@ -103,6 +103,12 @@ void html_decoder_finit(html_handler_t handler)
 int html_element_detect(html_data_t *html_data, const char *event_name, int event_id, void *event, 
 	char *cluster_buffer, size_t cluster_buffer_len)
 {
+	if(!html_data->engine_work)
+	{
+		ey_html_debug(debug_html_detect, "engine work is not created, skip scan\n");
+		return 0;
+	}
+
 	if(!event_name)
 	{
 		ey_html_debug(debug_html_detect, "event name is null\n");
