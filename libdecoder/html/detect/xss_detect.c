@@ -17,13 +17,13 @@ typedef struct xss_data
 static html_handler_t xss_handler;
 static ey_slab_t xss_data_slab;
 
-static int xss_parse(const char *template, xss_preprocess_fn fn, int argc, html_string_t *argv)
+static int xss_parse(const char *template, xss_preprocess_fn fn, int argv_cnt, int argv_size, html_string_t *argv)
 {
 	/*TODO:*/
 	return 1;
 }
 
-xss_work_t xss_traning(const char *template, xss_preprocess_fn fn, int argc, html_string_t *argv)
+xss_work_t xss_traning(const char *template, xss_preprocess_fn fn, int argv_cnt, int argv_size, html_string_t *argv)
 {
 	if(!xss_handler || !xss_data_slab)
 	{
@@ -31,7 +31,7 @@ xss_work_t xss_traning(const char *template, xss_preprocess_fn fn, int argc, htm
 		return NULL;
 	}
 	
-	if(!template || !template[0] || argc<=0 || !argv)
+	if(!template || !template[0] || argv_cnt<=0 || argv_size<=0 || argv_cnt>argv_size || !argv)
 	{
 		ey_html_debug(1, "xss module is not called correctly, bad parameter\n");
 		return NULL;
@@ -56,7 +56,7 @@ xss_work_t xss_traning(const char *template, xss_preprocess_fn fn, int argc, htm
 	}
 	strcpy(copy_temp, template);
 
-	score = xss_parse(template, fn, argc, argv);
+	score = xss_parse(template, fn, argv_cnt, argv_size, argv);
 	if(score <= 0)
 	{
 		ey_html_debug(1, "traning template failed\n");
@@ -76,9 +76,9 @@ failed:
 	return NULL;
 }
 
-int xss_check(xss_work_t work, int argc, html_string_t *argv)
+int xss_check(xss_work_t work, int argv_cnt, int argv_size, html_string_t *argv)
 {
-	if(!work || argc<=0 || !argv)
+	if(!work || argv_cnt<=0 || argv_size<=0 || argv_cnt>argv_size || !argv)
 	{
 		ey_html_debug(debug_html_detect, "bad paramter in xss_check\n");
 		return 0;
@@ -91,7 +91,7 @@ int xss_check(xss_work_t work, int argc, html_string_t *argv)
 		return 0;
 	}
 
-	int score = xss_parse(xss_data->template, xss_data->preprocessor, argc, argv);
+	int score = xss_parse(xss_data->template, xss_data->preprocessor, argv_cnt, argv_size, argv);
 	if(score != xss_data->score)
 	{
 		ey_html_debug(debug_html_detect, "find xss!\n");
