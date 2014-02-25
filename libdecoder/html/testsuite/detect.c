@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <stdarg.h>
 #include "html_detect.h"
+#include "html_util.h"
 
 #define PARAM_SIZE 512
 #define TEST_TEMPLATE "<p class=\"$1\">$0</p>"
@@ -31,6 +32,11 @@ int main(int argc, char *argv[])
 	xss_work_t work = NULL;
 	char p1[PARAM_SIZE], p2[PARAM_SIZE];
 	html_string_t params[2] = {{p1,0}, {p2,0}};
+
+	debug_html_lexer = 0;
+	debug_html_parser = 0;
+	debug_html_mem = 0;
+	debug_html_detect = 1;
 
 	if(xss_module_init(NULL))
 	{

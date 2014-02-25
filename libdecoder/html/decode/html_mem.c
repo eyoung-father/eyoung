@@ -29,7 +29,7 @@ int html_mem_init(html_decoder_t *decoder)
 	}
 
 	decoder->html_value_fslab = html_fzinit("html value", DEFAULT_VALUE_LENGTH);
-	if(decoder->html_value_fslab)
+	if(!decoder->html_value_fslab)
 	{
 		ey_html_debug(debug_html_mem, "init html value fslab failed\n");
 		return -1;

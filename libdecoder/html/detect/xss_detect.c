@@ -129,6 +129,7 @@ static int do_parse(xss_data_t *xss_data, int argv_cnt, int argv_size, html_stri
 		ey_html_debug(debug_html_detect, "cannot prepare stmt\n");
 		return -1;
 	}
+	ey_html_debug(debug_html_detect, "[STMT]: %s\n", stmt);
 	
 	html_work_t work = html_work_create(xss_handler, 1);
 	if(!work)
