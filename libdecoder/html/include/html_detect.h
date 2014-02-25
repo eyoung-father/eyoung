@@ -6,7 +6,7 @@
 typedef void *xss_work_t;
 typedef int (*xss_preprocess_fn)(int argv_cnt, int argv_size, html_string_t *argv);
 
-extern xss_work_t xss_traning(const char *template, xss_preprocess_fn fn, int argv_cnt, int argv_size, html_string_t *argv);
+extern xss_work_t xss_training(const char *template, xss_preprocess_fn fn, int argv_cnt, int argv_size, html_string_t *argv);
 extern int xss_check(xss_work_t work, int argv_cnt, int argv_size, html_string_t *argv);
 extern void xss_untraining(xss_work_t work);
 

@@ -148,7 +148,7 @@ static int do_parse(xss_data_t *xss_data, int argv_cnt, int argv_size, html_stri
 	return score;
 }
 
-xss_work_t xss_traning(const char *template, xss_preprocess_fn fn, int argv_cnt, int argv_size, html_string_t *argv)
+xss_work_t xss_training(const char *template, xss_preprocess_fn fn, int argv_cnt, int argv_size, html_string_t *argv)
 {
 	if(!xss_handler || !xss_data_slab)
 	{
@@ -186,7 +186,7 @@ xss_work_t xss_traning(const char *template, xss_preprocess_fn fn, int argv_cnt,
 	score = do_parse(ret, argv_cnt, argv_size, argv);
 	if(score <= 0)
 	{
-		ey_html_debug(1, "traning template failed\n");
+		ey_html_debug(1, "training template failed\n");
 		goto failed;
 	}
 
