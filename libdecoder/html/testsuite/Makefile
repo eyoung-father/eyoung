@@ -9,5 +9,5 @@ all:
 	cp ../detect/obj/libhtml_detect.so .
 
 clean:
-	rm -rf html decode detect html.eyc libhtml_detect.so log ./include/*.h
+	rm -rf html decode detect decode.eyc html.eyc libhtml_detect.so log ./include/*.h
 

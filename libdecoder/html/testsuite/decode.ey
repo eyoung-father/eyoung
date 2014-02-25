@@ -1,0 +1,77 @@
+%{
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <assert.h>
+#include <ctype.h>
+#include "html.h"
+
+#define ENTER_FUNC	fprintf(stderr, "\n=============ENTER %s=============\n", __FUNCTION__)
+#define EXIT_FUNC	fprintf(stderr, "=============EXIT %s=============\n\n", __FUNCTION__)
+%}
+
+%output "decode.eyc"
+%file-init "decode_html_init"
+%file-finit "decode_html_finit"
+
+%event "html_init"					"void"
+%event "empty"						"void"
+%event "html_tag_begin_end_"		"void"
+%event "html_tag_finish_"			"void"
+%event "html_tag_finish_end_"		"void"
+
+%event "html_tag_event_name_"		"int"
+%event "html_tag_name_"				"int"
+%event "html_tag_prot_name_"		"int"
+
+%event "html_doc"					"html_node_list_t"
+
+%event "html_tag"					"html_node_t *"
+%event "html_tag_begin_"			"html_node_t *"
+
+%event "html_tag_prot_event_list_"	"html_node_prot_list_t"
+
+%event "html_tag_prot_event_"		"html_node_prot_t *"
+%event "html_tag_event_"			"html_node_prot_t *"
+%event "html_tag_prot_"				"html_node_prot_t *"
+
+%event "html_doc_text"				"html_string_t"
+%event "html_tag_prot_value_"		"html_string_t"
+%event "html_tag_event_value_"		"html_string_t"
+
+%%
+1:html_doc;
+%%
+int decode_html_work_init_user(engine_work_t *work)
+{
+	ENTER_FUNC;
+	fprintf(stderr, ">>>>>>>>>>>>>>>>>%s return 0\n", __FUNCTION__);
+	EXIT_FUNC;
+	return 0;
+}
+
+int decode_html_work_finit_user(engine_work_t *work)
+{
+	ENTER_FUNC;
+	fprintf(stderr, ">>>>>>>>>>>>>>>>>%s return 0\n", __FUNCTION__);
+	EXIT_FUNC;
+	return 0;
+}
+
+int decode_html_finit(engine_t eng)
+{
+	ENTER_FUNC;
+	fprintf(stderr, ">>>>>>>>>>>>>>>>>%s return 0\n", __FUNCTION__);
+	EXIT_FUNC;
+	return 0;
+}
+
+int decode_html_init(engine_t eng)
+{
+	ENTER_FUNC;
+	ey_set_userdefine_work_init(eng, decode_html_work_init_user);
+	ey_set_userdefine_work_finit(eng, decode_html_work_finit_user);
+	fprintf(stderr, ">>>>>>>>>>>>>>>>>%s return 0\n", __FUNCTION__);
+	EXIT_FUNC;
+	return 0;
+}
