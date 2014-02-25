@@ -1,6 +1,6 @@
 TOP_DIR = ../../..
 MODULE_TOP_DIR = .
-BUILD_NAME = libhtml_decode
+BUILD_NAME = libhtml
 SUB_MOD =
 SUB_DIR = 
 BUILD_TYPE = dynlib
