@@ -25,16 +25,19 @@ http_work_t http_work_create(http_handler_t handler, int greedy)
 		return NULL;
 	}
 
-	engine_work_t *engine_work = ey_engine_work_create(engine);
-	if(!engine_work)
-	{
-		http_debug(debug_http_mem, "failed to alloc engine work\n");
-		http_free_priv_data(decoder, priv_data);
-		return NULL;
-	}
-	priv_data->engine_work = engine_work;
 	priv_data->decoder = handler;
-	engine_work->predefined = (void*)priv_data;
+	if(engine)
+	{
+		engine_work_t *engine_work = ey_engine_work_create(engine);
+		if(!engine_work)
+		{
+			http_debug(debug_http_mem, "failed to alloc engine work\n");
+			http_free_priv_data(decoder, priv_data);
+			return NULL;
+		}
+		priv_data->engine_work = engine_work;
+		engine_work->predefined = (void*)priv_data;
+	}
 	
 	return priv_data;
 }
@@ -76,10 +79,13 @@ http_handler_t http_decoder_init(engine_t engine)
 		http_debug(debug_http_mem, "failed to init http decoder mem\n");
 		goto failed;
 	}
-
-	decoder->engine = engine;
-	http_server_register(decoder);
-	http_client_register(decoder);
+	
+	if(engine)
+	{
+		decoder->engine = engine;
+		http_server_register(decoder);
+		http_client_register(decoder);
+	}
 	return (http_handler_t)decoder;
 
 failed:
@@ -101,6 +107,12 @@ void http_decoder_finit(http_handler_t handler)
 int http_element_detect(http_data_t *http_data, const char *event_name, int event_id, void *event, 
 	char *cluster_buffer, size_t cluster_buffer_len)
 {
+	if(!http_data->engine_work)
+	{
+		http_debug(debug_http_detect, "engine work is not created, skip scan\n");
+		return 0;
+	}
+
 	if(!event_name)
 	{
 		http_debug(debug_http_detect, "event name is null\n");
