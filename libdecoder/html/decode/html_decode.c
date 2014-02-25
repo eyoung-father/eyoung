@@ -145,3 +145,10 @@ int html_element_detect(html_data_t *html_data, const char *event_name, int even
 		return 0;
 	return -1;
 }
+
+int html_get_score(html_work_t work)
+{
+	assert(work != NULL);
+	html_data_t *priv_data = (html_data_t*)work;
+	return priv_data->reduced_count;
+}

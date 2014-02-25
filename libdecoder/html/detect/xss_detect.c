@@ -17,10 +17,50 @@ typedef struct xss_data
 static html_handler_t xss_handler;
 static ey_slab_t xss_data_slab;
 
-static int xss_parse(const char *template, xss_preprocess_fn fn, int argv_cnt, int argv_size, html_string_t *argv)
+static int prepare_template(char *template, int argc, html_string_t *argv, char *out, int out_size)
 {
-	/*TODO:*/
-	return 1;
+	return 0;
+}
+
+static int xss_parse(xss_data_t *xss_data, int argv_cnt, int argv_size, html_string_t *argv)
+{
+	#define MAX_HTML_LENGTH 8192
+	char stmt[MAX_HTML_LENGTH];
+	int stmt_len = 0;
+	int new_argv_cnt = argv_cnt;
+	int score = 0;
+
+	if(xss_data->preprocessor)
+		new_argv_cnt = xss_data->preprocessor(argv_cnt, argv_size, argv);
+
+	if(new_argv_cnt <= 0)
+	{
+		ey_html_debug(debug_html_detect, "cannot finish pre-processing\n");
+		return -1;
+	}
+
+	if((stmt_len = prepare_template(xss_data->template, new_argv_cnt, argv, stmt, MAX_HTML_LENGTH)) <= 0)
+	{
+		ey_html_debug(debug_html_detect, "cannot prepare stmt\n");
+		return -1;
+	}
+	
+	html_work_t work = html_work_create(xss_handler, 1);
+	if(!work)
+	{
+		ey_html_debug(debug_html_detect, "create html parser failed\n");
+		return -1;
+	}
+
+	if(html_decode_data(work, stmt, stmt_len, 1))
+	{
+		ey_html_debug(debug_html_detect, "parse stmt failed, find xss attack!\n");
+		return 0;
+	}
+	
+	score = html_get_score(work);
+	html_work_destroy(work);
+	return score;
 }
 
 xss_work_t xss_traning(const char *template, xss_preprocess_fn fn, int argv_cnt, int argv_size, html_string_t *argv)
@@ -56,16 +96,16 @@ xss_work_t xss_traning(const char *template, xss_preprocess_fn fn, int argv_cnt,
 	}
 	strcpy(copy_temp, template);
 
-	score = xss_parse(template, fn, argv_cnt, argv_size, argv);
+	ret->template = copy_temp;
+	ret->preprocessor = fn;
+	score = xss_parse(ret, argv_cnt, argv_size, argv);
 	if(score <= 0)
 	{
 		ey_html_debug(1, "traning template failed\n");
 		goto failed;
 	}
 
-	ret->template = copy_temp;
 	ret->score = score;
-	ret->preprocessor = fn;
 	return ret;
 
 failed:
@@ -91,7 +131,7 @@ int xss_check(xss_work_t work, int argv_cnt, int argv_size, html_string_t *argv)
 		return 0;
 	}
 
-	int score = xss_parse(xss_data->template, xss_data->preprocessor, argv_cnt, argv_size, argv);
+	int score = xss_parse(xss_data, argv_cnt, argv_size, argv);
 	if(score != xss_data->score)
 	{
 		ey_html_debug(debug_html_detect, "find xss!\n");
