@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <ctype.h>
 #include "html.h"
 #include "ey_export.h"
 #include "ey_memory.h"
@@ -19,10 +20,94 @@ static ey_slab_t xss_data_slab;
 
 static int prepare_template(char *template, int argc, html_string_t *argv, char *out, int out_size)
 {
-	return 0;
+	char *last_copy_pos = template;
+	char *matched = template;
+	char *wt = out;
+	char *tail = out + out_size;
+	int index = -1;
+	int copy_len = 0;
+
+	while((matched = strchr(matched, '$')) != NULL)
+	{
+		index = -1;
+		copy_len = 0;
+		if(isdigit(matched[1]))
+			index = matched[1] - '0';
+		if(index==-1)
+		{
+			matched++;
+			copy_len = matched - last_copy_pos;
+			if(wt + copy_len >= tail)
+			{
+				ey_html_debug(debug_html_detect, "parameter is too long\n");
+				return -1;
+			}
+			memcpy(wt, last_copy_pos, copy_len);
+			last_copy_pos = matched;
+			wt += copy_len;
+			continue;
+		}
+		else
+		{
+			if(index >= argc)
+			{
+				ey_html_debug(debug_html_detect, "index %d beyond paramaters size\n");
+				return -1;
+			}
+			
+			/*copy template part*/
+			copy_len = matched - last_copy_pos;
+			if(wt + copy_len >= tail)
+			{
+				ey_html_debug(debug_html_detect, "parameter is too long\n");
+				return -1;
+			}
+
+			if(copy_len)
+			{
+				memcpy(wt, last_copy_pos, copy_len);
+				wt += copy_len;
+			}
+			matched += 2;
+			last_copy_pos = matched;
+
+			/*copy parameter*/
+			copy_len = argv[index].len;
+			if(wt + copy_len >= tail)
+			{
+				ey_html_debug(debug_html_detect, "parameter %d is too long\n", index);
+				return -1;
+			}
+
+			if(copy_len)
+			{
+				memcpy(wt, argv[index].buf, copy_len);
+				wt += copy_len;
+			}
+
+			continue;
+		}
+	}
+
+	copy_len = strlen(last_copy_pos);
+	if(wt + copy_len >= tail)
+	{
+		ey_html_debug(debug_html_detect, "tail is too long\n");
+		return -1;
+	}
+	
+	if(copy_len)
+	{
+		memcpy(wt, last_copy_pos, copy_len);
+		wt += copy_len;
+	}
+
+	assert(wt <= tail);
+	*wt = '\0';
+	return wt-out;
 }
 
-static int xss_parse(xss_data_t *xss_data, int argv_cnt, int argv_size, html_string_t *argv)
+static int do_parse(xss_data_t *xss_data, int argv_cnt, int argv_size, html_string_t *argv)
 {
 	#define MAX_HTML_LENGTH 8192
 	char stmt[MAX_HTML_LENGTH];
@@ -98,7 +183,7 @@ xss_work_t xss_traning(const char *template, xss_preprocess_fn fn, int argv_cnt,
 
 	ret->template = copy_temp;
 	ret->preprocessor = fn;
-	score = xss_parse(ret, argv_cnt, argv_size, argv);
+	score = do_parse(ret, argv_cnt, argv_size, argv);
 	if(score <= 0)
 	{
 		ey_html_debug(1, "traning template failed\n");
@@ -131,7 +216,7 @@ int xss_check(xss_work_t work, int argv_cnt, int argv_size, html_string_t *argv)
 		return 0;
 	}
 
-	int score = xss_parse(xss_data, argv_cnt, argv_size, argv);
+	int score = do_parse(xss_data, argv_cnt, argv_size, argv);
 	if(score != xss_data->score)
 	{
 		ey_html_debug(debug_html_detect, "find xss!\n");
