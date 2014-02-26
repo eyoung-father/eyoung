@@ -68,6 +68,7 @@ int base64_stream_decode(char* dst, char* src, int src_len, int* left)
 		else if (BEND == ch)
 		{
 			*left = src_len - i - 1;
+			*p = '\0';
 			return p - dst;
 		}
 		effect_len ++;
