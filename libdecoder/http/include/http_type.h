@@ -759,11 +759,14 @@ typedef struct http_parser
 	char greedy;
 	char chunked;
 	size_t length;
+	size_t body_size;
 	http_body_content_encoding_t content_encoding;
 	http_body_content_maintype_t content_maintype;
 	http_body_content_subtype_t content_subtype;
 	http_body_content_charset_t content_charset;
 	http_body_content_language_t content_language;
+
+	void *unzip_handle;
 }http_parser_t;
 
 /*

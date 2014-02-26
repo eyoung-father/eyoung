@@ -5,6 +5,7 @@
 #include "http.h"
 #include "http_private.h"
 #include "http_server_lex.h"
+#include "ey_zlib.h"
 
 #ifdef YY_REDUCTION_CALLBACK
 #undef YY_REDUCTION_CALLBACK
@@ -100,6 +101,7 @@ extern int http_server_body_lex(HTTP_SERVER_STYPE *val, yyscan_t scanner);
 	http_chunk_body_list_t chunk_list;
 	http_chunk_body_t chunk_body;
 	http_chunk_body_header_t chunk_header;
+	http_body_info_t body_info;
 }
 
 %type <response>		response
@@ -119,6 +121,7 @@ extern int http_server_body_lex(HTTP_SERVER_STYPE *val, yyscan_t scanner);
 						TOKEN_SERVER_FIRST_CODE
 %type <string>			response_line_message
 						response_header_value
+						response_body_part
 						TOKEN_SERVER_FIRST_VALUE
 						TOKEN_SERVER_HEADER_VALUE
 						TOKEN_SERVER_BODY_PART
@@ -1043,65 +1046,139 @@ response_body:
 	{
 		$$ = NULL;
 	}
-	| response_normal_body 
+	| 
 	{
+		http_data_t *data = (http_data_t *)priv_data;
+		http_parser_t *parser = &data->response_parser;
+
+		parser->body_size = 0;
+		$<body_info>$.content_type.maintype = parser->content_maintype;
+		$<body_info>$.content_type.subtype = parser->content_subtype;
+		$<body_info>$.content_encoding = parser->content_encoding;
+		$<body_info>$.content_language = parser->content_language;
+		$<body_info>$.content_charset = parser->content_charset;
+		$<body_info>$.transfer_encoding = HTTP_BODY_TRANSFER_ENCODING_UNKOWN;
+
+		if(parser->unzip_handle)
+		{
+			ey_zlib_destroy((ey_zlib_t)parser->unzip_handle);
+			parser->unzip_handle = NULL;
+		}
+
+		if(parser->content_encoding==HTTP_BODY_CONTENT_ENCODING_GZIP ||
+		   parser->content_encoding==HTTP_BODY_CONTENT_ENCODING_DEFLATE)
+		{
+			http_debug(debug_http_server_parser, "will create unzip entry\n");
+			ey_zlib_format_t fmt = EY_ZLIB_FORMAT_GZIP_UNPACK;
+			if(parser->content_encoding==HTTP_BODY_CONTENT_ENCODING_DEFLATE)
+				fmt = EY_ZLIB_FORMAT_DEFLATE_UNPACK;
+			parser->unzip_handle = ey_zlib_create(NULL, fmt, priv_data);
+			if(!parser->unzip_handle)
+			{
+				http_debug(debug_http_server_parser, "create unzip entry failed\n");
+				YYABORT;
+			}
+		}
+	}
+	response_normal_body 
+	{
+		http_data_t *data = (http_data_t *)priv_data;
+		http_parser_t *parser = &data->response_parser;
 		http_body_t *ret = http_server_alloc_body(priv_decoder);
 		if(!ret)
 		{
 			http_debug(debug_http_server_parser, "failed to alloc http normal body\n");
 			YYABORT;
 		}
-		STAILQ_CONCAT(&ret->normal_body, &$1);
+
+		$<body_info>1.body_size = parser->body_size;
+		ret->info = $<body_info>1;
+		if(parser->unzip_handle)
+		{
+			ey_zlib_destroy((ey_zlib_t)parser->unzip_handle);
+			parser->unzip_handle = NULL;
+		}
+
+		STAILQ_CONCAT(&ret->normal_body, &$2);
 		$$ = ret;
 	}
-	| response_chunk_body
+	| 
 	{
+		http_data_t *data = (http_data_t *)priv_data;
+		http_parser_t *parser = &data->response_parser;
+
+		parser->body_size = 0;
+		$<body_info>$.content_type.maintype = parser->content_maintype;
+		$<body_info>$.content_type.subtype = parser->content_subtype;
+		$<body_info>$.content_encoding = parser->content_encoding;
+		$<body_info>$.content_language = parser->content_language;
+		$<body_info>$.content_charset = parser->content_charset;
+		$<body_info>$.transfer_encoding = HTTP_BODY_TRANSFER_ENCODING_CHUNKED;
+
+		if(parser->unzip_handle)
+		{
+			ey_zlib_destroy((ey_zlib_t)parser->unzip_handle);
+			parser->unzip_handle = NULL;
+		}
+
+		if(parser->content_encoding==HTTP_BODY_CONTENT_ENCODING_GZIP ||
+		   parser->content_encoding==HTTP_BODY_CONTENT_ENCODING_DEFLATE)
+		{
+			http_debug(debug_http_server_parser, "will create unzip entry\n");
+			ey_zlib_format_t fmt = EY_ZLIB_FORMAT_GZIP_UNPACK;
+			if(parser->content_encoding==HTTP_BODY_CONTENT_ENCODING_DEFLATE)
+				fmt = EY_ZLIB_FORMAT_DEFLATE_UNPACK;
+			parser->unzip_handle = ey_zlib_create(NULL, fmt, priv_data);
+			if(!parser->unzip_handle)
+			{
+				http_debug(debug_http_server_parser, "create unzip entry failed\n");
+				YYABORT;
+			}
+		}
+	}
+	response_chunk_body
+	{
+		http_data_t *data = (http_data_t *)priv_data;
+		http_parser_t *parser = &data->response_parser;
 		http_body_t *ret = http_server_alloc_body(priv_decoder);
 		if(!ret)
 		{
 			http_debug(debug_http_server_parser, "failed to alloc http chunk body\n");
 			YYABORT;
 		}
-		STAILQ_CONCAT(&ret->chunk_body.chunk_list, &$1.chunk_list);
-		STAILQ_CONCAT(&ret->chunk_body.chunk_tailer, &$1.chunk_tailer);
+
+		$<body_info>1.body_size = parser->body_size;
+		ret->info = $<body_info>1;
+		if(parser->unzip_handle)
+		{
+			ey_zlib_destroy((ey_zlib_t)parser->unzip_handle);
+			parser->unzip_handle = NULL;
+		}
+
+		STAILQ_CONCAT(&ret->chunk_body.chunk_list, &$2.chunk_list);
+		STAILQ_CONCAT(&ret->chunk_body.chunk_tailer, &$2.chunk_tailer);
 		$$ = ret;
 	}
 	;
 
 response_normal_body:
-	TOKEN_SERVER_BODY_PART
+	response_body_part
 	{
-		http_string_t dup_string = {NULL, 0};
-		if(!http_server_alloc_string(priv_decoder, $1.buf, $1.len, &dup_string))
-		{
-			http_debug(debug_http_server_parser, "alloc normal body value failed\n");
-			YYABORT;
-		}
-
-		http_string_list_part_t *ret = http_server_alloc_string_list_part(priv_decoder, &dup_string);
+		http_string_list_part_t *ret = http_server_alloc_string_list_part(priv_decoder, &$1);
 		if(!ret)
 		{
 			http_debug(debug_http_server_parser, "failed to alloc normal body data part\n");
-			http_server_free_string(priv_decoder, &dup_string);
 			YYABORT;
 		}
 		STAILQ_INIT(&$$);
 		STAILQ_INSERT_TAIL(&$$, ret, next);
 	}
-	| response_normal_body TOKEN_SERVER_BODY_PART
+	| response_normal_body response_body_part
 	{
-		http_string_t dup_string = {NULL, 0};
-		if(!http_server_alloc_string(priv_decoder, $2.buf, $2.len, &dup_string))
-		{
-			http_debug(debug_http_server_parser, "alloc normal body value failed\n");
-			YYABORT;
-		}
-
-		http_string_list_part_t *ret = http_server_alloc_string_list_part(priv_decoder, &dup_string);
+		http_string_list_part_t *ret = http_server_alloc_string_list_part(priv_decoder, &$2);
 		if(!ret)
 		{
 			http_debug(debug_http_server_parser, "failed to alloc normal body data part\n");
-			http_server_free_string(priv_decoder, &dup_string);
 			YYABORT;
 		}
 		$$ = $1;
@@ -1165,20 +1242,12 @@ response_chunk_data:
 	{
 		STAILQ_INIT(&$$);
 	}
-	| response_chunk_data TOKEN_SERVER_BODY_PART
+	| response_chunk_data response_body_part
 	{
-		http_string_t dup_string = {NULL, 0};
-		if(!http_server_alloc_string(priv_decoder, $2.buf, $2.len, &dup_string))
-		{
-			http_debug(debug_http_server_parser, "alloc chunk body data failed\n");
-			YYABORT;
-		}
-
-		http_string_list_part_t *ret = http_server_alloc_string_list_part(priv_decoder, &dup_string);
+		http_string_list_part_t *ret = http_server_alloc_string_list_part(priv_decoder, &$2);
 		if(!ret)
 		{
 			http_debug(debug_http_server_parser, "failed to alloc chunk data part\n");
-			http_server_free_string(priv_decoder, &dup_string);
 			YYABORT;
 		}
 		$$ = $1;
@@ -1209,6 +1278,19 @@ response_chunk_tailer_list:
 		}
 		$$ = $1;
 		STAILQ_INSERT_TAIL(&$$, ret, next);
+	}
+	;
+
+response_body_part:
+	TOKEN_SERVER_BODY_PART
+	{
+		http_string_t dup_string = {NULL, 0};
+		if(!http_server_alloc_string(priv_decoder, $1.buf, $1.len, &dup_string))
+		{
+			http_debug(debug_http_server_parser, "alloc normal body value failed\n");
+			YYABORT;
+		}
+		$$ = dup_string;
 	}
 	;
 %%

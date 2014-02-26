@@ -8,6 +8,7 @@
 #include "http_server_parser.h"
 #include "http_client_lex.h"
 #include "http_server_lex.h"
+#include "ey_zlib.h"
 
 extern int http_transaction_pair_id;
 
@@ -240,6 +241,8 @@ void http_free_priv_data(http_decoder_t *decoder, http_data_t *data)
 		http_client_lex_destroy(data->request_parser.lexier);
 	if(data->request_parser.saved)
 		http_free(data->request_parser.saved);
+	if(data->request_parser.unzip_handle)
+		ey_zlib_destroy((ey_zlib_t)data->request_parser.unzip_handle);
 	http_client_free_request_list(decoder, &data->request_list);
 
 	/*free server*/
@@ -249,6 +252,8 @@ void http_free_priv_data(http_decoder_t *decoder, http_data_t *data)
 		http_server_lex_destroy(data->response_parser.lexier);
 	if(data->response_parser.saved)
 		http_free(data->response_parser.saved);
+	if(data->response_parser.unzip_handle)
+		ey_zlib_destroy((ey_zlib_t)data->response_parser.unzip_handle);
 	http_server_free_response_list(decoder, &data->response_list);
 
 	http_free_transaction_list(decoder, &data->transaction_list);
