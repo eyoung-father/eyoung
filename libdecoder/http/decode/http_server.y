@@ -1305,12 +1305,28 @@ response_chunk_tailer_list:
 response_body_part:
 	TOKEN_SERVER_BODY_PART
 	{
+		http_data_t *data = (http_data_t *)priv_data;
+		http_parser_t *parser = &data->response_parser;
 		http_string_t dup_string = {NULL, 0};
-		if(!http_server_alloc_string(priv_decoder, $1.buf, $1.len, &dup_string))
+
+		if(!parser->unzip_handle)
 		{
-			http_debug(debug_http_server_parser, "alloc normal body value failed\n");
-			YYABORT;
+			if(!http_server_alloc_string(priv_decoder, $1.buf, $1.len, &dup_string))
+			{
+				http_debug(debug_http_server_parser, "failed to duplicate body part value\n");
+				YYABORT;
+			}
 		}
+		else
+		{
+			if(http_server_unzip_string(data, &$1, &dup_string))
+			{
+				http_debug(debug_http_server_parser, "failed to unzip body part value\n");
+				YYABORT;
+			}
+		}
+
+		parser->body_size += dup_string.len;
 		$$ = dup_string;
 	}
 	;

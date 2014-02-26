@@ -599,3 +599,9 @@ void http_parse_content_type(const char *value, http_body_content_maintype_t *ma
 	*charset = HTTP_BODY_CONTENT_CHARSET_UNKOWN;
 	return;
 }
+
+int http_unzip_string(http_data_t *priv, http_string_t *zipped, http_string_t *unzipped, int from_client)
+{
+	/*TODO*/
+	return 0;
+}

@@ -1715,13 +1715,28 @@ request_chunk_tailer_list:
 request_body_part:
 	TOKEN_CLIENT_BODY_PART
 	{
+		http_data_t *data = (http_data_t *)priv_data;
+		http_parser_t *parser = &data->request_parser;
 		http_string_t dup_part = {NULL, 0};
-		if(!http_client_alloc_string(priv_decoder, $1.buf, $1.len, &dup_part))
+		
+		if(!parser->unzip_handle)
 		{
-			http_debug(debug_http_client_parser, "failed to duplicate normal body part value\n");
-			YYABORT;
+			if(!http_client_alloc_string(priv_decoder, $1.buf, $1.len, &dup_part))
+			{
+				http_debug(debug_http_client_parser, "failed to duplicate body part value\n");
+				YYABORT;
+			}
 		}
-
+		else
+		{
+			if(http_client_unzip_string(data, &$1, &dup_part))
+			{
+				http_debug(debug_http_client_parser, "failed to unzip body part value\n");
+				YYABORT;
+			}
+		}
+		
+		parser->body_size += dup_part.len;
 		$$ = dup_part;
 	}
 	;

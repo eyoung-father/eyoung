@@ -166,6 +166,9 @@ extern int http_lexer_is_chunked_body(void *scanner, int from_client);
 #define http_client_lexer_is_chunk_body(lex) http_lexer_is_chunked_body(lex,1)
 #define http_server_lexer_is_chunk_body(lex) http_lexer_is_chunked_body(lex,0)
 
+extern int http_unzip_string(http_data_t *priv, http_string_t *zipped, http_string_t *unzipped, int from_client);
+#define http_client_unzip_string(priv,z,uz) http_unzip_string(priv,z,uz,1)
+#define http_server_unzip_string(priv,z,uz) http_unzip_string(priv,z,uz,0)
 /*
  * FOR REQUEST
  * */
