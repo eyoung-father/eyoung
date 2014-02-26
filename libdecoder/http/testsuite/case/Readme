@@ -10,6 +10,12 @@ req-5.msg:
 	http CHUNKED request
 req-6.msg:
 	http CHUNKED request with chunk tailer
+req-7.msg:
+	http content-encoding header parser
+req-8.msg:
+	http text/html content-type header parser
+req-9.msg:
+	http text/plain content-type header parser
 
 res-1.msg:
 	simple http get response

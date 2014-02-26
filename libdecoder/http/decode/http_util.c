@@ -488,13 +488,13 @@ http_body_content_encoding_t http_parse_content_encoding(const char *value)
 	if(!value)
 		return HTTP_BODY_CONTENT_ENCODING_UNKOWN;
 
-	if(!strncmp(value, "gzip", sizeof("gzip")-1))
+	if(!strncasecmp(value, "gzip", sizeof("gzip")-1))
 		return HTTP_BODY_CONTENT_ENCODING_GZIP;
-	else if(!strncmp(value, "deflate", sizeof("deflate")-1))
+	else if(!strncasecmp(value, "deflate", sizeof("deflate")-1))
 		return HTTP_BODY_CONTENT_ENCODING_DEFLATE;
-	else if(!strncmp(value, "compress", sizeof("compress")-1))
+	else if(!strncasecmp(value, "compress", sizeof("compress")-1))
 		return HTTP_BODY_CONTENT_ENCODING_COMPRESS;
-	else if(!strncmp(value, "identity", sizeof("identity")-1))
+	else if(!strncasecmp(value, "identity", sizeof("identity")-1))
 		return HTTP_BODY_CONTENT_ENCODING_IDENTITY;
 	else
 		return HTTP_BODY_CONTENT_ENCODING_UNKOWN;
@@ -510,8 +510,97 @@ void http_parse_content_type(const char *value, http_body_content_maintype_t *ma
 					http_body_content_subtype_t *sub_type, 
 					http_body_content_charset_t *charset)
 {
-	/*TODO*/
-	*main_type = HTTP_BODY_CONTENT_MAINTYPE_UNKOWN;
-	*sub_type = HTTP_BODY_CONTENT_SUBTYPE_UNKOWN;
+	if(!value)
+		return;
+	
+	/*TODO: RFC1521*/
+	const char *p = value;
+	if(!strncasecmp(p, "TEXT/", sizeof("TEXT/")-1))
+	{
+		*main_type = HTTP_BODY_CONTENT_MAINTYPE_TEXT;
+		p += (sizeof("TEXT/")-1);
+	}
+	else if(!strncasecmp(p, "APPLICATION/", sizeof("APPLICATION/")-1))
+	{
+		*main_type = HTTP_BODY_CONTENT_MAINTYPE_APPLICATION;
+		p += (sizeof("APPLICATION/")-1);
+	}
+	else if(!strncasecmp(p, "MULTIPART/", sizeof("MULTIPART/")-1))
+	{
+		*main_type = HTTP_BODY_CONTENT_MAINTYPE_MULTIPART;
+		p += (sizeof("MULTIPART/")-1);
+	}
+	else if(!strncasecmp(p, "IMAGE/", sizeof("IMAGE/")-1))
+	{
+		*main_type = HTTP_BODY_CONTENT_MAINTYPE_IMAGE;
+		p += (sizeof("IMAGE/")-1);
+	}
+	else if(!strncasecmp(p, "AUDIO/", sizeof("AUDIO/")-1))
+	{
+		*main_type = HTTP_BODY_CONTENT_MAINTYPE_AUDIO;
+		p += (sizeof("AUDIO/")-1);
+	}
+	else if(!strncasecmp(p, "VIDEO/", sizeof("VIDEO/")-1))
+	{
+		*main_type = HTTP_BODY_CONTENT_MAINTYPE_VIDEO;
+		p += (sizeof("VIDEO/")-1);
+	}
+	else if(!strncasecmp(p, "DRAWING/", sizeof("DRAWING/")-1))
+	{
+		*main_type = HTTP_BODY_CONTENT_MAINTYPE_DRAWING;
+		p += (sizeof("DRAWING/")-1);
+	}
+	else if(!strncasecmp(p, "MODEL/", sizeof("MODEL/")-1))
+	{
+		*main_type = HTTP_BODY_CONTENT_MAINTYPE_MODEL;
+		p += (sizeof("MODEL/")-1);
+	}
+	else if(!strncasecmp(p, "MESSAGE/", sizeof("MESSAGE/")-1))
+	{
+		*main_type = HTTP_BODY_CONTENT_MAINTYPE_MESSAGE;
+		p += (sizeof("MESSAGE/")-1);
+	}
+	else
+	{
+		*main_type = HTTP_BODY_CONTENT_MAINTYPE_UNKOWN;
+		*sub_type = HTTP_BODY_CONTENT_SUBTYPE_UNKOWN;
+		*charset = HTTP_BODY_CONTENT_CHARSET_UNKOWN;
+		return;
+	}
+
+
+	if(!strncasecmp(p, "HTML", sizeof("HTML")-1))
+	{
+		*sub_type = HTTP_BODY_CONTENT_SUBTYPE_HTML;
+		p += (sizeof("HTML")-1);
+	}
+	else if(!strncasecmp(p, "FORM-DATA", sizeof("FORM-DATA")-1))
+	{
+		*sub_type = HTTP_BODY_CONTENT_SUBTYPE_FORM_DATA;
+		p += (sizeof("FORM-DATA")-1);
+	}
+	else if(!strncasecmp(p, "CSS", sizeof("CSS")-1))
+	{
+		*sub_type = HTTP_BODY_CONTENT_SUBTYPE_CSS;
+		p += (sizeof("CSS")-1);
+	}
+	else if(!strncasecmp(p, "PLAIN", sizeof("PLAIN")-1))
+	{
+		*sub_type = HTTP_BODY_CONTENT_SUBTYPE_PLAIN;
+		p += (sizeof("PLAIN")-1);
+	}
+	else if(!strncasecmp(p, "x-www-form-urlencoded", sizeof("x-www-form-urlencoded")-1))
+	{
+		*sub_type = HTTP_BODY_CONTENT_SUBTYPE_X_WWW_FORM_URLENCODED;
+		p += (sizeof("x-www-form-urlencoded")-1);
+	}
+	else
+	{
+		*sub_type = HTTP_BODY_CONTENT_SUBTYPE_UNKOWN;
+		*charset = HTTP_BODY_CONTENT_CHARSET_UNKOWN;
+		return;
+	}
+
 	*charset = HTTP_BODY_CONTENT_CHARSET_UNKOWN;
+	return;
 }

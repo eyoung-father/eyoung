@@ -100,8 +100,8 @@ int main(int argc, char *argv[])
 	}
 	debug_http_server_lexer = 0;
 	debug_http_server_parser = 0;
-	debug_http_client_lexer = 0;
-	debug_http_client_parser = 0;
+	debug_http_client_lexer = 1;
+	debug_http_client_parser = 1;
 	debug_http_mem = 0;
 	debug_http_detect = 0;
 	debug_engine_parser = 0;
