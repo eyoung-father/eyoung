@@ -5,15 +5,27 @@
 #include <stdarg.h>
 #include "html_detect.h"
 #include "html_util.h"
+#include "libutil.h"
 
 #define PARAM_SIZE 512
 #define TEST_TEMPLATE "<p class=\"$1\">$0</p>"
-#define TRAINING_DATA "part1-part2"
-#define TEST_DATA "content-dummy\" onload=\"javascript:alert('abc')"
+
+//#define TRAINING_DATA "part1-part2"
+#define TRAINING_DATA "cGFydDEtcGFydDI="
+//#define TEST_DATA "content-dummy\" onload=\"javascript:alert('abc')"
+#define TEST_DATA "Y29udGVudC1kdW1teSIgb25sb2FkPSJqYXZhc2NyaXB0OmFsZXJ0KCdhYmMnKQo="
 
 static int my_preprocessor(int cnt, int size, html_string_t *params)
 {
-	char *ptr = strchr(params[0].buf, '-');
+	char *ptr = NULL;
+	
+	//base64 decode
+	int left = 0;
+	int decoded_len = base64_stream_decode(params[0].buf, params[0].buf, params[0].len, &left);
+	assert(left == 0);
+	params[0].len = decoded_len;
+
+	ptr = strchr(params[0].buf, '-');
 	assert(ptr != NULL);
 
 	*ptr = '\0';
