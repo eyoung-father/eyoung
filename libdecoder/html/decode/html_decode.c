@@ -54,6 +54,42 @@ void html_work_destroy(html_work_t work)
 	}
 }
 
+html_work_t html_work_create2(html_handler_t handler, int greedy, engine_work_t *engine_work)
+{
+	if(!handler || !engine_work)
+	{
+		ey_html_debug(debug_html_mem, "null html decoder handler\n");
+		return NULL;
+	}
+	
+	html_data_t *priv_data = NULL;
+	html_decoder_t *decoder = (html_decoder_t*)handler;
+	assert(decoder->engine != NULL && decoder->engine == engine_work->engine);
+
+	priv_data = html_alloc_priv_data(decoder, greedy, 1);	//create dom
+	if(!priv_data)
+	{
+		ey_html_debug(debug_html_mem, "failed to alloc html private data\n");
+		return NULL;
+	}
+
+	priv_data->decoder = handler;
+	priv_data->engine_work = engine_work;
+	
+	return priv_data;
+}
+
+void html_work_destroy2(html_work_t work)
+{
+	if(work)
+	{
+		html_data_t *priv_data = (html_data_t*)work;
+		html_decoder_t *decoder = (html_decoder_t*)(priv_data->decoder);
+		priv_data->engine_work = NULL;
+		html_free_priv_data(decoder, priv_data);
+	}
+}
+
 int html_decode_data(html_work_t work, const char *data, size_t data_len, int last_frag)
 {
 	assert(work != NULL);
