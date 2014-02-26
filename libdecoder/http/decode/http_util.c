@@ -451,11 +451,6 @@ void http_lexer_init_body_info(void *scanner, int from_client)
 	
 	parser->length = 0;
 	parser->chunked = 0;
-	parser->content_encoding = HTTP_BODY_CONTENT_ENCODING_UNKOWN;
-	parser->content_maintype = HTTP_BODY_CONTENT_MAINTYPE_UNKOWN;
-	parser->content_subtype = HTTP_BODY_CONTENT_SUBTYPE_UNKOWN;
-	parser->content_charset = HTTP_BODY_CONTENT_CHARSET_UNKOWN;
-	parser->content_language = HTTP_BODY_CONTENT_LANGUAGE_UNKOWN;
 }
 
 void http_lexer_set_chunked_body(void *scanner, int from_client)

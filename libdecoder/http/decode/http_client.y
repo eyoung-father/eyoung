@@ -1454,6 +1454,15 @@ request_header_value:
 request_body:
 	request_empty
 	{
+		http_data_t *data = (http_data_t *)priv_data;
+		http_parser_t *parser = &data->request_parser;
+
+		parser->content_encoding = HTTP_BODY_CONTENT_ENCODING_UNKOWN;
+		parser->content_maintype = HTTP_BODY_CONTENT_MAINTYPE_UNKOWN;
+		parser->content_subtype = HTTP_BODY_CONTENT_SUBTYPE_UNKOWN;
+		parser->content_charset = HTTP_BODY_CONTENT_CHARSET_UNKOWN;
+		parser->content_language = HTTP_BODY_CONTENT_LANGUAGE_UNKOWN;
+
 		$$ = NULL;
 	}
 	|
@@ -1508,6 +1517,12 @@ request_body:
 			ey_zlib_destroy((ey_zlib_t)parser->unzip_handle);
 			parser->unzip_handle = NULL;
 		}
+
+		parser->content_encoding = HTTP_BODY_CONTENT_ENCODING_UNKOWN;
+		parser->content_maintype = HTTP_BODY_CONTENT_MAINTYPE_UNKOWN;
+		parser->content_subtype = HTTP_BODY_CONTENT_SUBTYPE_UNKOWN;
+		parser->content_charset = HTTP_BODY_CONTENT_CHARSET_UNKOWN;
+		parser->content_language = HTTP_BODY_CONTENT_LANGUAGE_UNKOWN;
 
 		STAILQ_CONCAT(&ret->normal_body, &$2);
 		$$ = ret;
@@ -1564,6 +1579,12 @@ request_body:
 			ey_zlib_destroy((ey_zlib_t)parser->unzip_handle);
 			parser->unzip_handle = NULL;
 		}
+
+		parser->content_encoding = HTTP_BODY_CONTENT_ENCODING_UNKOWN;
+		parser->content_maintype = HTTP_BODY_CONTENT_MAINTYPE_UNKOWN;
+		parser->content_subtype = HTTP_BODY_CONTENT_SUBTYPE_UNKOWN;
+		parser->content_charset = HTTP_BODY_CONTENT_CHARSET_UNKOWN;
+		parser->content_language = HTTP_BODY_CONTENT_LANGUAGE_UNKOWN;
 
 		STAILQ_CONCAT(&ret->chunk_body.chunk_list, &$2.chunk_list);
 		STAILQ_CONCAT(&ret->chunk_body.chunk_tailer, &$2.chunk_tailer);
