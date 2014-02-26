@@ -10,6 +10,8 @@ extern int ey_file_is_header(const char *filename);
 extern int ey_file_is_library(const char *filename);
 extern int ey_file_is_signature(const char *filename);
 
+extern int base64_stream_decode(char* dst, char* src, int src_len, int* left);
+
 #ifdef RELEASE
 	#define ey_assert(c)
 #else
