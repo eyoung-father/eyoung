@@ -57,6 +57,7 @@ typedef enum http_body_content_maintype
 	HTTP_BODY_CONTENT_MAINTYPE_DRAWING,
 	HTTP_BODY_CONTENT_MAINTYPE_MODEL,
 	HTTP_BODY_CONTENT_MAINTYPE_MESSAGE,
+	HTTP_BODY_CONTENT_MAINTYPE_MULTIPART,
 
 	HTTP_BODY_CONTENT_MAINTYPE_UNKOWN
 }http_body_content_maintype_t;
@@ -81,6 +82,8 @@ static inline const char *http_body_content_maintype_name(http_body_content_main
 			return "model";
 		case HTTP_BODY_CONTENT_MAINTYPE_MESSAGE:
 			return "message";
+		case HTTP_BODY_CONTENT_MAINTYPE_MULTIPART:
+			return "multipart";
 		case HTTP_BODY_CONTENT_MAINTYPE_UNKOWN:
 		default:
 			return "UNKOWN";
@@ -172,14 +175,14 @@ static inline const char *http_body_transfer_encoding_name(http_body_transfer_en
  * */
 typedef enum http_body_content_language
 {
-	HTTP_BODY_CONTent_LANGUAGE_UNKOWN
+	HTTP_BODY_CONTENT_LANGUAGE_UNKOWN
 }http_body_content_language_t;
 
 static inline const char *http_body_content_language_name(http_body_content_language_t type)
 {
 	switch(type)
 	{
-		case HTTP_BODY_CONTent_LANGUAGE_UNKOWN:
+		case HTTP_BODY_CONTENT_LANGUAGE_UNKOWN:
 		default:
 			return "UNKOWN";
 	}
@@ -741,6 +744,11 @@ typedef struct http_parser
 	char greedy;
 	char chunked;
 	size_t length;
+	http_body_content_encoding_t content_encoding;
+	http_body_content_maintype_t content_maintype;
+	http_body_content_subtype_t content_subtype;
+	http_body_content_charset_t content_charset;
+	http_body_content_language_t content_language;
 }http_parser_t;
 
 /*

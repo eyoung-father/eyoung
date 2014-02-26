@@ -644,7 +644,7 @@ http_body_t* http_alloc_body(http_decoder_t *decoder, int from_client)
 		ret->info.content_type.subtype = HTTP_BODY_CONTENT_SUBTYPE_UNKOWN;
 		ret->info.content_encoding = HTTP_BODY_CONTENT_ENCODING_UNKOWN;
 		ret->info.transfer_encoding = HTTP_BODY_TRANSFER_ENCODING_UNKOWN;
-		ret->info.content_language = HTTP_BODY_CONTent_LANGUAGE_UNKOWN;
+		ret->info.content_language = HTTP_BODY_CONTENT_LANGUAGE_UNKOWN;
 		ret->info.content_charset = HTTP_BODY_CONTENT_CHARSET_UNKOWN;
 	}
 	return ret;

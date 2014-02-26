@@ -85,6 +85,9 @@ static int save_server_stream_context(yyscan_t yyscanner, int from_default);
 %x HTTP_SERVER_BODY_TRUNK_END
 %x HTTP_SERVER_BODY_TRUNK_TAILER
 %x HTTP_SERVER_CONTENT_LENGTH_HEADER_VALUE
+%x HTTP_SERVER_CONTENT_ENCODING_HEADER_VALUE
+%x HTTP_SERVER_CONTENT_LANGUAGE_HEADER_VALUE
+%x HTTP_SERVER_CONTENT_TYPE_HEADER_VALUE
 %x HTTP_SERVER_TRANSFER_ENCODING_HEADER_VALUE
 
 SPACE	[ \t]*
@@ -147,13 +150,13 @@ NUMBER	[1-9][0-9][0-9]
 {SPACE}"WARNING"{SPACE}:{SPACE}				{GOTO(HTTP_SERVER_HEADER_VALUE); RETURN(TOKEN_SERVER_HEADER_WARNING);}
 {SPACE}"MIME-VERSION"{SPACE}:{SPACE}		{GOTO(HTTP_SERVER_HEADER_VALUE); RETURN(TOKEN_SERVER_HEADER_MIME_VERSION);}
 {SPACE}"ALLOW"{SPACE}:{SPACE}				{GOTO(HTTP_SERVER_HEADER_VALUE); RETURN(TOKEN_SERVER_HEADER_ALLOW);}
-{SPACE}"CONTENT-ENCODING"{SPACE}:{SPACE}	{GOTO(HTTP_SERVER_HEADER_VALUE); RETURN(TOKEN_SERVER_HEADER_CONTENT_ENCODING);}
-{SPACE}"CONTENT-LANGUAGE"{SPACE}:{SPACE}	{GOTO(HTTP_SERVER_HEADER_VALUE); RETURN(TOKEN_SERVER_HEADER_CONTENT_LANGUAGE);}
+{SPACE}"CONTENT-ENCODING"{SPACE}:{SPACE}	{GOTO(HTTP_SERVER_CONTENT_ENCODING_HEADER_VALUE); RETURN(TOKEN_SERVER_HEADER_CONTENT_ENCODING);}
+{SPACE}"CONTENT-LANGUAGE"{SPACE}:{SPACE}	{GOTO(HTTP_SERVER_CONTENT_LANGUAGE_HEADER_VALUE); RETURN(TOKEN_SERVER_HEADER_CONTENT_LANGUAGE);}
 {SPACE}"CONTENT-LENGTH"{SPACE}:{SPACE}		{GOTO(HTTP_SERVER_CONTENT_LENGTH_HEADER_VALUE); RETURN(TOKEN_SERVER_HEADER_CONTENT_LENGTH);}
 {SPACE}"CONTENT-LOCATION"{SPACE}:{SPACE}	{GOTO(HTTP_SERVER_HEADER_VALUE); RETURN(TOKEN_SERVER_HEADER_CONTENT_LOCATION);}
 {SPACE}"CONTENT-MD5"{SPACE}:{SPACE}			{GOTO(HTTP_SERVER_HEADER_VALUE); RETURN(TOKEN_SERVER_HEADER_CONTENT_MD5);}
 {SPACE}"CONTENT-RANGE"{SPACE}:{SPACE}		{GOTO(HTTP_SERVER_HEADER_VALUE); RETURN(TOKEN_SERVER_HEADER_CONTENT_RANGE);}
-{SPACE}"CONTENT-TYPE"{SPACE}:{SPACE}		{GOTO(HTTP_SERVER_HEADER_VALUE); RETURN(TOKEN_SERVER_HEADER_CONTENT_TYPE);}
+{SPACE}"CONTENT-TYPE"{SPACE}:{SPACE}		{GOTO(HTTP_SERVER_CONTENT_TYPE_HEADER_VALUE); RETURN(TOKEN_SERVER_HEADER_CONTENT_TYPE);}
 {SPACE}"ETAG"{SPACE}:{SPACE}				{GOTO(HTTP_SERVER_HEADER_VALUE); RETURN(TOKEN_SERVER_HEADER_ETAG);}
 {SPACE}"EXPIRES"{SPACE}:{SPACE}				{GOTO(HTTP_SERVER_HEADER_VALUE); RETURN(TOKEN_SERVER_HEADER_EXPIRES);}
 {SPACE}"LAST-MODIFIED"{SPACE}:{SPACE}		{GOTO(HTTP_SERVER_HEADER_VALUE); RETURN(TOKEN_SERVER_HEADER_LAST_MODIFIED);}
@@ -181,6 +184,69 @@ NUMBER	[1-9][0-9][0-9]
 												else
 													GOTO(HTTP_SERVER_BODY_NORMAL); 
 												RETURN(TOKEN_SERVER_HEADER_TERM);
+											}
+.											{RETURN(-1);}
+}
+
+<HTTP_SERVER_CONTENT_ENCODING_HEADER_VALUE>{
+[^\r\n]*{NEWLINE}							{
+												http_data_t *priv_data = (http_data_t *)yyget_extra(yyg);
+												http_decoder_t *decoder = (http_decoder_t*)priv_data->decoder;
+												if(http_server_prepare_string(decoder, yytext, yyleng, &yylval->string, 1))
+												{
+													http_debug(debug_http_server_lexer, "prepare content-encoding header value failed\n");
+													RETURN(-1);
+												}
+												
+												http_body_content_encoding_t type = http_parse_content_encoding(yytext);
+												http_debug(debug_http_server_lexer, "get content-encoding %s\n", http_body_content_encoding_name(type));
+												http_server_lexer_set_content_encoding(yyg, type);
+												GOTO(HTTP_SERVER_HEADER_NAME);
+												RETURN(TOKEN_SERVER_HEADER_VALUE);
+											}
+.											{RETURN(-1);}
+}
+
+<HTTP_SERVER_CONTENT_LANGUAGE_HEADER_VALUE>{
+[^\r\n]*{NEWLINE}							{
+												http_data_t *priv_data = (http_data_t *)yyget_extra(yyg);
+												http_decoder_t *decoder = (http_decoder_t*)priv_data->decoder;
+												if(http_server_prepare_string(decoder, yytext, yyleng, &yylval->string, 1))
+												{
+													http_debug(debug_http_server_lexer, "prepare content-language header value failed\n");
+													RETURN(-1);
+												}
+												
+												http_body_content_language_t lang = http_parse_content_language(yytext);
+												http_debug(debug_http_server_lexer, "get content-language %s\n", http_body_content_language_name(lang));
+												http_server_lexer_set_content_language(yyg, lang);
+												GOTO(HTTP_SERVER_HEADER_NAME);
+												RETURN(TOKEN_SERVER_HEADER_VALUE);
+											}
+.											{RETURN(-1);}
+}
+
+<HTTP_SERVER_CONTENT_TYPE_HEADER_VALUE>{
+[^\r\n]*{NEWLINE}							{
+												http_data_t *priv_data = (http_data_t *)yyget_extra(yyg);
+												http_decoder_t *decoder = (http_decoder_t*)priv_data->decoder;
+												if(http_server_prepare_string(decoder, yytext, yyleng, &yylval->string, 1))
+												{
+													http_debug(debug_http_server_lexer, "prepare content-type header value failed\n");
+													RETURN(-1);
+												}
+												
+												http_body_content_maintype_t maintype = HTTP_BODY_CONTENT_MAINTYPE_UNKOWN;
+												http_body_content_subtype_t subtype = HTTP_BODY_CONTENT_SUBTYPE_UNKOWN;
+												http_body_content_charset_t charset = HTTP_BODY_CONTENT_CHARSET_UNKOWN;
+												http_parse_content_type(yytext, &maintype, &subtype, &charset);
+												http_debug(debug_http_server_lexer, "get main_type:%s, sub_type:%s, charset:%s\n", 
+													http_body_content_maintype_name(maintype),
+													http_body_content_subtype_name(subtype),
+													http_body_content_charset_name(charset));
+												http_server_lexer_set_content_type(yyg, maintype, subtype, charset);
+												GOTO(HTTP_SERVER_HEADER_NAME);
+												RETURN(TOKEN_SERVER_HEADER_VALUE);
 											}
 .											{RETURN(-1);}
 }

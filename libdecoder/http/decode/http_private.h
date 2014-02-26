@@ -134,10 +134,37 @@ extern void http_lexer_set_chunked_body(void *scanner, int from_client);
 #define http_client_lexer_set_chunked_body(lex) http_lexer_set_chunked_body(lex,1)
 #define http_server_lexer_set_chunked_body(lex) http_lexer_set_chunked_body(lex,0)
 
+extern void http_lexer_set_content_encoding(void *scanner, http_body_content_encoding_t encoding, int from_client);
+#define http_client_lexer_set_content_encoding(lex,code) http_lexer_set_content_encoding(lex,code,1)
+#define http_server_lexer_set_content_encoding(lex,code) http_lexer_set_content_encoding(lex,code,0)
+
+extern http_body_content_encoding_t http_lexer_get_content_encoding(void *scanner, int from_client);
+#define http_client_lexer_get_content_encoding(lex) http_lexer_get_content_encoding(lex,1)
+#define http_server_lexer_get_content_encoding(lex) http_lexer_get_content_encoding(lex,0)
+
+extern void http_lexer_set_content_language(void *scanner, http_body_content_language_t language, int from_client);
+#define http_client_lexer_set_content_language(lex,language) http_lexer_set_content_language(lex,language,1)
+#define http_server_lexer_set_content_language(lex,language) http_lexer_set_content_language(lex,language,0)
+
+extern http_body_content_language_t http_lexer_get_content_language(void *scanner, int from_client);
+#define http_client_lexer_get_content_language(lex) http_lexer_get_content_language(lex,1)
+#define http_server_lexer_get_content_language(lex) http_lexer_get_content_language(lex,0)
+
+extern void http_lexer_set_content_type(void *scanner, http_body_content_maintype_t main_type, 
+										http_body_content_subtype_t sub_type, 
+										http_body_content_charset_t charset, int from_client);
+#define http_client_lexer_set_content_type(lex,mt,st,cs) http_lexer_set_content_type(lex,mt,st,cs,1)
+#define http_server_lexer_set_content_type(lex,mt,st,cs) http_lexer_set_content_type(lex,mt,st,cs,0)
+
+extern void http_lexer_get_content_type(void *scanner, http_body_content_maintype_t *main_type, 
+										http_body_content_subtype_t *sub_type, 
+										http_body_content_charset_t *charset, int from_client);
+#define http_client_lexer_get_content_type(lex,mt,st,cs) http_lexer_get_content_type(lex,mt,st,cs,1)
+#define http_server_lexer_get_content_type(lex,mt,st,cs) http_lexer_get_content_type(lex,mt,st,cs,0)
+
 extern int http_lexer_is_chunked_body(void *scanner, int from_client);
 #define http_client_lexer_is_chunk_body(lex) http_lexer_is_chunked_body(lex,1)
 #define http_server_lexer_is_chunk_body(lex) http_lexer_is_chunked_body(lex,0)
-
 
 /*
  * FOR REQUEST

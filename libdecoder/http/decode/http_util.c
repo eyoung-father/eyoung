@@ -194,6 +194,164 @@ int http_prepare_string(http_decoder_t *decoder, char *line, size_t length, http
 	return 0;
 }
 
+void http_lexer_set_content_encoding(void *scanner, http_body_content_encoding_t encoding, int from_client)
+{
+	yyscan_t yyscanner = (yyscan_t)scanner;
+	http_data_t *priv = NULL;
+	http_parser_t *parser = NULL;
+	if(from_client)
+	{
+		priv = (http_data_t*)http_client_get_extra(yyscanner);
+		assert(priv != NULL);
+
+		parser = &priv->request_parser;
+		assert(parser != NULL);
+	}
+	else
+	{
+		priv = (http_data_t*)http_server_get_extra(yyscanner);
+		assert(priv != NULL);
+
+		parser = &priv->response_parser;
+		assert(parser != NULL);
+	}
+	
+	parser->content_encoding = encoding;
+}
+
+http_body_content_encoding_t http_lexer_get_content_encoding(void *scanner, int from_client)
+{
+	yyscan_t yyscanner = (yyscan_t)scanner;
+	http_data_t *priv = NULL;
+	http_parser_t *parser = NULL;
+	if(from_client)
+	{
+		priv = (http_data_t*)http_client_get_extra(yyscanner);
+		assert(priv != NULL);
+
+		parser = &priv->request_parser;
+		assert(parser != NULL);
+	}
+	else
+	{
+		priv = (http_data_t*)http_server_get_extra(yyscanner);
+		assert(priv != NULL);
+
+		parser = &priv->response_parser;
+		assert(parser != NULL);
+	}
+	
+	return parser->content_encoding;
+}
+
+void http_lexer_set_content_language(void *scanner, http_body_content_language_t language, int from_client)
+{
+	yyscan_t yyscanner = (yyscan_t)scanner;
+	http_data_t *priv = NULL;
+	http_parser_t *parser = NULL;
+	if(from_client)
+	{
+		priv = (http_data_t*)http_client_get_extra(yyscanner);
+		assert(priv != NULL);
+
+		parser = &priv->request_parser;
+		assert(parser != NULL);
+	}
+	else
+	{
+		priv = (http_data_t*)http_server_get_extra(yyscanner);
+		assert(priv != NULL);
+
+		parser = &priv->response_parser;
+		assert(parser != NULL);
+	}
+	
+	parser->content_language = language;
+}
+
+http_body_content_language_t http_lexer_get_content_language(void *scanner, int from_client)
+{
+	yyscan_t yyscanner = (yyscan_t)scanner;
+	http_data_t *priv = NULL;
+	http_parser_t *parser = NULL;
+	if(from_client)
+	{
+		priv = (http_data_t*)http_client_get_extra(yyscanner);
+		assert(priv != NULL);
+
+		parser = &priv->request_parser;
+		assert(parser != NULL);
+	}
+	else
+	{
+		priv = (http_data_t*)http_server_get_extra(yyscanner);
+		assert(priv != NULL);
+
+		parser = &priv->response_parser;
+		assert(parser != NULL);
+	}
+	
+	return parser->content_language;
+}
+
+void http_lexer_set_content_type(void *scanner, http_body_content_maintype_t main_type, 
+									http_body_content_subtype_t sub_type, 
+									http_body_content_charset_t charset, int from_client)
+{
+	yyscan_t yyscanner = (yyscan_t)scanner;
+	http_data_t *priv = NULL;
+	http_parser_t *parser = NULL;
+	if(from_client)
+	{
+		priv = (http_data_t*)http_client_get_extra(yyscanner);
+		assert(priv != NULL);
+
+		parser = &priv->request_parser;
+		assert(parser != NULL);
+	}
+	else
+	{
+		priv = (http_data_t*)http_server_get_extra(yyscanner);
+		assert(priv != NULL);
+
+		parser = &priv->response_parser;
+		assert(parser != NULL);
+	}
+	
+	parser->content_maintype = main_type;
+	parser->content_subtype = sub_type;
+	parser->content_charset = charset;
+}
+
+void http_lexer_get_content_type(void *scanner, http_body_content_maintype_t *main_type, 
+									http_body_content_subtype_t *sub_type, 
+									http_body_content_charset_t *charset, int from_client)
+{
+	yyscan_t yyscanner = (yyscan_t)scanner;
+	http_data_t *priv = NULL;
+	http_parser_t *parser = NULL;
+	if(from_client)
+	{
+		priv = (http_data_t*)http_client_get_extra(yyscanner);
+		assert(priv != NULL);
+
+		parser = &priv->request_parser;
+		assert(parser != NULL);
+	}
+	else
+	{
+		priv = (http_data_t*)http_server_get_extra(yyscanner);
+		assert(priv != NULL);
+
+		parser = &priv->response_parser;
+		assert(parser != NULL);
+	}
+	
+	*main_type = parser->content_maintype;
+	*sub_type = parser->content_subtype;
+	*charset = parser->content_charset;
+}
+
 void http_lexer_set_length(void *scanner, size_t length, int from_client)
 {
 	yyscan_t yyscanner = (yyscan_t)scanner;
@@ -293,6 +451,11 @@ void http_lexer_init_body_info(void *scanner, int from_client)
 	
 	parser->length = 0;
 	parser->chunked = 0;
+	parser->content_encoding = HTTP_BODY_CONTENT_ENCODING_UNKOWN;
+	parser->content_maintype = HTTP_BODY_CONTENT_MAINTYPE_UNKOWN;
+	parser->content_subtype = HTTP_BODY_CONTENT_SUBTYPE_UNKOWN;
+	parser->content_charset = HTTP_BODY_CONTENT_CHARSET_UNKOWN;
+	parser->content_language = HTTP_BODY_CONTENT_LANGUAGE_UNKOWN;
 }
 
 void http_lexer_set_chunked_body(void *scanner, int from_client)
@@ -318,4 +481,37 @@ void http_lexer_set_chunked_body(void *scanner, int from_client)
 	}
 	
 	parser->chunked = 1;
+}
+
+http_body_content_encoding_t http_parse_content_encoding(const char *value)
+{
+	if(!value)
+		return HTTP_BODY_CONTENT_ENCODING_UNKOWN;
+
+	if(!strncmp(value, "gzip", sizeof("gzip")-1))
+		return HTTP_BODY_CONTENT_ENCODING_GZIP;
+	else if(!strncmp(value, "deflate", sizeof("deflate")-1))
+		return HTTP_BODY_CONTENT_ENCODING_DEFLATE;
+	else if(!strncmp(value, "compress", sizeof("compress")-1))
+		return HTTP_BODY_CONTENT_ENCODING_COMPRESS;
+	else if(!strncmp(value, "identity", sizeof("identity")-1))
+		return HTTP_BODY_CONTENT_ENCODING_IDENTITY;
+	else
+		return HTTP_BODY_CONTENT_ENCODING_UNKOWN;
+}
+
+http_body_content_language_t http_parse_content_language(const char *value)
+{
+	/*TODO*/
+	return HTTP_BODY_CONTENT_LANGUAGE_UNKOWN;
+}
+
+void http_parse_content_type(const char *value, http_body_content_maintype_t *main_type, 
+					http_body_content_subtype_t *sub_type, 
+					http_body_content_charset_t *charset)
+{
+	/*TODO*/
+	*main_type = HTTP_BODY_CONTENT_MAINTYPE_UNKOWN;
+	*sub_type = HTTP_BODY_CONTENT_SUBTYPE_UNKOWN;
+	*charset = HTTP_BODY_CONTENT_CHARSET_UNKOWN;
 }
