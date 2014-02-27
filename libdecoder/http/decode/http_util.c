@@ -9,6 +9,7 @@
 #include "http_private.h"
 #include "http_client_lex.h"
 #include "http_server_lex.h"
+#include "ey_zlib.h"
 
 int debug_http_mem=1;
 int debug_http_client_lexer=1;
@@ -600,8 +601,91 @@ void http_parse_content_type(const char *value, http_body_content_maintype_t *ma
 	return;
 }
 
+typedef struct http_unzip_arg
+{
+	http_data_t *priv_data;
+	http_string_list_t *list;
+	int from_client;
+	size_t size;
+}http_unzip_arg_t;
+
+static int http_unzip_callback(char *o_buf, size_t o_len, void *arg)
+{
+	http_unzip_arg_t *unzip_arg = (http_unzip_arg_t*)arg;
+	http_data_t *data = unzip_arg->priv_data;
+	http_decoder_t *decoder = (http_decoder_t*)data->decoder;
+	http_string_t dup_string = {NULL, 0};
+	http_string_list_part_t *list_part = NULL;
+	
+	if(!o_buf || !o_len)
+		return 0;
+
+	if(!http_alloc_string(decoder, o_buf, o_len, &dup_string, unzip_arg->from_client))
+	{
+		http_debug(debug_http_mem, "alloc string failed, len: %d\n", o_len);
+		return -1;
+	}
+
+	list_part = http_alloc_string_list_part(decoder, &dup_string, unzip_arg->from_client);
+	if(!list_part)
+	{
+		http_debug(debug_http_mem, "alloc string part failed, len: %d\n", o_len);
+		http_free_string(decoder, &dup_string, unzip_arg->from_client);
+		return -1;
+	}
+	
+	STAILQ_INSERT_TAIL(unzip_arg->list, list_part, next);
+	unzip_arg->size += o_len;
+	return 0;
+}
+
 int http_unzip_string(http_data_t *priv, http_string_t *zipped, http_string_t *unzipped, int from_client)
 {
-	/*TODO*/
+	http_string_list_t unzip_data_list;
+	http_unzip_arg_t unzip_arg;
+	http_parser_t *parser = from_client?&priv->request_parser:&priv->response_parser;
+	ey_zlib_t unzip_handle = parser->unzip_handle;
+	http_decoder_t *decoder = (http_decoder_t*)priv->decoder;
+	char *o_buf = NULL, *wt = NULL;
+	size_t o_len = 0;
+	http_string_list_part_t *part = NULL;
+	assert(unzip_handle != NULL);
+
+	STAILQ_INIT(&unzip_data_list);
+	unzip_arg.priv_data = priv;
+	unzip_arg.list = &unzip_data_list;
+	unzip_arg.from_client = from_client;
+	unzip_arg.size = 0;
+	
+	if(ey_zlib_stream_unpack(unzip_handle, zipped->buf, zipped->len, http_unzip_callback, &unzip_arg))
+	{
+		http_debug(debug_http_mem, "unpack failed\n");
+		goto failed;
+	}
+	
+	o_len = unzip_arg.size;
+	o_buf = (char*)http_malloc(o_len + 1);
+	if(!o_len)
+	{
+		http_debug(debug_http_mem, "malloc out_buffer failed\n");
+		goto failed;
+	}
+	
+	wt = o_buf;
+	STAILQ_FOREACH(part, &unzip_data_list, next)
+	{
+		if(!part->string.len)
+			continue;
+		memcpy(wt, part->string.buf, part->string.len);
+		wt += part->string.len;
+	}
+
+	unzipped->buf = o_buf;
+	unzipped->len = o_len;
+	http_free_string_list(decoder, &unzip_data_list, from_client);
 	return 0;
+
+failed:
+	http_free_string_list(decoder, &unzip_data_list, from_client);
+	return -1;
 }
