@@ -125,7 +125,7 @@ int main(int argc, char *argv[])
 		goto failed;
 	}
 	
-	decoder = http_decoder_init(engine);
+	decoder = http_decoder_init(engine, NULL);
 	if(!decoder)
 	{
 		fprintf(stderr, "create http decoder failed\n");

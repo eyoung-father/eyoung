@@ -63,7 +63,7 @@ int http_decode_data(http_work_t work, const char *data, size_t data_len, int fr
 		return parse_http_server_stream((http_data_t*)work, data, data_len, last_frag);
 }
 
-http_handler_t http_decoder_init(engine_t engine)
+http_handler_t http_decoder_init(engine_t engine, void *html_decoder)
 {
 	http_decoder_t *decoder = NULL;
 	decoder = (http_decoder_t*)http_malloc(sizeof(http_decoder_t));
@@ -80,6 +80,7 @@ http_handler_t http_decoder_init(engine_t engine)
 		goto failed;
 	}
 	
+	decoder->html_decoder = html_decoder;
 	if(engine)
 	{
 		decoder->engine = engine;

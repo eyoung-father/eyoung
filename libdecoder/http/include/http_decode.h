@@ -6,7 +6,7 @@
 typedef void* http_work_t;
 typedef void* http_handler_t;
 
-extern http_handler_t http_decoder_init(engine_t engine);
+extern http_handler_t http_decoder_init(engine_t engine, void *html_decoder);
 extern void http_decoder_finit(http_handler_t handler);
 
 extern http_work_t http_work_create(http_handler_t handler, int greedy);
