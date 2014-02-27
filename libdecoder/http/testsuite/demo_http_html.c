@@ -112,11 +112,11 @@ int main(int argc, char *argv[])
 	debug_html_mem = 1;
 	debug_html_detect = 1;
 
-	debug_engine_parser = 1;
-	debug_engine_lexier = 1;
-	debug_engine_init = 1;
-	debug_engine_compiler = 1;
-	debug_engine_runtime = 1;
+	debug_engine_parser = 0;
+	debug_engine_lexier = 0;
+	debug_engine_init = 0;
+	debug_engine_compiler = 0;
+	debug_engine_runtime = 0;
 	
 	engine = ey_engine_create("http");
 	if(!engine)

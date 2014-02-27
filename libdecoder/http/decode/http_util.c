@@ -664,7 +664,7 @@ int http_unzip_string(http_data_t *priv, http_string_t *zipped, http_string_t *u
 	}
 	
 	o_len = unzip_arg.size;
-	o_buf = (char*)http_malloc(o_len + 1);
+	o_buf = http_alloc_string(decoder, NULL, o_len, unzipped, from_client);
 	if(!o_len)
 	{
 		http_debug(debug_http_mem, "malloc out_buffer failed\n");
@@ -676,13 +676,13 @@ int http_unzip_string(http_data_t *priv, http_string_t *zipped, http_string_t *u
 	{
 		if(!part->string.len)
 			continue;
+		assert(wt+part->string.len <= o_buf + o_len);
 		memcpy(wt, part->string.buf, part->string.len);
 		wt += part->string.len;
 	}
 
-	unzipped->buf = o_buf;
-	unzipped->len = o_len;
 	http_free_string_list(decoder, &unzip_data_list, from_client);
+	*wt = '\0';
 	return 0;
 
 failed:
