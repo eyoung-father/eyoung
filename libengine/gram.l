@@ -63,6 +63,21 @@ static void reset_string(yyscan_t yyscanner);
 static char *print_string(yyscan_t yyscanner);
 static char *copy_string(yyscan_t yyscanner);
 static char *get_filename(yyscan_t yyscanner);
+
+#define YY_USER_INIT										\
+	do														\
+	{														\
+		brace_level = 0;									\
+		paren_level = 0;									\
+		saved_state = 0;									\
+		in_code = 0;										\
+		after_prologue = 0;									\
+		start_location.first_line = 1;						\
+		start_location.first_column = 1;					\
+		start_location.last_line = 1;						\
+		start_location.last_column = 1;						\
+		start_location.filename = "";						\
+	}while(0)
 %}
 
 %option debug

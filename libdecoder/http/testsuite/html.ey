@@ -40,7 +40,7 @@
 %event "html_tag_event_value_"		"html_string_t"
 
 %%
-1:html_doc;
+2:html_doc;
 %%
 int decode_html_work_init_user(engine_work_t *work)
 {

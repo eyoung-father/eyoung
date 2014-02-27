@@ -237,12 +237,6 @@ prologue:
 			YYABORT;
 		}
 
-		if(output_filename)
-		{
-			engine_parser_error("output option is already set\n");
-			YYABORT;
-		}
-
 		output_filename = (char*)engine_fzalloc(len+1, ey_parser_fslab(ENG));
 		if(!output_filename)
 		{
