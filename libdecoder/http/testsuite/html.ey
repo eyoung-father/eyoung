@@ -42,22 +42,6 @@
 %%
 2:html_doc;
 %%
-int decode_html_work_init_user(engine_work_t *work)
-{
-	ENTER_FUNC;
-	fprintf(stderr, ">>>>>>>>>>>>>>>>>%s return 0\n", __FUNCTION__);
-	EXIT_FUNC;
-	return 0;
-}
-
-int decode_html_work_finit_user(engine_work_t *work)
-{
-	ENTER_FUNC;
-	fprintf(stderr, ">>>>>>>>>>>>>>>>>%s return 0\n", __FUNCTION__);
-	EXIT_FUNC;
-	return 0;
-}
-
 int decode_html_finit(engine_t eng)
 {
 	ENTER_FUNC;
@@ -69,8 +53,6 @@ int decode_html_finit(engine_t eng)
 int decode_html_init(engine_t eng)
 {
 	ENTER_FUNC;
-	ey_set_userdefine_work_init(eng, decode_html_work_init_user);
-	ey_set_userdefine_work_finit(eng, decode_html_work_finit_user);
 	fprintf(stderr, ">>>>>>>>>>>>>>>>>%s return 0\n", __FUNCTION__);
 	EXIT_FUNC;
 	return 0;
