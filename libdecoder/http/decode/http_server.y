@@ -6,6 +6,7 @@
 #include "http_private.h"
 #include "http_server_lex.h"
 #include "ey_zlib.h"
+#include "html.h"
 
 #ifdef YY_REDUCTION_CALLBACK
 #undef YY_REDUCTION_CALLBACK
@@ -1073,6 +1074,18 @@ response_body:
 			ey_zlib_destroy((ey_zlib_t)parser->unzip_handle);
 			parser->unzip_handle = NULL;
 		}
+		
+		assert(parser->html_work==NULL);
+		if(priv_decoder->html_decoder && parser->content_maintype==HTTP_BODY_CONTENT_MAINTYPE_TEXT && parser->content_subtype==HTTP_BODY_CONTENT_SUBTYPE_HTML)
+		{
+			http_debug(debug_http_server_parser, "will create html work entry\n");
+			parser->html_work = html_work_create2((html_handler_t)priv_decoder->html_decoder, 0, ((http_data_t*)priv_data)->engine_work);
+			if(!parser->html_work)
+			{
+				http_debug(debug_http_server_parser, "create html work entry failed\n");
+				YYABORT;
+			}
+		}
 
 		if(parser->content_encoding==HTTP_BODY_CONTENT_ENCODING_GZIP ||
 		   parser->content_encoding==HTTP_BODY_CONTENT_ENCODING_DEFLATE)
@@ -1102,6 +1115,24 @@ response_body:
 
 		$<body_info>1.body_size = parser->body_size;
 		ret->info = $<body_info>1;
+		
+		/*do html last slice check*/
+		if(parser->html_work)
+		{
+			if(html_decode_data((html_work_t)parser->html_work, "", 0, 1))
+			{
+				http_debug(debug_http_server_parser, "find errors while parsing last html slice\n");
+				html_work_destroy2((html_work_t)parser->html_work);
+				parser->html_work = NULL;
+			}
+			else
+			{
+				http_debug(debug_http_server_parser, "parse last html slice successfully\n");
+			}
+		}
+		ret->html_work = parser->html_work;
+		parser->html_work = NULL;
+
 		if(parser->unzip_handle)
 		{
 			ey_zlib_destroy((ey_zlib_t)parser->unzip_handle);
@@ -1137,6 +1168,18 @@ response_body:
 			parser->unzip_handle = NULL;
 		}
 
+		assert(parser->html_work==NULL);
+		if(priv_decoder->html_decoder && parser->content_maintype==HTTP_BODY_CONTENT_MAINTYPE_TEXT && parser->content_subtype==HTTP_BODY_CONTENT_SUBTYPE_HTML)
+		{
+			http_debug(debug_http_server_parser, "will create html work entry\n");
+			parser->html_work = html_work_create2((html_handler_t)priv_decoder->html_decoder, 0, ((http_data_t*)priv_data)->engine_work);
+			if(!parser->html_work)
+			{
+				http_debug(debug_http_server_parser, "create html work entry failed\n");
+				YYABORT;
+			}
+		}
+
 		if(parser->content_encoding==HTTP_BODY_CONTENT_ENCODING_GZIP ||
 		   parser->content_encoding==HTTP_BODY_CONTENT_ENCODING_DEFLATE)
 		{
@@ -1165,6 +1208,24 @@ response_body:
 
 		$<body_info>1.body_size = parser->body_size;
 		ret->info = $<body_info>1;
+
+		/*do html last slice check*/
+		if(parser->html_work)
+		{
+			if(html_decode_data((html_work_t)parser->html_work, "", 0, 1))
+			{
+				http_debug(debug_http_server_parser, "find errors while parsing last html slice\n");
+				html_work_destroy2((html_work_t)parser->html_work);
+				parser->html_work = NULL;
+			}
+			else
+			{
+				http_debug(debug_http_server_parser, "parse last html slice successfully\n");
+			}
+		}
+		ret->html_work = parser->html_work;
+		parser->html_work = NULL;
+
 		if(parser->unzip_handle)
 		{
 			ey_zlib_destroy((ey_zlib_t)parser->unzip_handle);
@@ -1325,6 +1386,20 @@ response_body_part:
 			{
 				http_debug(debug_http_server_parser, "failed to unzip body part value\n");
 				YYABORT;
+			}
+		}
+		
+		if(parser->html_work)
+		{
+			if(html_decode_data((html_work_t)parser->html_work, dup_string.buf, dup_string.len, 0))
+			{
+				http_debug(debug_http_server_parser, "find errors while parsing html slice\n");
+				html_work_destroy2((html_work_t)parser->html_work);
+				parser->html_work = NULL;
+			}
+			else
+			{
+				http_debug(debug_http_server_parser, "parse last html slice successfully\n");
 			}
 		}
 

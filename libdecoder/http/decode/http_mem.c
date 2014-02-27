@@ -9,6 +9,7 @@
 #include "http_client_lex.h"
 #include "http_server_lex.h"
 #include "ey_zlib.h"
+#include "html.h"
 
 extern int http_transaction_pair_id;
 
@@ -243,6 +244,7 @@ void http_free_priv_data(http_decoder_t *decoder, http_data_t *data)
 		http_free(data->request_parser.saved);
 	if(data->request_parser.unzip_handle)
 		ey_zlib_destroy((ey_zlib_t)data->request_parser.unzip_handle);
+	assert(data->request_parser.html_work==NULL);
 	http_client_free_request_list(decoder, &data->request_list);
 
 	/*free server*/
@@ -254,6 +256,8 @@ void http_free_priv_data(http_decoder_t *decoder, http_data_t *data)
 		http_free(data->response_parser.saved);
 	if(data->response_parser.unzip_handle)
 		ey_zlib_destroy((ey_zlib_t)data->response_parser.unzip_handle);
+	if(data->response_parser.html_work)
+		html_work_destroy2((html_work_t)data->response_parser.html_work);
 	http_server_free_response_list(decoder, &data->response_list);
 
 	http_free_transaction_list(decoder, &data->transaction_list);
@@ -662,6 +666,7 @@ void http_free_body(http_decoder_t *decoder, http_body_t *body, int from_client)
 	http_free_string_list(decoder, &body->normal_body, from_client);
 	http_free_string_list(decoder, &body->chunk_body.chunk_tailer, from_client);
 	http_free_chunk_body_list(decoder, &body->chunk_body.chunk_list, from_client);
+	html_work_destroy2((html_work_t)body->html_work);
 	if(from_client)
 		http_zfree(decoder->http_request_body_slab, body);
 	else

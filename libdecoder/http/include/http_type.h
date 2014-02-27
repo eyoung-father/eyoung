@@ -253,6 +253,7 @@ typedef struct http_chunk_body
 
 typedef struct http_body
 {
+	void *html_work;
 	http_body_info_t info;
 	http_string_list_t normal_body;
 	http_chunk_body_t chunk_body;
@@ -762,6 +763,7 @@ typedef struct http_parser
 	http_body_content_language_t content_language;
 
 	void *unzip_handle;
+	void *html_work;
 }http_parser_t;
 
 /*

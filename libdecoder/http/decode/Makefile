@@ -4,7 +4,7 @@ BUILD_NAME = libhttp
 SUB_MOD =
 SUB_DIR = 
 BUILD_TYPE = dynlib
-CFLAGS_LOCAL = -Wno-sign-compare -I../include
+CFLAGS_LOCAL = -Wno-sign-compare -I../include -I../../html/include
 
 include $(TOP_DIR)/script/compile.mk
 

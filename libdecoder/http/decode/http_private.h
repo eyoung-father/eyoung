@@ -6,6 +6,7 @@
 #include "http_type.h"
 #include "http_client_parser.h"
 #include "http_server_parser.h"
+#include "html.h"
 
 struct yy_buffer_state;
 extern struct yy_buffer_state* http_client_scan_stream(const char *new_buf, size_t new_buf_len, http_data_t *priv);
@@ -18,6 +19,7 @@ extern int parse_http_server_stream(http_data_t *priv, const char *buf, size_t b
 typedef struct http_decoder
 {
 	engine_t engine;
+	void *html_decoder;
 
 	/*for request*/
 	ey_fslab_t http_request_value_fslab;
