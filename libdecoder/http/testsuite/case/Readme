@@ -16,6 +16,8 @@ req-8.msg:
 	http text/html content-type header parser
 req-9.msg:
 	http text/plain content-type header parser
+req-10.msg:
+	http text/plain content-type/content-length header parser
 
 res-1.msg:
 	simple http get response

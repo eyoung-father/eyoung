@@ -21,11 +21,10 @@ typedef STAILQ_HEAD(http_string_list, http_string_list_part) http_string_list_t;
  * */
 typedef enum http_version
 {
-	HTTP_VERSION_09=1,
+	HTTP_VERSION_UNKOWN=0,
+	HTTP_VERSION_09,
 	HTTP_VERSION_10,
 	HTTP_VERSION_11,
-
-	HTTP_VERSION_UNKOWN
 }http_version_t;
 
 static inline const char* http_version_name(http_version_t version)
@@ -49,7 +48,9 @@ static inline const char* http_version_name(http_version_t version)
  * */
 typedef enum http_body_content_maintype
 {
-	HTTP_BODY_CONTENT_MAINTYPE_TEXT=1,
+	HTTP_BODY_CONTENT_MAINTYPE_UNKOWN=0,
+
+	HTTP_BODY_CONTENT_MAINTYPE_TEXT,
 	HTTP_BODY_CONTENT_MAINTYPE_IMAGE,
 	HTTP_BODY_CONTENT_MAINTYPE_AUDIO,
 	HTTP_BODY_CONTENT_MAINTYPE_VIDEO,
@@ -58,8 +59,6 @@ typedef enum http_body_content_maintype
 	HTTP_BODY_CONTENT_MAINTYPE_MODEL,
 	HTTP_BODY_CONTENT_MAINTYPE_MESSAGE,
 	HTTP_BODY_CONTENT_MAINTYPE_MULTIPART,
-
-	HTTP_BODY_CONTENT_MAINTYPE_UNKOWN
 }http_body_content_maintype_t;
 
 static inline const char *http_body_content_maintype_name(http_body_content_maintype_t type)
@@ -95,12 +94,12 @@ static inline const char *http_body_content_maintype_name(http_body_content_main
  * */
 typedef enum http_body_content_subtype
 {
-	HTTP_BODY_CONTENT_SUBTYPE_HTML=1,
+	HTTP_BODY_CONTENT_SUBTYPE_UNKOWN=0,
+	HTTP_BODY_CONTENT_SUBTYPE_HTML,
 	HTTP_BODY_CONTENT_SUBTYPE_CSS,
 	HTTP_BODY_CONTENT_SUBTYPE_PLAIN,
 	HTTP_BODY_CONTENT_SUBTYPE_X_WWW_FORM_URLENCODED,
 	HTTP_BODY_CONTENT_SUBTYPE_FORM_DATA,
-	HTTP_BODY_CONTENT_SUBTYPE_UNKOWN
 }http_body_content_subtype_t;
 
 static inline const char *http_body_content_subtype_name(http_body_content_subtype_t type)
@@ -137,12 +136,11 @@ typedef struct http_body_content_type
  * */
 typedef enum http_body_content_encoding
 {
-	HTTP_BODY_CONTENT_ENCODING_GZIP=1,
+	HTTP_BODY_CONTENT_ENCODING_UNKOWN=0,
+	HTTP_BODY_CONTENT_ENCODING_GZIP,
 	HTTP_BODY_CONTENT_ENCODING_COMPRESS,
 	HTTP_BODY_CONTENT_ENCODING_DEFLATE,
 	HTTP_BODY_CONTENT_ENCODING_IDENTITY,
-
-	HTTP_BODY_CONTENT_ENCODING_UNKOWN
 }http_body_content_encoding_t;
 
 static inline const char *http_body_content_encoding_name(http_body_content_encoding_t type)
@@ -168,9 +166,8 @@ static inline const char *http_body_content_encoding_name(http_body_content_enco
  * */
 typedef enum http_body_transfer_encoding
 {
-	HTTP_BODY_TRANSFER_ENCODING_CHUNKED=1,
-
-	HTTP_BODY_TRANSFER_ENCODING_UNKOWN
+	HTTP_BODY_TRANSFER_ENCODING_UNKOWN=0,
+	HTTP_BODY_TRANSFER_ENCODING_CHUNKED,
 }http_body_transfer_encoding_t;
 
 static inline const char *http_body_transfer_encoding_name(http_body_transfer_encoding_t type)
@@ -190,7 +187,7 @@ static inline const char *http_body_transfer_encoding_name(http_body_transfer_en
  * */
 typedef enum http_body_content_language
 {
-	HTTP_BODY_CONTENT_LANGUAGE_UNKOWN=1
+	HTTP_BODY_CONTENT_LANGUAGE_UNKOWN=0
 }http_body_content_language_t;
 
 static inline const char *http_body_content_language_name(http_body_content_language_t type)
@@ -208,7 +205,7 @@ static inline const char *http_body_content_language_name(http_body_content_lang
  * */
 typedef enum http_body_content_charset
 {
-	HTTP_BODY_CONTENT_CHARSET_UNKOWN=1
+	HTTP_BODY_CONTENT_CHARSET_UNKOWN=0
 }http_body_content_charset_t;
 
 static inline const char *http_body_content_charset_name(http_body_content_charset_t type)
@@ -266,7 +263,8 @@ typedef struct http_body
  */
 typedef enum http_request_method
 {
-	HTTP_REQUEST_METHOD_METHOD_GET = 1,
+	HTTP_REQUEST_METHOD_METHOD_UNKOWN=0,
+	HTTP_REQUEST_METHOD_METHOD_GET,
 	HTTP_REQUEST_METHOD_METHOD_POST,
 	HTTP_REQUEST_METHOD_METHOD_HEAD,
 	HTTP_REQUEST_METHOD_METHOD_OPTIONS,
@@ -296,8 +294,6 @@ typedef enum http_request_method
 	HTTP_REQUEST_METHOD_METHOD_MKACTIVITY,
 	HTTP_REQUEST_METHOD_METHOD_ORDERPATCH,
 	HTTP_REQUEST_METHOD_METHOD_BASELINE_CONTROL,
-
-	HTTP_REQUEST_METHOD_METHOD_UNKOWN
 }http_request_method_t;
 
 static inline const char *http_request_method_name(http_request_method_t method)
@@ -379,7 +375,8 @@ typedef struct http_request_first_line
 
 typedef enum http_request_header_type
 {
-	HTTP_REQUEST_HEADER_HOST=1,
+	HTTP_REQUEST_HEADER_UNKOWN=0,
+	HTTP_REQUEST_HEADER_HOST,
 	HTTP_REQUEST_HEADER_CACHE_CONTROL,
 	HTTP_REQUEST_HEADER_CONNECTION,
 	HTTP_REQUEST_HEADER_DATE,
@@ -432,8 +429,6 @@ typedef enum http_request_header_type
 	HTTP_REQUEST_HEADER_UA_CPU,
 	HTTP_REQUEST_HEADER_X_FLASH_VERSION,
 	HTTP_REQUEST_HEADER_PROXY_AUTHORIZATION,
-
-	HTTP_REQUEST_HEADER_UNKOWN
 }http_request_header_type_t;
 
 static inline const char* http_request_header_name(http_request_header_type_t type)
@@ -585,7 +580,8 @@ typedef struct http_response_first_line
 
 typedef enum http_response_header_type
 {
-	HTTP_RESPONSE_HEADER_CACHE_CONTROL=1,
+	HTTP_RESPONSE_HEADER_UNKOWN=0,
+	HTTP_RESPONSE_HEADER_CACHE_CONTROL,
 	HTTP_RESPONSE_HEADER_CONNECTION,
 	HTTP_RESPONSE_HEADER_DATE,
 	HTTP_RESPONSE_HEADER_PRAGMA,
@@ -623,7 +619,6 @@ typedef enum http_response_header_type
 	HTTP_RESPONSE_HEADER_SET_COOKIE,
 	HTTP_RESPONSE_HEADER_X_POWERED_BY,
 	HTTP_RESPONSE_HEADER_PROXY_AUTHENTICATE,
-	HTTP_RESPONSE_HEADER_UNKOWN
 }http_response_header_type_t;
 
 static inline const char* http_response_header_name(http_response_header_type_t type)

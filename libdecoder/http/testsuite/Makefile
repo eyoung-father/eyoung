@@ -1,5 +1,5 @@
 all:
-	gcc -o http -g -Wall -Werror -I../ -I../../../include -I../include -L../../../build/lib -lhttp -lengine -ljit -lmatch -ldl -lutil -lelf -lmemory -lpthread -DHTTP_MAIN=1 demo.c
+	gcc -o http -g -Wall -Werror -I../ -I../../../include -I../include -L../../../build/lib -ley_z -lhttp -lengine -ljit -lmatch -ldl -lutil -lelf -lmemory -lpthread -DHTTP_MAIN=1 demo.c
 	cp ../../../include/*.h ./include
 	cp ../../../include/libtcc/*.h ./include
 	cp ../include/* ./include

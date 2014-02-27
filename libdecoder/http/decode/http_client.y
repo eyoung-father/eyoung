@@ -1523,6 +1523,7 @@ request_body:
 		parser->content_subtype = HTTP_BODY_CONTENT_SUBTYPE_UNKOWN;
 		parser->content_charset = HTTP_BODY_CONTENT_CHARSET_UNKOWN;
 		parser->content_language = HTTP_BODY_CONTENT_LANGUAGE_UNKOWN;
+		parser->body_size = 0;
 
 		STAILQ_CONCAT(&ret->normal_body, &$2);
 		$$ = ret;
@@ -1585,6 +1586,7 @@ request_body:
 		parser->content_subtype = HTTP_BODY_CONTENT_SUBTYPE_UNKOWN;
 		parser->content_charset = HTTP_BODY_CONTENT_CHARSET_UNKOWN;
 		parser->content_language = HTTP_BODY_CONTENT_LANGUAGE_UNKOWN;
+		parser->body_size = 0;
 
 		STAILQ_CONCAT(&ret->chunk_body.chunk_list, &$2.chunk_list);
 		STAILQ_CONCAT(&ret->chunk_body.chunk_tailer, &$2.chunk_tailer);
