@@ -156,9 +156,33 @@
 
 %event "transaction_pair"					"http_transaction_t *"
 
-%event-preprocessor "request_event_init" "request"
 %%
-1:request;
+1:request
+	{
+		ENTER_FUNC;
+		fprintf(stderr, ">>>>>>>>>>>>>>>>>%s return 0\n", __FUNCTION__);
+		EXIT_FUNC;
+		return 1;
+	}
+	;
+
+2:request_line_uri
+	{
+		ENTER_FUNC;
+		fprintf(stderr, ">>>>>>>>>>>>>>>>>%s return 0\n", __FUNCTION__);
+		EXIT_FUNC;
+		return 1;
+	}
+	;
+
+3:request_body
+	{
+		ENTER_FUNC;
+		fprintf(stderr, ">>>>>>>>>>>>>>>>>%s return 0\n", __FUNCTION__);
+		EXIT_FUNC;
+		return 1;
+	}
+	;
 %%
 int http_work_init_user(engine_work_t *work)
 {
@@ -168,7 +192,7 @@ int http_work_init_user(engine_work_t *work)
 	return 0;
 }
 
-int request_event_init(engine_work_event_t *event)
+int http_request_event_preprocessor(engine_work_event_t *event)
 {
 	ENTER_FUNC;
 	fprintf(stderr, ">>>>>>>>>>>>>>>>>%s return 0\n", __FUNCTION__);
@@ -198,6 +222,9 @@ int http_init(engine_t eng)
 	ey_add_file_finit(eng, http_finit);
 	ey_set_userdefine_work_init(eng, http_work_init_user);
 	ey_set_userdefine_work_finit(eng, http_work_finit_user);
+	ey_set_userdefine_event_preprocess(eng, request, http_request_event_preprocessor);
+	ey_set_userdefine_event_preprocess(eng, request_line_uri, http_request_uri_preprocessor);
+	ey_set_userdefine_event_preprocess(eng, request_body, http_request_body_preprocessor);
 	fprintf(stderr, ">>>>>>>>>>>>>>>>>%s return 0\n", __FUNCTION__);
 	EXIT_FUNC;
 	return 0;

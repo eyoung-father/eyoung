@@ -572,7 +572,7 @@ int ey_runtime_detect_event(engine_work_event_t *work_event)
 		ey_assert(predefined_preprocessor != NULL);
 		if(predefined_preprocessor(work_event))
 		{
-			engine_runtime_error("call predefined work event preprocessorializer failed\n");
+			engine_runtime_error("call predefined work event preprocessor failed\n");
 			return 0;
 		}
 	}
@@ -584,7 +584,7 @@ int ey_runtime_detect_event(engine_work_event_t *work_event)
 		ey_assert(userdefined_preprocessor != NULL);
 		if(userdefined_preprocessor(work_event))
 		{
-			engine_runtime_error("call userdefined work event preprocessorializer failed\n");
+			engine_runtime_error("call userdefined work event preprocessor failed\n");
 			return 0;
 		}
 	}
