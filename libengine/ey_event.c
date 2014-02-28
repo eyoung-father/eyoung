@@ -213,6 +213,65 @@ int ey_event_set_runtime_init(ey_engine_t *eng, const char *event_name, int user
 	}
 }
 
+int ey_event_set_runtime_preprocessor(ey_engine_t *eng, const char *event_name, int user_define,
+	const char *function, event_preprocess_handle address, ey_location_t *location)
+{
+	if(!eng || !event_name || !function || !location)
+	{
+		engine_init_error("%s bad parameters\n", __FUNCTION__);
+		return -1;
+	}
+
+	ey_event_t *event = ey_find_event(eng, event_name);
+	if(!event)
+	{
+		engine_init_error("event %s is not defined\n", event_name);
+		return -1;
+	}
+
+	ey_code_t *find = NULL;
+	if(user_define)
+		find = event->event_preprocessor_userdefined;
+	else
+		find = event->event_preprocessor_predefined;
+	if(find)
+	{
+		if(!strcmp(function, find->function))
+		{
+			engine_init_debug("event preprocessor function is already called %s:%d\n", find->location.filename, find->location.first_line);
+			return 0;
+		}
+		else
+		{
+			engine_init_error("event preprocessor function is already set in %s:%d\n", find->location.filename, find->location.first_line);
+			return -1;
+		}
+	}
+	else
+	{
+		char *name = engine_fzalloc(strlen(function)+1, ey_parser_fslab(eng));
+		if(!name)
+		{
+			engine_init_error("alloc function name failed\n");
+			return -1;
+		}
+		strcpy(name, function);
+
+		find = ey_alloc_code(eng, location, name, address, NULL, EY_CODE_EVENT_PREPROCESSOR);
+		if(!find)
+		{
+			engine_init_error("copy event preprocessor function %s failed\n", function);
+			engine_fzfree(ey_parser_fslab(eng), name);
+			return -1;
+		}
+		if(user_define)
+			event->event_preprocessor_userdefined = find;
+		else
+			event->event_preprocessor_predefined = find;
+		return 0;
+	}
+}
+
 int ey_event_set_runtime_finit(ey_engine_t *eng, const char *event_name, int user_define,
 	const char *function, event_finit_handle address, ey_location_t *location)
 {

@@ -149,6 +149,13 @@ void ey_engine_work_destroy_event(engine_work_event_t *event)
 	ey_runtime_destroy_event(event);
 }
 
+int _ey_set_event_preprocessor(engine_t engine, const char *event, int type,
+	const char *function, event_preprocess_handle address, const char *filename, int line)
+{
+	ey_location_t location = {line,0,line,0,filename};
+	return ey_event_set_runtime_preprocessor((ey_engine_t*)engine, event, type, function, address, &location);
+}
+
 int _ey_set_event_init(engine_t engine, const char *event, int type,
 	const char *function, event_init_handle address, const char *filename, int line)
 {

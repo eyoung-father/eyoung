@@ -145,6 +145,21 @@ static int do_link(ey_engine_t *eng)
 			}
 			engine_compiler_debug("compile %s, address: %p\n", function->function, function->handle);
 		}
+
+		function = event->event_preprocessor_userdefined;
+		if(function)
+		{
+			if(function->handle)
+				continue;
+			function->handle = ey_jit_get_symbol(ey_jit(eng), function->function);
+			if(!function->handle)
+			{
+				engine_compiler_error("relocate event %s preprocessor function %s[%s:%d] failed\n", event->name, 
+					function->function, function->location.filename, function->location.first_line);
+				return -1;
+			}
+			engine_compiler_debug("compile %s, address: %p\n", function->function, function->handle);
+		}
 	}
 	engine_compiler_debug("do link successfully\n");
 	return 0;

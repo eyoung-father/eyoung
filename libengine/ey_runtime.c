@@ -564,6 +564,30 @@ int ey_runtime_detect_event(engine_work_event_t *work_event)
 	engine_action_t *action = work_event->action;
 	ey_assert(event != NULL && action != NULL);
 	action->action = ENGINE_ACTION_PASS;
+	
+	/*call predefined preprocessor function*/
+	if(event->event_preprocessor_predefined)
+	{
+		event_preprocess_handle predefined_preprocessor = (event_preprocess_handle)(event->event_preprocessor_predefined->handle);
+		ey_assert(predefined_preprocessor != NULL);
+		if(predefined_preprocessor(work_event))
+		{
+			engine_runtime_error("call predefined work event preprocessorializer failed\n");
+			return 0;
+		}
+	}
+
+	/*call userdefined preprocessor function*/
+	if(event->event_preprocessor_userdefined)
+	{
+		event_preprocess_handle userdefined_preprocessor = (event_preprocess_handle)(event->event_preprocessor_userdefined->handle);
+		ey_assert(userdefined_preprocessor != NULL);
+		if(userdefined_preprocessor(work_event))
+		{
+			engine_runtime_error("call userdefined work event preprocessorializer failed\n");
+			return 0;
+		}
+	}
 
 	int lock_index = work->lock_index;
 	ey_runtime_item_t *item = runtime_item + lock_index;

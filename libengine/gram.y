@@ -43,6 +43,7 @@ static ey_acsm_pattern_t *parse_cluster_string(ey_engine_t *eng, char *pattern);
 %token TOKEN_WORK_FINIT		"%work-finit"
 %token TOKEN_EVENT_INIT		"%event-init"
 %token TOKEN_EVENT_FINIT	"%event-finit"
+%token TOKEN_EVENT_PREPROCESSOR	"%event-preprocessor"
 
 %union
 {
@@ -320,7 +321,23 @@ prologue:
 		ey_code_t *ret = ey_alloc_code(ENG, &@2, (void*)$2, NULL, $3, EY_CODE_EVENT_INIT);
 		if(!ret)
 		{
-			engine_parser_error("alloc work init code failed\n");
+			engine_parser_error("alloc event init code failed\n");
+			YYABORT;
+		}
+		$$ = ret;
+	}
+	| TOKEN_EVENT_PREPROCESSOR TOKEN_STRING TOKEN_STRING
+	{
+		if(!ey_find_event(ENG, $3))
+		{
+			engine_parser_error("event %s is not defined before\n");
+			YYABORT;
+		}
+
+		ey_code_t *ret = ey_alloc_code(ENG, &@2, (void*)$2, NULL, $3, EY_CODE_EVENT_PREPROCESSOR);
+		if(!ret)
+		{
+			engine_parser_error("alloc event preprocessor code failed\n");
 			YYABORT;
 		}
 		$$ = ret;
@@ -336,7 +353,7 @@ prologue:
 		ey_code_t *ret = ey_alloc_code(ENG, &@2, (void*)$2, NULL, $3, EY_CODE_EVENT_FINIT);
 		if(!ret)
 		{
-			engine_parser_error("alloc work finit code failed\n");
+			engine_parser_error("alloc event finit code failed\n");
 			YYABORT;
 		}
 		$$ = ret;

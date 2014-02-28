@@ -150,6 +150,9 @@ number	[1-9]{digit}*
 	"%event-finit"	{
 						RETURN(TOKEN_EVENT_FINIT);
 					}
+	"%event-preprocessor"	{
+						RETURN(TOKEN_EVENT_PREPROCESSOR);
+					}
 	{ident}			{
 						ey_engine_t *eng = (ey_engine_t *)gram_get_extra(yyscanner);
 						char *ident = (char*)engine_fzalloc(yyleng+1, ey_parser_fslab(eng));

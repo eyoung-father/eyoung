@@ -85,15 +85,16 @@ typedef struct ey_code
 {
 	TAILQ_ENTRY(ey_code) link;
 	ey_location_t location;
-	#define EY_CODE_NORMAL 			1
-	#define EY_CODE_IMPORT			2
-	#define EY_CODE_EVENT			3
-	#define EY_CODE_FILE_INIT		4
-	#define EY_CODE_FILE_FINIT		5
-	#define EY_CODE_WORK_INIT		6
-	#define EY_CODE_WORK_FINIT		7
-	#define EY_CODE_EVENT_INIT		8
-	#define EY_CODE_EVENT_FINIT		9
+	#define EY_CODE_NORMAL				1
+	#define EY_CODE_IMPORT				2
+	#define EY_CODE_EVENT				3
+	#define EY_CODE_FILE_INIT			4
+	#define EY_CODE_FILE_FINIT			5
+	#define EY_CODE_WORK_INIT			6
+	#define EY_CODE_WORK_FINIT			7
+	#define EY_CODE_EVENT_INIT			8
+	#define EY_CODE_EVENT_FINIT			9
+	#define EY_CODE_EVENT_PREPROCESSOR	10
 	int type;
 	union
 	{

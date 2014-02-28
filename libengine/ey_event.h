@@ -19,9 +19,13 @@ typedef struct ey_event
 	ey_rhs_item_list_t uncluster_item_list;
 
 	ey_code_t *event_init_predefined;
-	ey_code_t *event_finit_predefined;
 	ey_code_t *event_init_userdefined;
+
+	ey_code_t *event_finit_predefined;
 	ey_code_t *event_finit_userdefined;
+
+	ey_code_t *event_preprocessor_predefined;
+	ey_code_t *event_preprocessor_userdefined;
 }ey_event_t;
 
 struct ey_engine;
@@ -36,4 +40,6 @@ extern int ey_event_set_runtime_init(struct ey_engine *eng, const char *event_na
 	const char *function, event_init_handle address, ey_location_t *location);
 extern int ey_event_set_runtime_finit(struct ey_engine *eng, const char *event_name, int user_define,
 	const char *function, event_finit_handle address, ey_location_t *location);
+extern int ey_event_set_runtime_preprocessor(struct ey_engine *eng, const char *event_name, int user_define,
+	const char *function, event_preprocess_handle address, ey_location_t *location);
 #endif
