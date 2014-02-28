@@ -7,37 +7,20 @@
 #include "http_detect.h"
 #include "http_private.h"
 
-static void http_free_parameter(http_decoder_t *decoder, http_parameter_t *pm, int from_client)
+static void http_free_parameter_list(http_decoder_t *decoder, parameter_list_t *p_list, int from_client)
 {
-	assert(decoder != NULL);
-
-	if(!pm)
-	{
-		http_debug(debug_http_detect, "%s: null paramter data\n", __FUNCTION__);
-		return;
-	}
-	http_free_string(decoder, &pm->name, from_client);
-	http_free_string(decoder, &pm->value, from_client);
-	http_free(pm);
-}
-
-void http_free_parameter_list(http_work_t work, http_parameter_list_t *p_list, int from_client)
-{
-	assert(work != NULL);
-	http_data_t *data = (http_data_t*)work;
-	http_decoder_t *decoder = (http_decoder_t*)data->decoder;
-
-	http_parameter_t *pm=NULL, *tmp=NULL;
+	parameter_t *pm=NULL, *tmp=NULL;
 	STAILQ_FOREACH_SAFE(pm, p_list, next, tmp)
-		http_free_parameter(decoder,pm,from_client);
+	{
+		http_free_string(decoder, &pm->name, from_client);
+		http_free_string(decoder, &pm->value, from_client);
+		http_free(pm);
+	}
 }
 
-int http_body_merge(http_work_t work, http_body_t *body, http_string_t *body_string, int from_client)
+static int http_body_merge(http_decoder_t *decoder, http_body_t *body, http_string_t *body_string, int from_client)
 {
-	assert(work != NULL);
 	assert(body_string != NULL);
-	http_data_t *data = (http_data_t*)work;
-	http_decoder_t *decoder = (http_decoder_t*)data->decoder;
 	char *wt = NULL, *o_buf=NULL;
 	size_t o_len = 0;
 	
@@ -101,18 +84,19 @@ int http_request_uri_preprocessor(engine_work_event_t *event)
 
 int http_request_body_init(engine_work_event_t *event)
 {
-	http_string_t *body = NULL;
+	request_data_t *req_data = NULL;
 	http_debug(debug_http_detect, "\n=============ENTER %s=============\n", __FUNCTION__);
-	body = (http_string_t*)http_malloc(sizeof(http_string_t));
-	if(!body)
+	req_data = (request_data_t*)http_malloc(sizeof(request_data_t));
+	if(!req_data)
 	{
 		http_debug(debug_http_detect, ">>>>>>>>>>>>>>>>>%s return 1\n", __FUNCTION__);
 		http_debug(debug_http_detect, "=============EXIT %s=============\n", __FUNCTION__);
-		event->user_defined = body;
+		event->user_defined = req_data;
 		return 1;
 	}
-	memset(body, 0, sizeof(*body));
-	event->user_defined = body;
+	memset(req_data, 0, sizeof(request_data_t));
+	STAILQ_INIT(&req_data->parameter_list);
+	event->user_defined = req_data;
 	http_debug(debug_http_detect, "=============EXIT %s=============\n", __FUNCTION__);
 	return 0;
 }
@@ -125,10 +109,11 @@ int http_request_body_finit(engine_work_event_t *event)
 		engine_work_t *engine_work = event->work;
 		http_data_t *http_data = (http_data_t*)engine_work->predefined;
 		http_decoder_t *http_decoder = (http_decoder_t*)http_data->decoder;
-		http_string_t *body = (http_string_t*)event->user_defined;
+		request_data_t *req_data = (request_data_t*)event->user_defined;
 		
-		http_free_string(http_decoder, body, 1);
-		http_free(body);
+		http_free_string(http_decoder, &req_data->raw_data, 1);
+		http_free_parameter_list(http_decoder, &req_data->parameter_list, 1);
+		http_free(req_data);
 		event->user_defined = NULL;
 	}
 	http_debug(debug_http_detect, "=============EXIT %s=============\n", __FUNCTION__);
@@ -138,11 +123,18 @@ int http_request_body_finit(engine_work_event_t *event)
 int http_request_body_preprocessor(engine_work_event_t *event)
 {
 	http_debug(debug_http_detect, "\n=============ENTER %s=============\n", __FUNCTION__);
-	http_string_t *body_content = (http_string_t*)event->user_defined;
+	request_data_t *req_data = (request_data_t*)event->user_defined;
+	http_string_t *body_content = &req_data->raw_data;
 	assert(body_content != NULL);
 
 	engine_work_t *engine_work = event->work;
 	assert(engine_work != NULL);
+
+	http_data_t *data = (http_data_t*)engine_work->predefined;
+	assert(data != NULL);
+	
+	http_decoder_t *decoder = (http_decoder_t*)data->decoder;
+	assert(decoder != NULL);
 
 	http_body_t *body = *(http_body_t**)event->predefined;
 	if(!body)
@@ -151,7 +143,7 @@ int http_request_body_preprocessor(engine_work_event_t *event)
 		http_debug(debug_http_detect, "=============EXIT %s=============\n", __FUNCTION__);
 		return 0;
 	}
-	
+
 	if(body->info.content_type.subtype != HTTP_BODY_CONTENT_SUBTYPE_X_WWW_FORM_URLENCODED || 
 		body->info.content_type.maintype != HTTP_BODY_CONTENT_MAINTYPE_APPLICATION)
 	{
@@ -160,7 +152,7 @@ int http_request_body_preprocessor(engine_work_event_t *event)
 		return 0;
 	}
 
-	if(http_body_merge((http_work_t)engine_work->predefined, body, body_content, 1))
+	if(http_body_merge(decoder, body, body_content, 1))
 	{
 		http_debug(debug_http_detect, "merge http body failed\n");
 		http_debug(debug_http_detect, "=============EXIT %s=============\n", __FUNCTION__);
