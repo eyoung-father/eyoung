@@ -111,8 +111,9 @@ int http_request_body_init(engine_work_event_t *event)
 		event->user_defined = body;
 		return 1;
 	}
-	http_debug(debug_http_detect, "=============EXIT %s=============\n", __FUNCTION__);
+	memset(body, 0, sizeof(*body));
 	event->user_defined = body;
+	http_debug(debug_http_detect, "=============EXIT %s=============\n", __FUNCTION__);
 	return 0;
 }
 
@@ -136,6 +137,7 @@ int http_request_body_finit(engine_work_event_t *event)
 
 int http_request_body_preprocessor(engine_work_event_t *event)
 {
+	http_debug(debug_http_detect, "\n=============ENTER %s=============\n", __FUNCTION__);
 	http_string_t *body_content = (http_string_t*)event->user_defined;
 	assert(body_content != NULL);
 
@@ -149,8 +151,15 @@ int http_request_body_preprocessor(engine_work_event_t *event)
 		http_debug(debug_http_detect, "=============EXIT %s=============\n", __FUNCTION__);
 		return 0;
 	}
+	
+	if(body->info.content_type.subtype != HTTP_BODY_CONTENT_SUBTYPE_X_WWW_FORM_URLENCODED || 
+		body->info.content_type.maintype != HTTP_BODY_CONTENT_MAINTYPE_APPLICATION)
+	{
+		http_debug(debug_http_detect, "no need do body preprocessing\n");
+		http_debug(debug_http_detect, "=============EXIT %s=============\n", __FUNCTION__);
+		return 0;
+	}
 
-	http_debug(debug_http_detect, "\n=============ENTER %s=============\n", __FUNCTION__);
 	if(http_body_merge((http_work_t)engine_work->predefined, body, body_content, 1))
 	{
 		http_debug(debug_http_detect, "merge http body failed\n");
