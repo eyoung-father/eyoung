@@ -104,11 +104,11 @@ int main(int argc, char *argv[])
 	debug_http_client_parser = 1;
 	debug_http_mem = 0;
 	debug_http_detect = 0;
-	debug_engine_parser = 0;
-	debug_engine_lexier = 0;
-	debug_engine_init = 0;
-	debug_engine_compiler = 0;
-	debug_engine_runtime = 0;
+	debug_engine_parser = 1;
+	debug_engine_lexier = 1;
+	debug_engine_init = 1;
+	debug_engine_compiler = 1;
+	debug_engine_runtime = 1;
 	
 	engine = ey_engine_create("http");
 	if(!engine)

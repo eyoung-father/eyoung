@@ -117,6 +117,11 @@ static int ey_output_event_finit_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *fi
 	return ey_event_set_runtime_finit(eng, finit->event_name, 1, finit->function, NULL, &finit->location);
 }
 
+static int ey_output_event_preprocessor_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *preprocessor)
+{
+	return ey_event_set_runtime_preprocessor(eng, preprocessor->event_name, 1, preprocessor->function, NULL, &preprocessor->location);
+}
+
 static int ey_output_prologue_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *prologue)
 {
 	ey_assert(eng!=NULL);
@@ -160,6 +165,10 @@ static int ey_output_prologue_cfile(ey_engine_t *eng, FILE *fp, ey_code_t *prolo
 		case EY_CODE_EVENT_FINIT:
 		{
 			return ey_output_event_finit_cfile(eng, fp, prologue);
+		}
+		case EY_CODE_EVENT_PREPROCESSOR:
+		{
+			return ey_output_event_preprocessor_cfile(eng, fp, prologue);
 		}
 		default:
 		{

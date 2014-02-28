@@ -195,6 +195,7 @@ ey_code_t *ey_alloc_code(ey_engine_t *eng, ey_location_t *location, void *code, 
 		case EY_CODE_WORK_FINIT:
 		case EY_CODE_EVENT_INIT:
 		case EY_CODE_EVENT_FINIT:
+		case EY_CODE_EVENT_PREPROCESSOR:
 			ret->function = (char*)code;
 			ret->handle = addr;
 			ret->event_name = (char*)event;
@@ -227,6 +228,7 @@ void ey_free_code(ey_engine_t *eng, ey_code_t *code)
 		case EY_CODE_WORK_FINIT:
 		case EY_CODE_EVENT_INIT:
 		case EY_CODE_EVENT_FINIT:
+		case EY_CODE_EVENT_PREPROCESSOR:
 			if(code->function) 
 				engine_fzfree(ey_parser_fslab(eng), code->function);
 			if(code->event_name)

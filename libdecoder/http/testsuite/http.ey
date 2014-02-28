@@ -156,10 +156,19 @@
 
 %event "transaction_pair"					"http_transaction_t *"
 
+%event-preprocessor "request_event_init" "request"
 %%
 1:request;
 %%
 int http_work_init_user(engine_work_t *work)
+{
+	ENTER_FUNC;
+	fprintf(stderr, ">>>>>>>>>>>>>>>>>%s return 0\n", __FUNCTION__);
+	EXIT_FUNC;
+	return 0;
+}
+
+int request_event_init(engine_work_event_t *event)
 {
 	ENTER_FUNC;
 	fprintf(stderr, ">>>>>>>>>>>>>>>>>%s return 0\n", __FUNCTION__);
