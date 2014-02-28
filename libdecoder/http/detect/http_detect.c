@@ -95,7 +95,7 @@ int http_request_uri_preprocessor(engine_work_event_t *event)
 {
 	http_debug(debug_http_detect, "\n=============ENTER %s=============\n", __FUNCTION__);
 	http_debug(debug_http_detect, ">>>>>>>>>>>>>>>>>%s return 1\n", __FUNCTION__);
-	http_debug(debug_http_detect, "\n=============EXIT %s=============\n", __FUNCTION__);
+	http_debug(debug_http_detect, "=============EXIT %s=============\n", __FUNCTION__);
 	return 0;
 }
 
@@ -103,7 +103,7 @@ int http_request_body_preprocessor(engine_work_event_t *event)
 {
 	http_debug(debug_http_detect, "\n=============ENTER %s=============\n", __FUNCTION__);
 	http_debug(debug_http_detect, ">>>>>>>>>>>>>>>>>%s return 1\n", __FUNCTION__);
-	http_debug(debug_http_detect, "\n=============EXIT %s=============\n", __FUNCTION__);
+	http_debug(debug_http_detect, "=============EXIT %s=============\n", __FUNCTION__);
 	return 0;
 }
 
@@ -111,7 +111,7 @@ int http_request_uri_xss_check(engine_work_t *engine_work, engine_work_event_t *
 {
 	http_debug(debug_http_detect, "\n=============ENTER %s=============\n", __FUNCTION__);
 	http_debug(debug_http_detect, ">>>>>>>>>>>>>>>>>%s return 1\n", __FUNCTION__);
-	http_debug(debug_http_detect, "\n=============EXIT %s=============\n", __FUNCTION__);
+	http_debug(debug_http_detect, "=============EXIT %s=============\n", __FUNCTION__);
 	return 1;
 }
 
@@ -119,6 +119,6 @@ int http_request_body_xss_check(engine_work_t *engine_work, engine_work_event_t 
 {
 	http_debug(debug_http_detect, "\n=============ENTER %s=============\n", __FUNCTION__);
 	http_debug(debug_http_detect, ">>>>>>>>>>>>>>>>>%s return 1\n", __FUNCTION__);
-	http_debug(debug_http_detect, "\n=============EXIT %s=============\n", __FUNCTION__);
+	http_debug(debug_http_detect, "=============EXIT %s=============\n", __FUNCTION__);
 	return 1;
 }
