@@ -18,6 +18,12 @@ static void http_free_parameter_list(http_decoder_t *decoder, parameter_list_t *
 	}
 }
 
+static int html_parse_urlencoded_parameter(http_decoder_t *decoder, http_string_t *raw_data, parameter_list_t *list)
+{
+	/*TODO*/
+	return 0;
+}
+
 static int http_body_merge(http_decoder_t *decoder, http_body_t *body, http_string_t *body_string, int from_client)
 {
 	assert(body_string != NULL);
@@ -124,8 +130,6 @@ int http_request_body_preprocessor(engine_work_event_t *event)
 {
 	http_debug(debug_http_detect, "\n=============ENTER %s=============\n", __FUNCTION__);
 	request_data_t *req_data = (request_data_t*)event->user_defined;
-	http_string_t *body_content = &req_data->raw_data;
-	assert(body_content != NULL);
 
 	engine_work_t *engine_work = event->work;
 	assert(engine_work != NULL);
@@ -152,13 +156,19 @@ int http_request_body_preprocessor(engine_work_event_t *event)
 		return 0;
 	}
 
-	if(http_body_merge(decoder, body, body_content, 1))
+	if(http_body_merge(decoder, body, &req_data->raw_data, 1))
 	{
 		http_debug(debug_http_detect, "merge http body failed\n");
 		http_debug(debug_http_detect, "=============EXIT %s=============\n", __FUNCTION__);
 		return -1;
 	}
 	
+	if(html_parse_urlencoded_parameter(decoder, &req_data->raw_data, &req_data->parameter_list))
+	{
+		http_debug(debug_http_detect, "parse url-encoded parameter list failed\n");
+		http_debug(debug_http_detect, "=============EXIT %s=============\n", __FUNCTION__);
+		return -1;
+	}
 	http_debug(debug_http_detect, "=============EXIT %s=============\n", __FUNCTION__);
 	return 0;
 }
