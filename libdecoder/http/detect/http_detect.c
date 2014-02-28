@@ -56,7 +56,7 @@ int http_body_merge(http_work_t work, http_body_t *body, http_string_t *body_str
 	}
 
 	wt = o_buf;
-	if(body->info.transfer_encoding != HTTP_BODY_TRANSFER_ENCODING_CHUNKED)
+	if(body->info.transfer_encoding == HTTP_BODY_TRANSFER_ENCODING_CHUNKED)
 	{
 		http_chunk_body_part_t *chunk_part = NULL;
 		STAILQ_FOREACH(chunk_part, &body->chunk_body.chunk_list, next)
@@ -94,15 +94,70 @@ int http_body_merge(http_work_t work, http_body_t *body, http_string_t *body_str
 int http_request_uri_preprocessor(engine_work_event_t *event)
 {
 	http_debug(debug_http_detect, "\n=============ENTER %s=============\n", __FUNCTION__);
-	http_debug(debug_http_detect, ">>>>>>>>>>>>>>>>>%s return 1\n", __FUNCTION__);
+	http_debug(debug_http_detect, ">>>>>>>>>>>>>>>>>%s return 0\n", __FUNCTION__);
+	http_debug(debug_http_detect, "=============EXIT %s=============\n", __FUNCTION__);
+	return 0;
+}
+
+int http_request_body_init(engine_work_event_t *event)
+{
+	http_string_t *body = NULL;
+	http_debug(debug_http_detect, "\n=============ENTER %s=============\n", __FUNCTION__);
+	body = (http_string_t*)http_malloc(sizeof(http_string_t));
+	if(!body)
+	{
+		http_debug(debug_http_detect, ">>>>>>>>>>>>>>>>>%s return 1\n", __FUNCTION__);
+		http_debug(debug_http_detect, "=============EXIT %s=============\n", __FUNCTION__);
+		event->user_defined = body;
+		return 1;
+	}
+	http_debug(debug_http_detect, "=============EXIT %s=============\n", __FUNCTION__);
+	event->user_defined = body;
+	return 0;
+}
+
+int http_request_body_finit(engine_work_event_t *event)
+{
+	http_debug(debug_http_detect, "\n=============ENTER %s=============\n", __FUNCTION__);
+	if(event->user_defined)
+	{
+		engine_work_t *engine_work = event->work;
+		http_data_t *http_data = (http_data_t*)engine_work->predefined;
+		http_decoder_t *http_decoder = (http_decoder_t*)http_data->decoder;
+		http_string_t *body = (http_string_t*)event->user_defined;
+		
+		http_free_string(http_decoder, body, 1);
+		http_free(body);
+		event->user_defined = NULL;
+	}
 	http_debug(debug_http_detect, "=============EXIT %s=============\n", __FUNCTION__);
 	return 0;
 }
 
 int http_request_body_preprocessor(engine_work_event_t *event)
 {
+	http_string_t *body_content = (http_string_t*)event->user_defined;
+	assert(body_content != NULL);
+
+	engine_work_t *engine_work = event->work;
+	assert(engine_work != NULL);
+
+	http_body_t *body = *(http_body_t**)event->predefined;
+	if(!body)
+	{
+		http_debug(debug_http_detect, "null http body\n");
+		http_debug(debug_http_detect, "=============EXIT %s=============\n", __FUNCTION__);
+		return 0;
+	}
+
 	http_debug(debug_http_detect, "\n=============ENTER %s=============\n", __FUNCTION__);
-	http_debug(debug_http_detect, ">>>>>>>>>>>>>>>>>%s return 1\n", __FUNCTION__);
+	if(http_body_merge((http_work_t)engine_work->predefined, body, body_content, 1))
+	{
+		http_debug(debug_http_detect, "merge http body failed\n");
+		http_debug(debug_http_detect, "=============EXIT %s=============\n", __FUNCTION__);
+		return -1;
+	}
+	
 	http_debug(debug_http_detect, "=============EXIT %s=============\n", __FUNCTION__);
 	return 0;
 }

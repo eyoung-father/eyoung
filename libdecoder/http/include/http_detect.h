@@ -27,6 +27,8 @@ extern void http_free_parameter_list(http_work_t work, http_parameter_list_t *p_
 #define http_client_free_parameter_list(w,p) http_free_parameter_list(w,p,1)
 #define http_server_free_parameter_list(w,p) http_free_parameter_list(w,p,0)
 
+extern int http_request_body_init(engine_work_event_t *event);
+extern int http_request_body_finit(engine_work_event_t *event);
 extern int http_request_uri_preprocessor(engine_work_event_t *event);
 extern int http_request_body_preprocessor(engine_work_event_t *event);
 

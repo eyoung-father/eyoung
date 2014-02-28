@@ -177,7 +177,9 @@
 
 3:request_body
 	{
+		http_string_t *body = (http_string_t*)_THIS_->user_defined;
 		ENTER_FUNC;
+		fprintf(stderr, "body len: %d, body content: %s\n", body->len, body->buf);
 		fprintf(stderr, ">>>>>>>>>>>>>>>>>%s return 0\n", __FUNCTION__);
 		EXIT_FUNC;
 		return 1;
@@ -225,6 +227,8 @@ int http_init(engine_t eng)
 	ey_set_userdefine_event_preprocess(eng, request, http_request_event_preprocessor);
 	ey_set_userdefine_event_preprocess(eng, request_line_uri, http_request_uri_preprocessor);
 	ey_set_userdefine_event_preprocess(eng, request_body, http_request_body_preprocessor);
+	ey_set_userdefine_event_init(eng, request_body, http_request_body_init);
+	ey_set_userdefine_event_finit(eng, request_body, http_request_body_finit);
 	fprintf(stderr, ">>>>>>>>>>>>>>>>>%s return 0\n", __FUNCTION__);
 	EXIT_FUNC;
 	return 0;
