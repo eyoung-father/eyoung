@@ -18,6 +18,10 @@ req-9.msg:
 	http text/plain content-type header parser
 req-10.msg:
 	http text/plain content-type/content-length header parser
+req-11.msg
+	one paramater in post body defined by content-length header
+req-12.msg
+	two paramaters in post body defined by content-length header
 
 res-1.msg:
 	simple http get response

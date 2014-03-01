@@ -130,7 +130,7 @@ static int parse_urlencoded_parameter_list(http_decoder_t *decoder, http_string_
 		continue;
 	}
 
-	if(n==0 && ptr<tail)
+	if(ptr<tail)
 	{
 		http_string_t s = {ptr, tail-ptr};
 
