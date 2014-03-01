@@ -187,10 +187,15 @@
 
 3:request_body
 	{
+		ENTER_FUNC;
 		request_data_t *req_data = (request_data_t*)_THIS_->user_defined;
 		http_string_t *body = &req_data->raw_data;
-		ENTER_FUNC;
+		parameter_list_t *list = &req_data->parameter_list;
+		parameter_t *pm = NULL;
+		int n=0;
 		http_debug(debug_http_detect, "body len: %d, body content: %s\n", body->len, body->buf);
+		STAILQ_FOREACH(pm, list, next)
+			http_debug(debug_http_detect, "param[%d], name: %s, value: %s\n", ++n, pm->name.buf, pm->value.buf);
 		EXIT_FUNC(1);
 	}
 	;
