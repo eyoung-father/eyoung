@@ -51,6 +51,7 @@ static void print_parameter_list(parameter_list_t *list)
 
 static parameter_t *parse_urlencoded_parameter(http_decoder_t *decoder, http_string_t *raw_data)
 {
+	ENTER;
 	http_string_t name={NULL, 0};
 	http_string_t value={NULL, 0};
 	char *begin = raw_data->buf;
@@ -96,6 +97,7 @@ failed:
 
 static int parse_urlencoded_parameter_list(http_decoder_t *decoder, http_string_t *raw_data, parameter_list_t *list)
 {
+	ENTER;
 	char *scan = raw_data->buf;
 	char *tail = scan + raw_data->len;
 	char *ptr  = scan;
@@ -127,6 +129,20 @@ static int parse_urlencoded_parameter_list(http_decoder_t *decoder, http_string_
 		}
 		continue;
 	}
+
+	if(n==0 && ptr<tail)
+	{
+		http_string_t s = {ptr, tail-ptr};
+
+		parameter = parse_urlencoded_parameter(decoder, &s);
+		if(!parameter)
+		{
+			http_debug(debug_http_detect, "parse parameter %d failed\n", n);
+			goto failed;
+		}
+		n++;
+		STAILQ_INSERT_TAIL(list, parameter, next);
+	}
 	http_debug(debug_http_detect, "find %d parameters\n", n);
 	print_parameter_list(list);
 	LEAVE(0);
@@ -138,6 +154,7 @@ failed:
 
 static int body_merge(http_decoder_t *decoder, http_body_t *body, http_string_t *body_string, int from_client)
 {
+	ENTER;
 	assert(body_string != NULL);
 	char *wt = NULL, *o_buf=NULL;
 	size_t o_len = 0;
@@ -200,8 +217,8 @@ int http_request_uri_preprocessor(engine_work_event_t *event)
 
 int http_request_body_init(engine_work_event_t *event)
 {
-	request_data_t *req_data = NULL;
 	ENTER;
+	request_data_t *req_data = NULL;
 	req_data = (request_data_t*)http_malloc(sizeof(request_data_t));
 	if(!req_data)
 	{

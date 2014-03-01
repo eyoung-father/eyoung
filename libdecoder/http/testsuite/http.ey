@@ -7,8 +7,22 @@
 #include "http.h"
 #include "http_detect.h"
 
-#define ENTER_FUNC	fprintf(stderr, "\n=============ENTER %s=============\n", __FUNCTION__)
-#define EXIT_FUNC	fprintf(stderr, "=============EXIT %s=============\n\n", __FUNCTION__)
+#define ENTER_FUNC									\
+	do												\
+	{												\
+		http_debug(debug_http_detect,				\
+		"\n=============ENTER %s=============\n",	\
+		__FUNCTION__);								\
+	}while(0)
+
+#define EXIT_FUNC(r)								\
+	do												\
+	{												\
+		http_debug(debug_http_detect,				\
+		"=============EXIT %s(%d)=============\n\n",\
+		__FUNCTION__, r);							\
+		return (r);									\
+	}while(0)
 %}
 
 %output "http.eyc"
@@ -160,62 +174,49 @@
 1:request
 	{
 		ENTER_FUNC;
-		fprintf(stderr, ">>>>>>>>>>>>>>>>>%s return 0\n", __FUNCTION__);
-		EXIT_FUNC;
-		return 1;
+		EXIT_FUNC(1);
 	}
 	;
 
 2:request_line_uri
 	{
 		ENTER_FUNC;
-		fprintf(stderr, ">>>>>>>>>>>>>>>>>%s return 0\n", __FUNCTION__);
-		EXIT_FUNC;
-		return 1;
+		EXIT_FUNC(1);
 	}
 	;
 
 3:request_body
 	{
-		http_string_t *body = (http_string_t*)_THIS_->user_defined;
+		request_data_t *req_data = (request_data_t*)_THIS_->user_defined;
+		http_string_t *body = &req_data->raw_data;
 		ENTER_FUNC;
-		fprintf(stderr, "body len: %d, body content: %s\n", body->len, body->buf);
-		fprintf(stderr, ">>>>>>>>>>>>>>>>>%s return 0\n", __FUNCTION__);
-		EXIT_FUNC;
-		return 1;
+		http_debug(debug_http_detect, "body len: %d, body content: %s\n", body->len, body->buf);
+		EXIT_FUNC(1);
 	}
 	;
 %%
 int http_work_init_user(engine_work_t *work)
 {
 	ENTER_FUNC;
-	fprintf(stderr, ">>>>>>>>>>>>>>>>>%s return 0\n", __FUNCTION__);
-	EXIT_FUNC;
-	return 0;
+	EXIT_FUNC(0);
 }
 
 int http_request_event_preprocessor(engine_work_event_t *event)
 {
 	ENTER_FUNC;
-	fprintf(stderr, ">>>>>>>>>>>>>>>>>%s return 0\n", __FUNCTION__);
-	EXIT_FUNC;
-	return 0;
+	EXIT_FUNC(0);
 }
 
 int http_work_finit_user(engine_work_t *work)
 {
 	ENTER_FUNC;
-	fprintf(stderr, ">>>>>>>>>>>>>>>>>%s return 0\n", __FUNCTION__);
-	EXIT_FUNC;
-	return 0;
+	EXIT_FUNC(0);
 }
 
 int http_finit(engine_t eng)
 {
 	ENTER_FUNC;
-	fprintf(stderr, ">>>>>>>>>>>>>>>>>%s return 0\n", __FUNCTION__);
-	EXIT_FUNC;
-	return 0;
+	EXIT_FUNC(0);
 }
 
 int http_init(engine_t eng)
@@ -229,7 +230,5 @@ int http_init(engine_t eng)
 	ey_set_userdefine_event_preprocess(eng, request_body, http_request_body_preprocessor);
 	ey_set_userdefine_event_init(eng, request_body, http_request_body_init);
 	ey_set_userdefine_event_finit(eng, request_body, http_request_body_finit);
-	fprintf(stderr, ">>>>>>>>>>>>>>>>>%s return 0\n", __FUNCTION__);
-	EXIT_FUNC;
-	return 0;
+	EXIT_FUNC(0);
 }
