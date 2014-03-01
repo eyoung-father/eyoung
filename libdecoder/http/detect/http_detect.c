@@ -7,6 +7,22 @@
 #include "http_detect.h"
 #include "http_private.h"
 
+#define ENTER										\
+	do												\
+	{												\
+		http_debug(debug_http_detect,				\
+		"\n=============ENTER %s=============\n",	\
+		__FUNCTION__);								\
+	}while(0)
+
+#define LEAVE(r)									\
+	do												\
+	{												\
+		http_debug(debug_http_detect,				\
+		"=============EXIT %s(%d)=============\n",	\
+		__FUNCTION__, r);							\
+		return r;									\
+	}while(0)
 static void http_free_parameter_list(http_decoder_t *decoder, parameter_list_t *p_list, int from_client)
 {
 	parameter_t *pm=NULL, *tmp=NULL;
@@ -82,34 +98,29 @@ static int http_body_merge(http_decoder_t *decoder, http_body_t *body, http_stri
 
 int http_request_uri_preprocessor(engine_work_event_t *event)
 {
-	http_debug(debug_http_detect, "\n=============ENTER %s=============\n", __FUNCTION__);
-	http_debug(debug_http_detect, ">>>>>>>>>>>>>>>>>%s return 0\n", __FUNCTION__);
-	http_debug(debug_http_detect, "=============EXIT %s=============\n", __FUNCTION__);
-	return 0;
+	ENTER;
+	LEAVE(0);
 }
 
 int http_request_body_init(engine_work_event_t *event)
 {
 	request_data_t *req_data = NULL;
-	http_debug(debug_http_detect, "\n=============ENTER %s=============\n", __FUNCTION__);
+	ENTER;
 	req_data = (request_data_t*)http_malloc(sizeof(request_data_t));
 	if(!req_data)
 	{
-		http_debug(debug_http_detect, ">>>>>>>>>>>>>>>>>%s return 1\n", __FUNCTION__);
-		http_debug(debug_http_detect, "=============EXIT %s=============\n", __FUNCTION__);
 		event->user_defined = req_data;
-		return 1;
+		LEAVE(1);
 	}
 	memset(req_data, 0, sizeof(request_data_t));
 	STAILQ_INIT(&req_data->parameter_list);
 	event->user_defined = req_data;
-	http_debug(debug_http_detect, "=============EXIT %s=============\n", __FUNCTION__);
-	return 0;
+	LEAVE(0);
 }
 
 int http_request_body_finit(engine_work_event_t *event)
 {
-	http_debug(debug_http_detect, "\n=============ENTER %s=============\n", __FUNCTION__);
+	ENTER;
 	if(event->user_defined)
 	{
 		engine_work_t *engine_work = event->work;
@@ -122,13 +133,12 @@ int http_request_body_finit(engine_work_event_t *event)
 		http_free(req_data);
 		event->user_defined = NULL;
 	}
-	http_debug(debug_http_detect, "=============EXIT %s=============\n", __FUNCTION__);
-	return 0;
+	LEAVE(0);
 }
 
 int http_request_body_preprocessor(engine_work_event_t *event)
 {
-	http_debug(debug_http_detect, "\n=============ENTER %s=============\n", __FUNCTION__);
+	ENTER;
 	request_data_t *req_data = (request_data_t*)event->user_defined;
 
 	engine_work_t *engine_work = event->work;
@@ -144,47 +154,40 @@ int http_request_body_preprocessor(engine_work_event_t *event)
 	if(!body)
 	{
 		http_debug(debug_http_detect, "null http body\n");
-		http_debug(debug_http_detect, "=============EXIT %s=============\n", __FUNCTION__);
-		return 0;
+		LEAVE(0);
 	}
 
 	if(body->info.content_type.subtype != HTTP_BODY_CONTENT_SUBTYPE_X_WWW_FORM_URLENCODED || 
 		body->info.content_type.maintype != HTTP_BODY_CONTENT_MAINTYPE_APPLICATION)
 	{
 		http_debug(debug_http_detect, "no need do body preprocessing\n");
-		http_debug(debug_http_detect, "=============EXIT %s=============\n", __FUNCTION__);
-		return 0;
+		LEAVE(0);
 	}
 
 	if(http_body_merge(decoder, body, &req_data->raw_data, 1))
 	{
 		http_debug(debug_http_detect, "merge http body failed\n");
-		http_debug(debug_http_detect, "=============EXIT %s=============\n", __FUNCTION__);
-		return -1;
+		LEAVE(-1);
 	}
 	
 	if(html_parse_urlencoded_parameter(decoder, &req_data->raw_data, &req_data->parameter_list))
 	{
 		http_debug(debug_http_detect, "parse url-encoded parameter list failed\n");
-		http_debug(debug_http_detect, "=============EXIT %s=============\n", __FUNCTION__);
-		return -1;
+		LEAVE(-1);
 	}
-	http_debug(debug_http_detect, "=============EXIT %s=============\n", __FUNCTION__);
-	return 0;
+	LEAVE(0);
 }
 
 int http_request_uri_xss_check(engine_work_t *engine_work, engine_work_event_t *work_event)
 {
-	http_debug(debug_http_detect, "\n=============ENTER %s=============\n", __FUNCTION__);
+	ENTER;
 	http_debug(debug_http_detect, ">>>>>>>>>>>>>>>>>%s return 1\n", __FUNCTION__);
-	http_debug(debug_http_detect, "=============EXIT %s=============\n", __FUNCTION__);
-	return 1;
+	LEAVE(1);
 }
 
 int http_request_body_xss_check(engine_work_t *engine_work, engine_work_event_t *work_event)
 {
-	http_debug(debug_http_detect, "\n=============ENTER %s=============\n", __FUNCTION__);
+	ENTER;
 	http_debug(debug_http_detect, ">>>>>>>>>>>>>>>>>%s return 1\n", __FUNCTION__);
-	http_debug(debug_http_detect, "=============EXIT %s=============\n", __FUNCTION__);
-	return 1;
+	LEAVE(1);
 }
