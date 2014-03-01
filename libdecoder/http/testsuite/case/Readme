@@ -22,6 +22,8 @@ req-11.msg
 	one paramater in post body defined by content-length header
 req-12.msg
 	two paramaters in post body defined by content-length header
+req-13.msg
+	two paramaters in post body defined by chunked format
 
 res-1.msg:
 	simple http get response
