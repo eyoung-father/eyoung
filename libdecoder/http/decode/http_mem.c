@@ -543,7 +543,7 @@ char* http_alloc_string(http_decoder_t *decoder, const char *i_str, size_t i_len
 		ret = (char*)http_fzalloc(i_len+1, decoder->http_response_value_fslab);
 	if(ret)
 	{
-		if(i_str)
+		if(i_str && i_len)
 			memcpy(ret, i_str, i_len);
 		ret[i_len] = '\0';
 		o_str->buf = ret;

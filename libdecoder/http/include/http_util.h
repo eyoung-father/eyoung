@@ -22,4 +22,5 @@ extern http_body_content_language_t http_parse_content_language(const char *valu
 extern void http_parse_content_type(const char *value, http_body_content_maintype_t *main_type, 
 									http_body_content_subtype_t *sub_type, 
 									http_body_content_charset_t *charset);
+extern void http_string_decode(http_string_t *string);
 #endif

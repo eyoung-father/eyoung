@@ -689,3 +689,8 @@ failed:
 	http_free_string_list(decoder, &unzip_data_list, from_client);
 	return -1;
 }
+
+void http_string_decode(http_string_t *string)
+{
+	/*TODO*/
+}

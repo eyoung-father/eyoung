@@ -23,24 +23,120 @@
 		__FUNCTION__, r);							\
 		return r;									\
 	}while(0)
-static void http_free_parameter_list(http_decoder_t *decoder, parameter_list_t *p_list, int from_client)
+static void free_parameter_list(http_decoder_t *decoder, parameter_list_t *p_list)
 {
 	parameter_t *pm=NULL, *tmp=NULL;
 	STAILQ_FOREACH_SAFE(pm, p_list, next, tmp)
 	{
-		http_free_string(decoder, &pm->name, from_client);
-		http_free_string(decoder, &pm->value, from_client);
+		http_client_free_string(decoder, &pm->name);
+		http_client_free_string(decoder, &pm->value);
 		http_free(pm);
+	}
+	STAILQ_INIT(p_list);
+}
+
+static void print_parameter_list(parameter_list_t *list)
+{
+	if(!debug_http_detect)
+		return;
+	
+	parameter_t *p = NULL;
+	int n=0;
+	STAILQ_FOREACH(p, list, next)
+	{
+		http_debug(1, "\tparam[%d], name: %s, value: %s\n", n, p->name.buf, p->value.buf);
+		n++;
 	}
 }
 
-static int html_parse_urlencoded_parameter(http_decoder_t *decoder, http_string_t *raw_data, parameter_list_t *list)
+static parameter_t *parse_urlencoded_parameter(http_decoder_t *decoder, http_string_t *raw_data)
 {
-	/*TODO*/
-	return 0;
+	http_string_t name={NULL, 0};
+	http_string_t value={NULL, 0};
+	char *begin = raw_data->buf;
+	char *scan = begin;
+	char *tail = scan + raw_data->len;
+	parameter_t *ret = NULL;
+
+	while(*scan != '=' && scan < tail)
+		scan++;
+	
+	if(!http_client_alloc_string(decoder, begin, scan-begin, &name))
+	{
+		http_debug(debug_http_detect, "alloc name string failed\n");
+		goto failed;
+	}
+
+	if(scan<tail)
+		scan++;
+	
+	if(!http_client_alloc_string(decoder, scan, tail-scan, &value))
+	{
+		http_debug(debug_http_detect, "alloc value string failed\n");
+		goto failed;
+	}
+	http_string_decode(&value);
+
+	ret = (parameter_t*)http_malloc(sizeof(parameter_t));
+	if(!ret)
+	{
+		http_debug(debug_http_detect, "alloc return parameter failed\n");
+		goto failed;
+	}
+	memset(ret, 0, sizeof(parameter_t));
+	ret->name = name;
+	ret->value = value;
+	return ret;
+
+failed:
+	http_client_free_string(decoder, &name);
+	http_client_free_string(decoder, &value);
+	return NULL;
 }
 
-static int http_body_merge(http_decoder_t *decoder, http_body_t *body, http_string_t *body_string, int from_client)
+static int parse_urlencoded_parameter_list(http_decoder_t *decoder, http_string_t *raw_data, parameter_list_t *list)
+{
+	char *scan = raw_data->buf;
+	char *tail = scan + raw_data->len;
+	char *ptr  = scan;
+	int n=0;
+	parameter_t *parameter=NULL;
+	
+	while(*ptr == '&' && ptr<tail)
+		ptr++;
+	
+	for(scan=ptr; scan<tail; scan++)
+	{
+		if(*scan == '&')
+		{
+			size_t len = scan - ptr;
+			http_string_t s = {ptr, len};
+			assert(len>0);
+			parameter = parse_urlencoded_parameter(decoder, &s);
+			if(!parameter)
+			{
+				http_debug(debug_http_detect, "parse parameter %d failed\n", n);
+				goto failed;
+			}
+			n++;
+			STAILQ_INSERT_TAIL(list, parameter, next);
+			ptr = scan;
+			while(*ptr == '&' && ptr<tail)
+				ptr++;
+			scan = ptr - 1;
+		}
+		continue;
+	}
+	http_debug(debug_http_detect, "find %d parameters\n", n);
+	print_parameter_list(list);
+	LEAVE(0);
+
+failed:
+	free_parameter_list(decoder, list);
+	LEAVE(-1);
+}
+
+static int body_merge(http_decoder_t *decoder, http_body_t *body, http_string_t *body_string, int from_client)
 {
 	assert(body_string != NULL);
 	char *wt = NULL, *o_buf=NULL;
@@ -49,7 +145,7 @@ static int http_body_merge(http_decoder_t *decoder, http_body_t *body, http_stri
 	if(!body)
 	{
 		http_debug(debug_http_detect, "%s: null body parameter\n", __FUNCTION__);
-		return -1;
+		LEAVE(-1);
 	}
 
 	o_len = body->info.body_size;
@@ -57,7 +153,7 @@ static int http_body_merge(http_decoder_t *decoder, http_body_t *body, http_stri
 	if(!o_buf)
 	{
 		http_debug(debug_http_detect, "%s: failed to alloc merged body space\n", __FUNCTION__);
-		return -1;
+		LEAVE(-1);
 	}
 
 	wt = o_buf;
@@ -93,7 +189,7 @@ static int http_body_merge(http_decoder_t *decoder, http_body_t *body, http_stri
 	}
 
 	*wt = '\0';
-	return 0;
+	LEAVE(0);
 }
 
 int http_request_uri_preprocessor(engine_work_event_t *event)
@@ -128,8 +224,8 @@ int http_request_body_finit(engine_work_event_t *event)
 		http_decoder_t *http_decoder = (http_decoder_t*)http_data->decoder;
 		request_data_t *req_data = (request_data_t*)event->user_defined;
 		
-		http_free_string(http_decoder, &req_data->raw_data, 1);
-		http_free_parameter_list(http_decoder, &req_data->parameter_list, 1);
+		http_client_free_string(http_decoder, &req_data->raw_data);
+		free_parameter_list(http_decoder, &req_data->parameter_list);
 		http_free(req_data);
 		event->user_defined = NULL;
 	}
@@ -164,13 +260,13 @@ int http_request_body_preprocessor(engine_work_event_t *event)
 		LEAVE(0);
 	}
 
-	if(http_body_merge(decoder, body, &req_data->raw_data, 1))
+	if(body_merge(decoder, body, &req_data->raw_data, 1))
 	{
 		http_debug(debug_http_detect, "merge http body failed\n");
 		LEAVE(-1);
 	}
 	
-	if(html_parse_urlencoded_parameter(decoder, &req_data->raw_data, &req_data->parameter_list))
+	if(parse_urlencoded_parameter_list(decoder, &req_data->raw_data, &req_data->parameter_list))
 	{
 		http_debug(debug_http_detect, "parse url-encoded parameter list failed\n");
 		LEAVE(-1);
@@ -181,13 +277,11 @@ int http_request_body_preprocessor(engine_work_event_t *event)
 int http_request_uri_xss_check(engine_work_t *engine_work, engine_work_event_t *work_event)
 {
 	ENTER;
-	http_debug(debug_http_detect, ">>>>>>>>>>>>>>>>>%s return 1\n", __FUNCTION__);
 	LEAVE(1);
 }
 
 int http_request_body_xss_check(engine_work_t *engine_work, engine_work_event_t *work_event)
 {
 	ENTER;
-	http_debug(debug_http_detect, ">>>>>>>>>>>>>>>>>%s return 1\n", __FUNCTION__);
 	LEAVE(1);
 }
