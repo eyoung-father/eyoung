@@ -1,0 +1,307 @@
+%{
+#include <string.h>
+#include <strings.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <assert.h>
+#include <ctype.h>
+#include "http.h"
+#include "http_detect.h"
+#include "html_detect.h"
+
+#define ENTER_FUNC									\
+	do												\
+	{												\
+		http_debug(debug_http_detect,				\
+		"\n=============ENTER %s=============\n",	\
+		__FUNCTION__);								\
+	}while(0)
+
+#define EXIT_FUNC(r)								\
+	do												\
+	{												\
+		http_debug(debug_http_detect,				\
+		"=============EXIT %s(%d)=============\n\n",\
+		__FUNCTION__, r);							\
+		return (r);									\
+	}while(0)
+
+#define PARAM_SIZE 512
+#define TEST_TEMPLATE "<p class=\"$1\">$0</p>"
+#define TRAINING_DATA "cGFydDEtcGFydDI="	/*"part1-part2"*/
+static int my_xss_preprocessor(int cnt, int size, html_string_t *params);
+static int my_xss_check(engine_work_event_t *body_event);
+static xss_work_t my_xss_work = NULL;
+%}
+
+%output "http_xss.eyc"
+%file-init "http_init"
+%import "libhttp_detect.so"
+%import "libhtml_detect.so"
+
+/*
+ * CLIENT EVENT
+ * */
+%event "request_list"						"void"
+%event "request_empty"						"void"
+%event "request"							"http_request_t *"
+%event "request_line"						"http_request_first_line_t *"
+%event "request_headers"					"http_request_header_list_t"
+%event "request_header_list"				"http_request_header_list_t"
+%event "request_line_method"				"http_request_method_t"
+%event "request_line_uri"					"http_string_t"
+%event "request_header_value"				"http_string_t"
+%event "request_body_part"					"http_string_t"
+%event "request_line_version"				"http_version_t"
+%event "request_body"						"http_body_t *"
+%event "request_normal_body"				"http_string_list_t"
+%event "request_chunk_tailer_list"			"http_string_list_t"
+%event "request_chunk_data"					"http_string_list_t"
+%event "request_chunk"						"http_chunk_body_part_t *"
+%event "request_chunk_list"					"http_chunk_body_list_t"
+%event "request_chunk_header"				"http_chunk_body_header_t"
+%event "request_chunk_body"					"http_chunk_body_t"
+%event "request_header"						"http_request_header_t *"
+%event "request_header_cache_control"		"http_request_header_t *"
+%event "request_header_connection"			"http_request_header_t *"
+%event "request_header_date"				"http_request_header_t *"
+%event "request_header_pragma"				"http_request_header_t *"
+%event "request_header_trailer"				"http_request_header_t *"
+%event "request_header_transfer_encoding"	"http_request_header_t *"
+%event "request_header_upgrade"				"http_request_header_t *"
+%event "request_header_via"					"http_request_header_t *"
+%event "request_header_warning"				"http_request_header_t *"
+%event "request_header_mime_version"		"http_request_header_t *"
+%event "request_header_allow"				"http_request_header_t *"
+%event "request_header_content_encoding"	"http_request_header_t *"
+%event "request_header_content_language"	"http_request_header_t *"
+%event "request_header_content_length"		"http_request_header_t *"
+%event "request_header_content_location"	"http_request_header_t *"
+%event "request_header_content_md5"			"http_request_header_t *"
+%event "request_header_content_range"		"http_request_header_t *"
+%event "request_header_content_type"		"http_request_header_t *"
+%event "request_header_etag"				"http_request_header_t *"
+%event "request_header_expires"				"http_request_header_t *"
+%event "request_header_last_modified"		"http_request_header_t *"
+%event "request_header_content_base"		"http_request_header_t *"
+%event "request_header_content_version"		"http_request_header_t *"
+%event "request_header_derived_from"		"http_request_header_t *"
+%event "request_header_link"				"http_request_header_t *"
+%event "request_header_keep_alive"			"http_request_header_t *"
+%event "request_header_uri"					"http_request_header_t *"
+%event "request_header_accept_charset"		"http_request_header_t *"
+%event "request_header_accept_encoding"		"http_request_header_t *"
+%event "request_header_accept_language"		"http_request_header_t *"
+%event "request_header_accept"				"http_request_header_t *"
+%event "request_header_authorization"		"http_request_header_t *"
+%event "request_header_except"				"http_request_header_t *"
+%event "request_header_from"				"http_request_header_t *"
+%event "request_header_host"				"http_request_header_t *"
+%event "request_header_if_match"			"http_request_header_t *"
+%event "request_header_if_modified_since"	"http_request_header_t *"
+%event "request_header_if_none_match"		"http_request_header_t *"
+%event "request_header_if_range"			"http_request_header_t *"
+%event "request_header_if_unmodified_since"	"http_request_header_t *"
+%event "request_header_max_forwards"		"http_request_header_t *"
+%event "request_header_proxy_authorization"	"http_request_header_t *"
+%event "request_header_range"				"http_request_header_t *"
+%event "request_header_referer"				"http_request_header_t *"
+%event "request_header_te"					"http_request_header_t *"
+%event "request_header_user_agent"			"http_request_header_t *"
+%event "request_header_cookie2"				"http_request_header_t *"
+%event "request_header_cookie"				"http_request_header_t *"
+%event "request_header_ua_pixels"			"http_request_header_t *"
+%event "request_header_ua_color"			"http_request_header_t *"
+%event "request_header_ua_os"				"http_request_header_t *"
+%event "request_header_ua_cpu"				"http_request_header_t *"
+%event "request_header_x_flash_version"		"http_request_header_t *"
+%event "request_header_unkown"				"http_request_header_t *"
+
+
+%event "response_list"						"void"
+%event "response_empty"						"void"
+%event "response"							"http_response_t *"
+%event "response_line"						"http_response_first_line_t *"
+%event "response_headers"					"http_response_header_list_t"
+%event "response_header_list"				"http_response_header_list_t"
+%event "response_body"						"http_body_t *"
+%event "response_normal_body"				"http_string_list_t"
+%event "response_chunk_tailer_list"			"http_string_list_t"
+%event "response_chunk_data"				"http_string_list_t"
+%event "response_chunk"						"http_chunk_body_part_t *"
+%event "response_chunk_list"				"http_chunk_body_list_t"
+%event "response_chunk_header"				"http_chunk_body_header_t"
+%event "response_chunk_body"				"http_chunk_body_t"
+%event "response_line_version"				"http_version_t"
+%event "response_line_code"					"http_response_code_t"
+%event "response_line_message"				"http_string_t"
+%event "response_header_value"				"http_string_t"
+%event "response_body_part"					"http_string_t"
+%event "response_header"					"http_response_header_t *"
+%event "response_header_cache_control"		"http_response_header_t *"
+%event "response_header_connection"			"http_response_header_t *"
+%event "response_header_date"				"http_response_header_t *"
+%event "response_header_pragma"				"http_response_header_t *"
+%event "response_header_trailer"			"http_response_header_t *"
+%event "response_header_transfer_encoding"	"http_response_header_t *"
+%event "response_header_upgrade"			"http_response_header_t *"
+%event "response_header_via"				"http_response_header_t *"
+%event "response_header_warning"			"http_response_header_t *"
+%event "response_header_mime_version"		"http_response_header_t *"
+%event "response_header_allow"				"http_response_header_t *"
+%event "response_header_content_encoding"	"http_response_header_t *"
+%event "response_header_content_language"	"http_response_header_t *"
+%event "response_header_content_length"		"http_response_header_t *"
+%event "response_header_content_location"	"http_response_header_t *"
+%event "response_header_content_md5"		"http_response_header_t *"
+%event "response_header_content_range"		"http_response_header_t *"
+%event "response_header_content_type"		"http_response_header_t *"
+%event "response_header_etag"				"http_response_header_t *"
+%event "response_header_expires"			"http_response_header_t *"
+%event "response_header_last_modified"		"http_response_header_t *"
+%event "response_header_content_base"		"http_response_header_t *"
+%event "response_header_content_version"	"http_response_header_t *"
+%event "response_header_derived_from"		"http_response_header_t *"
+%event "response_header_link"				"http_response_header_t *"
+%event "response_header_keep_alive"			"http_response_header_t *"
+%event "response_header_uri"				"http_response_header_t *"
+%event "response_header_accept_ranges"		"http_response_header_t *"
+%event "response_header_age"				"http_response_header_t *"
+%event "response_header_location"			"http_response_header_t *"
+%event "response_header_retry_after"		"http_response_header_t *"
+%event "response_header_server"				"http_response_header_t *"
+%event "response_header_vary"				"http_response_header_t *"
+%event "response_header_www_authenticate"	"http_response_header_t *"
+%event "response_header_set_cookie2"		"http_response_header_t *"
+%event "response_header_set_cookie"			"http_response_header_t *"
+%event "response_header_x_powered_by"		"http_response_header_t *"
+%event "response_header_proxy_authenticate"	"http_response_header_t *"
+%event "response_header_unkown"				"http_response_header_t *"
+
+%event "transaction_pair"					"http_transaction_t *"
+
+%%
+1:request_body(my_xss_check(_THIS_))
+	{
+		ENTER_FUNC;
+		request_data_t *req_data = (request_data_t*)_THIS_->user_defined;
+		http_string_t *body = &req_data->raw_data;
+		parameter_list_t *list = &req_data->parameter_list;
+		parameter_t *pm = NULL;
+		int n=0;
+		http_debug(debug_http_detect, "body len: %d, body content: %s\n", body->len, body->buf);
+		STAILQ_FOREACH(pm, list, next)
+			http_debug(debug_http_detect, "param[%d], name: %s, value: %s\n", ++n, pm->name.buf, pm->value.buf);
+		EXIT_FUNC(1);
+	}
+	;
+%%
+static int my_xss_check(engine_work_event_t *body_event)
+{
+	ENTER_FUNC;
+	request_data_t *req_data = (request_data_t*)body_event->user_defined;
+	if(!req_data)
+	{
+		http_debug(debug_http_detect, "body is not pre-processed, skip xss check\n");
+		EXIT_FUNC(0);
+	}
+
+	parameter_t *pm = NULL;
+	STAILQ_FOREACH(pm, &req_data->parameter_list, next)
+	{
+		if(!strcasecmp(pm->name.buf, "eyoung"))
+		{
+			http_debug(debug_http_detect, "find post parameter 'eyoung'\n");
+			break;
+		}
+	}
+	if(!pm)
+	{
+		http_debug(debug_http_detect, "post parameter 'eyoung' is not found\n");
+		EXIT_FUNC(0);
+	}
+
+	char p1[PARAM_SIZE], p2[PARAM_SIZE];
+	html_string_t params[2] = {{p1,0}, {p2,0}};
+	
+	strncpy(params[0].buf, pm->value.buf, PARAM_SIZE);
+	params[0].buf[PARAM_SIZE-1] = '\0';
+	params[0].len = strlen(params[0].buf);
+
+	if(xss_check(my_xss_work, 1, 2, params))
+	{
+		http_debug(debug_http_detect, "find xss in value: %s\n", pm->value.buf);
+		EXIT_FUNC(1);
+	}
+
+	http_debug(debug_http_detect, "value %s is clean\n", pm->value.buf);
+	EXIT_FUNC(0);
+}
+
+static int my_xss_preprocessor(int cnt, int size, html_string_t *params)
+{
+	ENTER_FUNC;
+	char *ptr = NULL;
+	
+	//base64 decode
+	int left = 0;
+	int decoded_len = base64_stream_decode(params[0].buf, params[0].buf, params[0].len, &left);
+	assert(left == 0);
+	params[0].len = decoded_len;
+
+	ptr = strchr(params[0].buf, '-');
+	assert(ptr != NULL);
+
+	*ptr = '\0';
+	params[0].len = strlen(params[0].buf);
+
+	ptr++;
+	assert(*ptr != '\0');
+	strcpy(params[1].buf, ptr);
+	params[1].len = strlen(ptr);
+
+	EXIT_FUNC(2);
+}
+
+static int my_xss_init()
+{
+	ENTER_FUNC;
+	char p1[PARAM_SIZE], p2[PARAM_SIZE];
+	html_string_t params[2] = {{p1,0}, {p2,0}};
+	
+	strncpy(params[0].buf, TRAINING_DATA, PARAM_SIZE);
+	params[0].len = sizeof(TRAINING_DATA) - 1;
+	my_xss_work = xss_training(TEST_TEMPLATE, my_xss_preprocessor, 1, 2, params);
+	assert(my_xss_work != NULL);
+	EXIT_FUNC(0);
+}
+
+static int my_xss_finit()
+{
+	ENTER_FUNC;
+	if(my_xss_work)
+	{
+		xss_untraining(my_xss_work);
+		my_xss_work = NULL;
+	}
+	EXIT_FUNC(0);
+}
+
+int http_finit(engine_t eng)
+{
+	ENTER_FUNC;
+	my_xss_finit();
+	EXIT_FUNC(0);
+}
+
+int http_init(engine_t eng)
+{
+	ENTER_FUNC;
+	ey_add_file_finit(eng, http_finit);
+	ey_set_userdefine_event_preprocess(eng, request_body, http_request_body_preprocessor);
+	ey_set_userdefine_event_init(eng, request_body, http_request_body_init);
+	ey_set_userdefine_event_finit(eng, request_body, http_request_body_finit);
+
+	my_xss_init();
+	EXIT_FUNC(0);
+}

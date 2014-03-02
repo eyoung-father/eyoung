@@ -24,6 +24,12 @@ req-12.msg
 	two paramaters in post body defined by content-length header
 req-13.msg
 	two paramaters in post body defined by chunked format
+req-14.msg
+	two paramaters in post body defined by chunked format
+	eyoung parameter is checked by libhtml_detect.so, and it is clean
+req-15.msg
+	two paramaters in post body defined by chunked format
+	eyoung parameter is checked by libhtml_detect.so, and it is dirty
 
 res-1.msg:
 	simple http get response
