@@ -18,7 +18,7 @@ static ey_preprocessor_t *ey_preprocessor_find(ey_engine_t *engine, const char *
 	return pp;
 }
 
-ey_preprocessor_t *ey_preprocessor_register(ey_engine_t *engine, ey_preprocessor_t *preprocessor)
+int ey_preprocessor_register(ey_engine_t *engine, ey_preprocessor_t *preprocessor)
 {
 	ey_preprocessor_t *ret = NULL;
 	assert(engine != NULL && preprocessor != NULL);
@@ -26,14 +26,14 @@ ey_preprocessor_t *ey_preprocessor_register(ey_engine_t *engine, ey_preprocessor
 	if(ey_preprocessor_find(engine, preprocessor->name))
 	{
 		engine_init_error("preprocessor %s is already registered\n");
-		return NULL;
+		return -1;
 	}
 
 	ret = (ey_preprocessor_t*)engine_malloc(sizeof(ey_preprocessor_t));
 	if(!ret)
 	{
 		engine_init_error("malloc preprocessor failed\n");
-		return NULL;
+		return -1;
 	}
 
 	memset(ret, 0, sizeof(*ret));
@@ -43,11 +43,11 @@ ey_preprocessor_t *ey_preprocessor_register(ey_engine_t *engine, ey_preprocessor
 	{
 		engine_init_error("preprocessor init failed\n");
 		engine_free(ret);
-		return NULL;
+		return -1;
 	}
 
 	TAILQ_INSERT_TAIL(&ey_preprocessor_list(engine), ret, link);
-	return ret;
+	return 0;
 }
 
 static void ey_preprocessor_unregister(ey_engine_t *engine, ey_preprocessor_t *preprocessor)
