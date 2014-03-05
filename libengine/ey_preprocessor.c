@@ -18,14 +18,12 @@ static ey_preprocessor_t *ey_preprocessor_find(ey_engine_t *engine, const char *
 	return pp;
 }
 
-ey_preprocessor_t *ey_preprocessor_register(ey_engine_t *engine, const char *name,
-	preprocessor_init_fn init, preprocessor_load_fn load,
-	preprocessor_detect_fn detect, preprocessor_finit_fn finit)
+ey_preprocessor_t *ey_preprocessor_register(ey_engine_t *engine, ey_preprocessor_t *preprocessor)
 {
 	ey_preprocessor_t *ret = NULL;
-	assert(engine != NULL && name != NULL);
+	assert(engine != NULL && preprocessor != NULL);
 	
-	if(ey_preprocessor_find(engine, name))
+	if(ey_preprocessor_find(engine, preprocessor->name))
 	{
 		engine_init_error("preprocessor %s is already registered\n");
 		return NULL;
@@ -39,15 +37,9 @@ ey_preprocessor_t *ey_preprocessor_register(ey_engine_t *engine, const char *nam
 	}
 
 	memset(ret, 0, sizeof(*ret));
+	memcpy(ret, preprocessor, sizeof(ey_preprocessor_t));
 
-	strncpy(ret->name, name, sizeof(ret->name));
-	ret->name[sizeof(ret->name)-1] = '\0';
-	ret->preprocessor_init = init;
-	ret->preprocessor_load = load;
-	ret->preprocessor_detect = detect;
-	ret->preprocessor_finit = finit;
-
-	if(init && init(engine, ret))
+	if(preprocessor->preprocessor_init && preprocessor->preprocessor_init(engine, ret))
 	{
 		engine_init_error("preprocessor init failed\n");
 		engine_free(ret);
