@@ -23,6 +23,7 @@
 #include "ey_work.h"
 #include "ey_runtime.h"
 #include "ey_lock.h"
+#include "ey_preprocessor.h"
 
 typedef struct ey_engine
 {
@@ -36,6 +37,7 @@ typedef struct ey_engine
 	ey_hash_t library_hash;
 	ey_hash_t rhs_item_hash;
 
+	ey_preprocessor_list_t preprocessor_list;
 	engine_work_list_t engine_work_list;
 
 	ey_signature_list_t signature_list;
@@ -86,6 +88,7 @@ typedef struct ey_engine
 #define ey_work_init_userdefined(eng) (((ey_engine_t*)(eng))->work_init_userdefined)
 #define ey_work_finit_userdefined(eng) (((ey_engine_t*)(eng))->work_finit_userdefined)
 #define ey_engine_work_list(eng) (((ey_engine_t*)(eng))->engine_work_list)
+#define ey_preprocessor_list(eng) (((ey_engine_t*)(eng))->preprocessor_list)
 #define ey_bitmap_slab(eng) (((ey_engine_t*)(eng))->bitmap_slab)
 #define ey_bitmap_buffer_fslab(eng) (((ey_engine_t*)(eng))->bitmap_buffer_fslab)
 #define ey_work_slab(eng) (((ey_engine_t*)(eng))->private_work_slab)
