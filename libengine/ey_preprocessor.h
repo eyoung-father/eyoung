@@ -24,13 +24,13 @@ typedef struct ey_preprocessor
 	char name[64];
 	void *processor_data;
 	
-	preprocessor_init_fn preprocessor_init;
-	preprocessor_load_fn preprocessor_load;
-	preprocessor_load_finish_fn preprocessor_load_finish;
-	preprocessor_detect_init_fn preprocessor_detect_init;
-	preprocessor_detect_fn preprocessor_detect;
-	preprocessor_detect_finit_fn preprocessor_detect_finit;
-	preprocessor_finit_fn preprocessor_finit;
+	preprocessor_init_fn preprocessor_init;		//called while preprocessor creating
+	preprocessor_load_fn preprocessor_load;		//called while loading a signature
+	preprocessor_load_finish_fn preprocessor_load_finish;	//called while loading all signature
+	preprocessor_detect_init_fn preprocessor_detect_init;	//called while a work being created
+	preprocessor_detect_fn preprocessor_detect;				//detect main
+	preprocessor_detect_finit_fn preprocessor_detect_finit;	//called while a work being destroyed
+	preprocessor_finit_fn preprocessor_finit;	//called while signature unload
 }ey_preprocessor_t;
 typedef TAILQ_HEAD(ey_preprocessor_list, ey_preprocessor) ey_preprocessor_list_t;
 
