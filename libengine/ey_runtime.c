@@ -134,8 +134,8 @@ engine_work_t* ey_runtime_create(ey_engine_t *eng)
 	lock_index++;
 	if(lock_index >= MAX_RUNTIME_ITEM)
 		lock_index = 0;
-	ey_spinlock_unlock(&ey_engine_lock(eng));
 	ey_work->lock_index = lock_index;
+	ey_spinlock_unlock(&ey_engine_lock(eng));
 	return engine_work;
 
 userdefined_failed:
