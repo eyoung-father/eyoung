@@ -7,7 +7,7 @@
 struct ey_engine;
 struct ey_preprocessor;
 
-typedef int (*preprocessor_load_fn)(struct ey_engine *engine, struct ey_preprocessor *preprocessor, const char *signature);
+typedef int (*preprocessor_load_fn)(struct ey_engine *engine, struct ey_preprocessor *preprocessor, const char *signature, unsigned long signature_id);
 typedef int (*preprocessor_detect_fn)(struct ey_engine *engine, struct ey_preprocessor *preprocessor, engine_work_event_t *work_event);
 typedef void (*preprocessor_finit_fn)(struct ey_engine *engine, struct ey_preprocessor *preprocessor);
 typedef int (*preprocessor_init_fn)(struct ey_engine *engine, struct ey_preprocessor *preprocessor);
