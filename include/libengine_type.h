@@ -44,7 +44,6 @@ typedef struct engine_work_event
 	char *data;
 	int data_len;
 
-	TAILQ_ENTRY(engine_work_event) link;
 	engine_work_t *work;
 	void *event;
 	void *predefined;	/*for protocol parser*/

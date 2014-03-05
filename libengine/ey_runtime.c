@@ -90,8 +90,6 @@ engine_work_t* ey_runtime_create(ey_engine_t *eng)
 		goto common_failed;
 	}
 	ey_work->state_bitmap = bitmap;
-	TAILQ_INIT(&ey_work->event_list);
-	ey_spinlock_init(&ey_work->work_lock);
 
 	/*alloc engine work*/
 	engine_work = (engine_work_t*)engine_zalloc(ey_engine_work_slab(eng));
@@ -188,15 +186,6 @@ void ey_runtime_destroy(engine_work_t *work)
 
 	ey_work_t *priv_work = (ey_work_t*)(work->priv_data);
 	ey_assert(priv_work!=NULL);
-
-	/*release work event list*/
-	engine_work_event_t *event = NULL, *tmp = NULL;
-	ey_spinlock_lock(&priv_work->work_lock);
-	TAILQ_FOREACH_SAFE(event, &priv_work->event_list, link, tmp)
-	{
-		ey_runtime_destroy_event(event);
-	}
-	ey_spinlock_unlock(&priv_work->work_lock);
 
 	/*call userdefined engine work finit function*/
 	if(ey_work_finit_userdefined(eng))
@@ -553,10 +542,6 @@ int ey_runtime_detect_event(engine_work_event_t *work_event)
 	engine_work_t *engine_work = work_event->work;
 	ey_assert(engine_work != NULL);
 
-#ifndef RELEASE
-	ey_engine_t *eng = (ey_engine_t*)(engine_work->engine);
-	ey_assert(eng != NULL);
-#endif
 	ey_work_t *work = (ey_work_t*)(engine_work->priv_data);
 	ey_assert(work != NULL);
 
@@ -564,6 +549,7 @@ int ey_runtime_detect_event(engine_work_event_t *work_event)
 	engine_action_t *action = work_event->action;
 	ey_assert(event != NULL && action != NULL);
 	action->action = ENGINE_ACTION_PASS;
+	engine_runtime_debug("check event %s\n", event->name);
 	
 	/*call predefined preprocessor function*/
 	if(event->event_preprocessor_predefined)
@@ -601,47 +587,19 @@ int ey_runtime_detect_event(engine_work_event_t *work_event)
 	 * such as other core/cpu/gpu/chip, in an async arch
 	 * */
 	engine_runtime_debug("start to do top half check\n");
-	TAILQ_INSERT_TAIL(&work->event_list, work_event, link);
-	int event_count = 0;
-	int release_list = 0;
-	engine_work_event_t *tmp = NULL;
-
 	ey_spinlock_lock(&item->lock);
-	TAILQ_FOREACH_SAFE(work_event, &work->event_list, link, tmp)
-	{
-		event = (ey_event_t*)(work_event->event);
-		engine_runtime_debug("check event %s\n", event->name);
-		if(event_count++ >= MAX_RUNTIME_EVENT)
-		{
-			engine_runtime_debug("check too many event once\n");
-			release_list = 1;
-		}
-		
-		if(!release_list)
-		{
-			int do_bottom = 1;
-			if(do_top_half_detect(work_event))
-			{
-				ey_spinlock_unlock(&item->lock);
-				engine_runtime_debug("no need to bottom half check, return 0\n");
-				do_bottom = 0;
-			}
-			
-			if(do_bottom)
-			{
-				engine_runtime_debug("start to do bottom half check\n");
-				if(do_bottom_half_detect(work_event))
-				{
-					ey_spinlock_unlock(&item->lock);
-					engine_runtime_debug("event is clean, return 0\n");
-				}
-			}
-		}
 
-		TAILQ_REMOVE(&work->event_list, work_event, link);
-		if(work->from_signature)
-			ey_runtime_destroy_event(work_event);
+	if(do_top_half_detect(work_event))
+	{
+		engine_runtime_debug("no need to bottom half check, return 0\n");
 	}
+	else
+	{
+		engine_runtime_debug("start to do bottom half check\n");
+		if(do_bottom_half_detect(work_event))
+			engine_runtime_debug("event is clean, return 0\n");
+	}
+
 	ey_spinlock_unlock(&item->lock);
 	engine_runtime_debug("event detect return %d\n", action->action==ENGINE_ACTION_PASS?0:-1);
 	return action->action==ENGINE_ACTION_PASS?0:-1;
