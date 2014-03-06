@@ -17,7 +17,7 @@ int gram_error(GRAM_LTYPE *loc, void *eng, const char *format, ...);
 
 #define ENG ((ey_engine_t *)eng)
 static char *output_filename;
-static ey_acsm_pattern_t *parse_cluster_string(ey_engine_t *eng, char *pattern);
+static ey_cluster_condition_t *parse_cluster_string(ey_engine_t *eng, char *preprocessor, char *pattern);
 %}
 
 %token TOKEN_STRING			"string"
@@ -59,7 +59,7 @@ static ey_acsm_pattern_t *parse_cluster_string(ey_engine_t *eng, char *pattern);
 	ey_code_t *code;
 	ey_code_list_t code_list;
 	ey_signature_file_t *file;
-	ey_acsm_pattern_t *pattern;
+	ey_cluster_condition_t *pattern;
 }
 
 %type	<integer>			TOKEN_INT
@@ -517,8 +517,8 @@ rhs_cluster_opt:
 	}
 	| TOKEN_SLASH TOKEN_STRING
 	{
-		ey_acsm_pattern_t *ret = NULL;
-		ret = parse_cluster_string(ENG, $2);
+		ey_cluster_condition_t *ret = NULL;
+		ret = parse_cluster_string(ENG, NULL, $2);
 		if(!ret)
 		{
 			engine_parser_error("parse cluster string failed\n");
@@ -576,7 +576,7 @@ int gram_error(GRAM_LTYPE *loc, void *eng, const char *format, ...)
 	return engine_parser_error("error(line %d): %s\n", loc->first_line, error_buf);
 }
 
-static ey_acsm_pattern_t *parse_cluster_string(ey_engine_t *eng, char *pattern)
+static ey_cluster_condition_t *parse_cluster_string(ey_engine_t *eng, char *preprocessor, char *pattern)
 {
 	if(!eng || !pattern)
 	{
@@ -584,7 +584,7 @@ static ey_acsm_pattern_t *parse_cluster_string(ey_engine_t *eng, char *pattern)
 		return NULL;
 	}
 
-	ey_acsm_pattern_t *ret = (ey_acsm_pattern_t*)engine_fzalloc(sizeof(ey_acsm_pattern_t), ey_parser_fslab(eng));
+	ey_cluster_condition_t *ret = (ey_cluster_condition_t*)engine_fzalloc(sizeof(ey_cluster_condition_t), ey_parser_fslab(eng));
 	if(!ret)
 	{
 		engine_parser_error("alloc acsm pattern failed\n");
@@ -595,5 +595,6 @@ static ey_acsm_pattern_t *parse_cluster_string(ey_engine_t *eng, char *pattern)
 	/*TODO: pattern string parse*/
 	ret->pattern = pattern;
 	ret->pattern_len = strlen(pattern);
+	ret->preprocessor = preprocessor;
 	return ret;
 }

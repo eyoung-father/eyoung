@@ -198,26 +198,6 @@ static int do_prefix_postfix(ey_engine_t *eng)
 	return 0;
 }
 
-static int do_acsm_compile(ey_engine_t *eng)
-{
-	/*do acsm compile for all event*/
-	if(ey_event_array(eng) && ey_event_count(eng))
-	{
-		int index = 0;
-		for(index=0; index<ey_event_count(eng); index++)
-		{
-			ey_assert(ey_event_array(eng)[index].cluster_pattern != NULL);
-			if(ey_acsm_compile(ey_event_array(eng)[index].cluster_pattern))
-			{
-				engine_init_error("compile acsm for event %s failed\n", ey_event_array(eng)[index].name);
-				return -1;
-			}
-		}
-	}
-	engine_init_debug("set compile event acsm ok\n");
-	return 0;
-}
-
 int ey_load_post_action(ey_engine_t *eng)
 {
 	if(!eng || !ey_rhs_id(eng) || !ey_jit(eng))
@@ -235,9 +215,6 @@ int ey_load_post_action(ey_engine_t *eng)
 		return -1;
 	
 	if(do_prefix_postfix(eng))
-		return -1;
-	
-	if(do_acsm_compile(eng))
 		return -1;
 	
 	return 0;

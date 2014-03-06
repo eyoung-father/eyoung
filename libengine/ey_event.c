@@ -80,13 +80,6 @@ ey_event_t *ey_alloc_event(ey_engine_t *eng, ey_location_t *location, char *name
 		return find;
 	}
 	
-	ey_acsm_t ac = ey_acsm_create();
-	if(!ac)
-	{
-		engine_parser_error("create acsm structure failed\n");
-		return NULL;
-	}
-
 	ey_event_t *ret = NULL;
 	if(ey_event_count(eng) > ey_event_size(eng))
 	{
@@ -100,7 +93,6 @@ ey_event_t *ey_alloc_event(ey_engine_t *eng, ey_location_t *location, char *name
 		if(!new_array)
 		{
 			engine_parser_error("alloc new event array failed\n");
-			ey_acsm_destroy(ac);
 			return NULL;
 		}
 		memcpy(new_array, ey_event_array(eng), sizeof(ey_event_t)*ey_event_count(eng));
@@ -127,7 +119,6 @@ ey_event_t *ey_alloc_event(ey_engine_t *eng, ey_location_t *location, char *name
 	ret->location = *location;
 	ret->name = name;
 	ret->define = define;
-	ret->cluster_pattern = ac;
 	TAILQ_INIT(&ret->item_list);
 	ey_event_count(eng)++;
 	return ret;
@@ -144,8 +135,6 @@ void ey_free_event(ey_engine_t *eng, ey_event_t *event)
 	if(event->define)
 		engine_fzfree(ey_parser_fslab(eng), event->define);
 
-	if(event->cluster_pattern)
-		ey_acsm_destroy(event->cluster_pattern);
 }
 
 int ey_event_set_runtime_init(ey_engine_t *eng, const char *event_name, int user_define,
