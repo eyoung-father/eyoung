@@ -14,9 +14,8 @@ typedef struct ey_work
 	ey_bitmap_t *preprocessor_bitmap;
 	ey_fslab_t local_allocator;
 
-	int lock_index;
-
 	void *simple_preprocessor;
+	int preprocessor_finish;
 }ey_work_t;
 
 extern int ey_work_init(struct ey_engine *eng);

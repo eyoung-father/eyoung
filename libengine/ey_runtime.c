@@ -6,15 +6,6 @@
 #include "ey_engine.h"
 #include "ey_runtime.h"
 
-typedef struct ey_runtime_item
-{
-	unsigned long head;
-	int *results;
-	ey_spinlock_t lock;
-}ey_runtime_item_t;
-static int *result_buffer;
-static ey_runtime_item_t runtime_item[MAX_RUNTIME_ITEM];
-
 int ey_runtime_init(ey_engine_t *eng)
 {
 	if(ey_bitmap_init(eng))
@@ -29,29 +20,11 @@ int ey_runtime_init(ey_engine_t *eng)
 		return -1;
 	}
 
-	result_buffer = (int*)engine_malloc(sizeof(int) * ey_rhs_id(eng) * MAX_RUNTIME_ITEM);
-	if(!result_buffer)
-	{
-		engine_init_error("malloc result buffer failed\n");
-		return -1;
-	}
-	memset(result_buffer, 0, sizeof(int) * ey_rhs_id(eng) * MAX_RUNTIME_ITEM);
-
-	int index;
-	for(index=0; index<MAX_RUNTIME_ITEM; index++)
-	{
-		runtime_item[index].results = result_buffer + ey_rhs_id(eng) * index;
-		ey_spinlock_init(&runtime_item[index].lock);
-	}
 	return 0;
 }
 
 void ey_runtime_finit(ey_engine_t *eng)
 {
-	if(result_buffer)
-		engine_free(result_buffer);
-	memset(runtime_item, 0, sizeof(runtime_item));
-
 	ey_work_finit(eng);
 	ey_bitmap_finit(eng);
 	return;
@@ -64,7 +37,6 @@ engine_work_t* ey_runtime_create(ey_engine_t *eng)
 	ey_bitmap_t *pp_bitmap = NULL;
 	ey_work_t *ey_work = NULL;
 	engine_work_t *engine_work = NULL;
-	static int lock_index;
 
 	/*alloc bitmap*/
 	bitmap = ey_bitmap_create(eng, ey_rhs_id(eng));
@@ -140,10 +112,6 @@ engine_work_t* ey_runtime_create(ey_engine_t *eng)
 	/*insert into work list*/
 	ey_spinlock_lock(&ey_engine_lock(eng));
 	TAILQ_INSERT_TAIL(&ey_engine_work_list(eng), engine_work, link);
-	lock_index++;
-	if(lock_index >= MAX_RUNTIME_ITEM)
-		lock_index = 0;
-	ey_work->lock_index = lock_index;
 	ey_spinlock_unlock(&ey_engine_lock(eng));
 	return engine_work;
 
@@ -342,56 +310,6 @@ void ey_runtime_destroy_event(engine_work_event_t *work_event)
 /*
  * DETECTING :)
  * */
-static int acsm_match_cb(void *id, void *tree, int index, void *data, void *neg_list)
-{
-	engine_work_event_t *work_event = (engine_work_event_t*)data;
-	engine_work_t *engine_work = work_event->work;
-	ey_work_t *work = (ey_work_t*)(engine_work->priv_data);
-	ey_runtime_item_t *item = runtime_item + work->lock_index;
-	unsigned long rhs_id = (unsigned long)id;
-	
-	if(debug_engine_runtime)
-	{
-		ey_engine_t *eng = (ey_engine_t*)(engine_work->engine);
-		ey_rhs_item_t *rhs_item = ey_hash_find(ey_rhs_item_hash(eng), id);
-		ey_assert(rhs_item!=NULL);
-		engine_runtime_debug("find rhs item %lu:%lu:%lu\n",
-			rhs_item->signature_id, rhs_item->rhs_signature_position, rhs_item->rhs_item_position);
-	}
-	item->results[rhs_id] = item->head;
-	item->head = rhs_id;
-	return 0;
-}
-
-static int do_top_half_detect(engine_work_event_t *work_event)
-{
-	engine_work_t *engine_work = work_event->work;
-	ey_event_t *event = (ey_event_t*)(work_event->event);
-	ey_work_t *work = (ey_work_t*)(engine_work->priv_data);
-	ey_runtime_item_t *item = runtime_item + work->lock_index;
-
-	if(TAILQ_EMPTY(&event->cluster_item_list) && TAILQ_EMPTY(&event->uncluster_item_list))
-	{
-		engine_runtime_debug("empty cluster and uncluster item list, no need to further checking\n");
-		return 1;
-	}
-
-	if(TAILQ_EMPTY(&event->uncluster_item_list) && (!work_event->data || !work_event->data_len))
-	{
-		engine_runtime_debug("only need do cluster check, but cluster matching data is not set\n");
-		return 1;
-	}
-
-	item->head = (unsigned long)-1;
-	if(event->cluster_pattern && work_event->data && work_event->data_len)
-	{
-		int last_state = 0;
-		ey_acsm_search(event->cluster_pattern, work_event->data, work_event->data_len, acsm_match_cb, work_event, &last_state);
-	}
-	engine_runtime_debug("need do further check, do_top_half_detect return 0\n");
-	return 0;
-}
-
 static int do_bottom_half_detect(engine_work_event_t *work_event)
 {
 	engine_work_t *engine_work = work_event->work;
@@ -399,22 +317,21 @@ static int do_bottom_half_detect(engine_work_event_t *work_event)
 	ey_event_t *event = (ey_event_t*)(work_event->event);
 	ey_work_t *work = (ey_work_t*)(engine_work->priv_data);
 	ey_bitmap_t *bitmap = work->state_bitmap;
-	ey_runtime_item_t *item = runtime_item + work->lock_index;
+	ey_bitmap_t *pp_bitmap = work->preprocessor_bitmap;
 	ey_rhs_item_t *rhs_item = NULL;
 	int prefix = 0, postfix=0;
 	event_condition_handle condition_cb = NULL;
 	event_action_handle action_cb = NULL;
-	unsigned long next_id = 0;
 	
 	/*check uncluster rhs_items first*/
 	TAILQ_FOREACH(rhs_item, &event->uncluster_item_list, event_link)
 	{
 		prefix = ey_prefix_array(eng)[rhs_item->rhs_id];
 		postfix = ey_postfix_array(eng)[rhs_item->rhs_id];
-
-		if(item->results[rhs_item->rhs_id])
+		
+		if(rhs_item->clustered ^ ey_bitmap_isset(eng, pp_bitmap, rhs_item->rhs_id))
 		{
-			engine_runtime_debug("%lu:%lu:%lu match negative, skip it\n", 
+			engine_runtime_debug("%lu:%lu:%lu not match preprocessor, skip it\n", 
 				rhs_item->signature_id, rhs_item->rhs_signature_position, rhs_item->rhs_item_position);
 			continue;
 		}
@@ -447,90 +364,25 @@ static int do_bottom_half_detect(engine_work_event_t *work_event)
 				continue;
 			}
 		}
-
+		
+		ey_bitmap_set(eng, bitmap, rhs_item->rhs_id);
 		if(postfix)
 		{
-			if(prefix)
-				ey_bitmap_clear(eng, bitmap, prefix);
-			ey_bitmap_set(eng, bitmap, postfix);
 			engine_runtime_debug("%lu:%lu:%lu need further check later\n",
 				rhs_item->signature_id, rhs_item->rhs_signature_position, rhs_item->rhs_item_position);
 			continue;
 		}
 		else
 		{
-			if(prefix)
-				ey_bitmap_clear(eng, bitmap, prefix);
+			ey_rhs_item_t *prev = rhs_item;
+			while(prev)
+			{
+				ey_bitmap_clear(eng, bitmap, prev->rhs_id);
+				ey_bitmap_clear(eng, pp_bitmap, prev->rhs_id);
+				prev = TAILQ_PREV(prev, ey_rhs_item_list, link);
+			}
 			goto find_something;
 		}
-	}
-	
-	/*do cluster rhs_item checking*/
-	while(item->head != (unsigned long)-1)
-	{
-		rhs_item = ey_hash_find(ey_rhs_item_hash(eng), (void*)&item->head);
-		ey_assert(rhs_item!=NULL);
-
-		if(!rhs_item->clustered)
-		{
-			engine_runtime_debug("%lu:%lu:%lu is not in cluster list, skip it\n",
-				rhs_item->signature_id, rhs_item->rhs_signature_position, rhs_item->rhs_item_position);
-			goto do_next;
-		}
-
-		prefix = ey_prefix_array(eng)[rhs_item->rhs_id];
-		postfix = ey_postfix_array(eng)[rhs_item->rhs_id];
-
-		if(prefix && !ey_bitmap_isset(eng, bitmap, rhs_item->rhs_id))
-		{
-			engine_runtime_debug("%lu:%lu:%lu prefix is not satisfied, skip it\n",
-				rhs_item->signature_id, rhs_item->rhs_signature_position, rhs_item->rhs_item_position);
-			goto do_next;
-		}
-
-		if(rhs_item->condition && rhs_item->condition->addr)
-		{
-			condition_cb = (event_condition_handle)(rhs_item->condition->addr);
-			if(condition_cb(engine_work, work_event) <= 0)
-			{
-				engine_runtime_debug("%lu:%lu:%lu condition check return false, skip it\n",
-					rhs_item->signature_id, rhs_item->rhs_signature_position, rhs_item->rhs_item_position);
-				goto do_next;
-			}
-		}
-
-		if(rhs_item->action && rhs_item->action->addr)
-		{
-			action_cb = (event_action_handle)(rhs_item->action->addr);
-			if(action_cb(engine_work, work_event) <= 0)
-			{
-				engine_runtime_debug("%lu:%lu:%lu action check return false, skip it\n",
-					rhs_item->signature_id, rhs_item->rhs_signature_position, rhs_item->rhs_item_position);
-				goto do_next;
-			}
-		}
-
-		if(postfix)
-		{
-			if(prefix)
-				ey_bitmap_clear(eng, bitmap, prefix);
-			ey_bitmap_set(eng, bitmap, postfix);
-			engine_runtime_debug("%lu:%lu:%lu need further check later\n",
-				rhs_item->signature_id, rhs_item->rhs_signature_position, rhs_item->rhs_item_position);
-			goto do_next;
-		}
-		else
-		{
-			if(prefix)
-				ey_bitmap_clear(eng, bitmap, prefix);
-			goto find_something;
-		}
-
-do_next:
-		next_id = item->results[item->head];
-		item->results[item->head] = 0;
-		item->head = next_id;
-		continue;
 	}
 
 	engine_runtime_debug("do_bottom_half_detect find nothing and return 1\n");
@@ -539,14 +391,6 @@ do_next:
 find_something:
 	engine_runtime_debug("%lu:%lu:%lu do_bottom_half_detect find something and return 0\n",
 		rhs_item->signature_id, rhs_item->rhs_signature_position, rhs_item->rhs_item_position);
-	
-	/*reset item->result*/
-	while(item->head != (unsigned long)-1)
-	{
-		next_id = item->results[item->head];
-		item->results[item->head] = 0;
-		item->head = next_id;
-	}
 	return 0;
 }
 
@@ -590,32 +434,10 @@ int ey_runtime_detect_event(engine_work_event_t *work_event)
 		}
 	}
 
-	int lock_index = work->lock_index;
-	ey_runtime_item_t *item = runtime_item + lock_index;
-	ey_assert(lock_index>=0 && lock_index<MAX_RUNTIME_ITEM);
-	/*
-	 * work event detecting is divided into two parts:
-	 * 1, top-half will do cluster matching and event enqueue,
-	 * 2, bottom-half will do event dequeue and further checking.
-	 *
-	 * Top-half could be done in other computing unit
-	 * such as other core/cpu/gpu/chip, in an async arch
-	 * */
-	engine_runtime_debug("start to do top half check\n");
-	ey_spinlock_lock(&item->lock);
+	engine_runtime_debug("start to do bottom half check\n");
+	if(do_bottom_half_detect(work_event))
+		engine_runtime_debug("event is clean, return 0\n");
 
-	if(do_top_half_detect(work_event))
-	{
-		engine_runtime_debug("no need to bottom half check, return 0\n");
-	}
-	else
-	{
-		engine_runtime_debug("start to do bottom half check\n");
-		if(do_bottom_half_detect(work_event))
-			engine_runtime_debug("event is clean, return 0\n");
-	}
-
-	ey_spinlock_unlock(&item->lock);
 	engine_runtime_debug("event detect return %d\n", action->action==ENGINE_ACTION_PASS?0:-1);
 	return action->action==ENGINE_ACTION_PASS?0:-1;
 }
