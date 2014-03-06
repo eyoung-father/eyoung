@@ -61,6 +61,7 @@ engine_work_t* ey_runtime_create(ey_engine_t *eng)
 {
 	ey_assert(eng!=NULL);
 	ey_bitmap_t *bitmap = NULL;
+	ey_bitmap_t *pp_bitmap = NULL;
 	ey_work_t *ey_work = NULL;
 	engine_work_t *engine_work = NULL;
 	static int lock_index;
@@ -70,6 +71,13 @@ engine_work_t* ey_runtime_create(ey_engine_t *eng)
 	if(!bitmap)
 	{
 		engine_runtime_error("alloc bitmap failed\n");
+		goto common_failed;
+	}
+
+	pp_bitmap = ey_bitmap_create(eng, ey_rhs_id(eng));
+	if(!pp_bitmap)
+	{
+		engine_runtime_error("alloc preprocessor bitmap failed\n");
 		goto common_failed;
 	}
 
@@ -90,6 +98,7 @@ engine_work_t* ey_runtime_create(ey_engine_t *eng)
 		goto common_failed;
 	}
 	ey_work->state_bitmap = bitmap;
+	ey_work->preprocessor_bitmap = pp_bitmap;
 
 	/*alloc engine work*/
 	engine_work = (engine_work_t*)engine_zalloc(ey_engine_work_slab(eng));
@@ -171,6 +180,9 @@ common_failed:
 
 	if(bitmap)
 		ey_bitmap_destroy(eng, bitmap);
+
+	if(pp_bitmap)
+		ey_bitmap_destroy(eng, pp_bitmap);
 	return NULL;
 }
 
@@ -211,6 +223,9 @@ void ey_runtime_destroy(engine_work_t *work)
 	
 	if(priv_work->state_bitmap)
 		ey_bitmap_destroy(eng, priv_work->state_bitmap);
+	
+	if(priv_work->preprocessor_bitmap)
+		ey_bitmap_destroy(eng, priv_work->preprocessor_bitmap);
 	
 	engine_zfree(ey_work_slab(eng), priv_work);
 	engine_zfree(ey_engine_work_slab(eng), work);

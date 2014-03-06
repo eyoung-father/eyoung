@@ -11,6 +11,7 @@ struct ey_engine;
 typedef struct ey_work
 {
 	ey_bitmap_t *state_bitmap;
+	ey_bitmap_t *preprocessor_bitmap;
 	ey_fslab_t local_allocator;
 
 	int lock_index;
