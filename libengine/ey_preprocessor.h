@@ -37,5 +37,6 @@ typedef TAILQ_HEAD(ey_preprocessor_list, ey_preprocessor) ey_preprocessor_list_t
 extern int ey_preprocessor_register(struct ey_engine *engine, ey_preprocessor_t *preprocessor);
 extern int ey_preprocessor_init(struct ey_engine *engine);
 extern void ey_preprocessor_finit(struct ey_engine *engine);
+extern ey_preprocessor_t *ey_preprocessor_find(struct ey_engine *engine, const char *name);
 
 #endif

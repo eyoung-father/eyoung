@@ -5,7 +5,7 @@
 
 #include "ey_engine.h"
 
-static ey_preprocessor_t *ey_preprocessor_find(ey_engine_t *engine, const char *name)
+ey_preprocessor_t *ey_preprocessor_find(ey_engine_t *engine, const char *name)
 {
 	assert(engine != NULL && name != NULL);
 	
