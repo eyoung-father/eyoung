@@ -324,7 +324,7 @@ static int do_bottom_half_detect(engine_work_event_t *work_event)
 	event_action_handle action_cb = NULL;
 	
 	/*check uncluster rhs_items first*/
-	TAILQ_FOREACH(rhs_item, &event->uncluster_item_list, event_link)
+	TAILQ_FOREACH(rhs_item, &event->item_list, event_link)
 	{
 		prefix = ey_prefix_array(eng)[rhs_item->rhs_id];
 		postfix = ey_postfix_array(eng)[rhs_item->rhs_id];

@@ -15,8 +15,7 @@ typedef struct ey_event
 	char *define;
 
 	ey_acsm_t cluster_pattern;
-	ey_rhs_item_list_t cluster_item_list;
-	ey_rhs_item_list_t uncluster_item_list;
+	ey_rhs_item_list_t item_list;
 
 	ey_code_t *event_init_predefined;
 	ey_code_t *event_init_userdefined;

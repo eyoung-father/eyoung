@@ -417,29 +417,10 @@ int ey_insert_signature(ey_engine_t *eng, ey_signature_t *signature)
 		{
 			ey_event_t *event = ey_find_event(eng, item->event_name);
 			ey_assert(event!=NULL);
+			item->clustered = 0;
 			if(item->cluster_condition)
-			{
-				if(ey_acsm_add_pattern(event->cluster_pattern, item->cluster_condition))
-				{
-					engine_parser_error("add pattern for %u:%u:%u failed\n", item->signature_id, 
-					item->rhs_signature_position, item->rhs_item_position);
-				}
-				if(!item->cluster_condition->negative)
-				{
-					TAILQ_INSERT_TAIL(&event->cluster_item_list, item, event_link);
-					item->clustered = 1;
-				}
-				else
-				{
-					TAILQ_INSERT_TAIL(&event->uncluster_item_list, item, event_link);
-					item->clustered = 0;
-				}
-			}
-			else
-			{
-				TAILQ_INSERT_TAIL(&event->uncluster_item_list, item, event_link);
-				item->clustered = 0;
-			}
+				item->clustered = 1;
+			TAILQ_INSERT_TAIL(&event->item_list, item, event_link);
 		}
 	}
 	engine_parser_debug("signature %lu inserted successfully\n", signature->signature_id);

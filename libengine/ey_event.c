@@ -24,10 +24,7 @@ int ey_event_init(ey_engine_t *eng)
 		int index = 0;
 		ey_event_t *ev = ey_event_array(eng);
 		for(; index<EVENT_ARRAY_STEP; index++, ev++)
-		{
-			TAILQ_INIT(&ev->cluster_item_list);
-			TAILQ_INIT(&ev->uncluster_item_list);
-		}
+			TAILQ_INIT(&ev->item_list);
 	}
 	ey_event_count(eng) = 0;
 
@@ -112,13 +109,11 @@ ey_event_t *ey_alloc_event(ey_engine_t *eng, ey_location_t *location, char *name
 		ey_event_t *ev = new_array;
 		for(; index<new_size; index++, ev++)
 		{
-			TAILQ_INIT(&ev->cluster_item_list);
-			TAILQ_INIT(&ev->uncluster_item_list);
+			TAILQ_INIT(&ev->item_list);
 			if(index<ey_event_size(eng))
 			{
 				ey_event_t *ev_old = ey_event_array(eng) + index;
-				TAILQ_CONCAT(&ev->cluster_item_list, &ev_old->cluster_item_list, event_link);
-				TAILQ_CONCAT(&ev->uncluster_item_list, &ev_old->uncluster_item_list, event_link);
+				TAILQ_CONCAT(&ev->item_list, &ev_old->item_list, event_link);
 			}
 		}
 
@@ -133,8 +128,7 @@ ey_event_t *ey_alloc_event(ey_engine_t *eng, ey_location_t *location, char *name
 	ret->name = name;
 	ret->define = define;
 	ret->cluster_pattern = ac;
-	TAILQ_INIT(&ret->cluster_item_list);
-	TAILQ_INIT(&ret->uncluster_item_list);
+	TAILQ_INIT(&ret->item_list);
 	ey_event_count(eng)++;
 	return ret;
 }
