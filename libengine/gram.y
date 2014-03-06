@@ -84,6 +84,8 @@ static ey_cluster_condition_t *parse_cluster_string(ey_engine_t *eng, char *prep
 	{
 		if($$->pattern)
 			engine_fzfree(ey_parser_fslab(ENG), $$->pattern);
+		if($$->preprocessor)
+			engine_fzfree(ey_parser_fslab(ENG), $$->preprocessor);
 		engine_fzfree(ey_parser_fslab(ENG), $$);
 	}
 }rhs_cluster_opt
@@ -515,10 +517,10 @@ rhs_cluster_opt:
 	{
 		$$ = NULL;
 	}
-	| TOKEN_SLASH TOKEN_STRING
+	| TOKEN_SLASH TOKEN_ID TOKEN_COLON TOKEN_STRING 
 	{
 		ey_cluster_condition_t *ret = NULL;
-		ret = parse_cluster_string(ENG, NULL, $2);
+		ret = parse_cluster_string(ENG, $2, $4);
 		if(!ret)
 		{
 			engine_parser_error("parse cluster string failed\n");
