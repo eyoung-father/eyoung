@@ -35,8 +35,13 @@ typedef struct ey_preprocessor
 typedef TAILQ_HEAD(ey_preprocessor_list, ey_preprocessor) ey_preprocessor_list_t;
 
 extern int ey_preprocessor_register(struct ey_engine *engine, ey_preprocessor_t *preprocessor);
+
 extern int ey_preprocessor_init(struct ey_engine *engine);
 extern void ey_preprocessor_finit(struct ey_engine *engine);
-extern ey_preprocessor_t *ey_preprocessor_find(struct ey_engine *engine, const char *name);
+extern int ey_preprocessor_compile(struct ey_engine *engine);
+extern int ey_preprocessor_add_signature(struct ey_engine *engine, const char *pp_name, const char *signature, void *id);
+extern int ey_preprocessor_detect_init(struct ey_engine *engine, engine_work_t *work);
+extern void ey_preprocessor_detect_finit(struct ey_engine *engine, engine_work_t *work);
+extern int ey_preprocessor_detect(struct ey_engine *engine, engine_work_t *work, const char *buf, size_t buf_len, int from_client);
 
 #endif
