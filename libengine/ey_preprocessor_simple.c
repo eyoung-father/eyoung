@@ -147,7 +147,7 @@ int ey_preprocessor_simple_register(ey_engine_t *engine)
 	ey_preprocessor_t pp;
 	memset(&pp, 0, sizeof(pp));
 
-	strncpy(pp.name, "simple-preprocessor", sizeof(pp.name));
+	strncpy(pp.name, "simple", sizeof(pp.name));
 	pp.preprocessor_init = simple_init;
 	pp.preprocessor_load = simple_load;
 	pp.preprocessor_load_finish = simple_load_finish;

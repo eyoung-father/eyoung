@@ -181,7 +181,7 @@ static xss_work_t my_xss_work = NULL;
 %event "transaction_pair"					"http_transaction_t *"
 
 %%
-1:request_body(my_xss_check(_THIS_))
+1:request_line_method/simple:"POST" request_header_host/simple:"www.eyoung_post.com" request_body(my_xss_check(_THIS_))
 	{
 		ENTER_FUNC;
 		request_data_t *req_data = (request_data_t*)_THIS_->user_defined;
@@ -309,6 +309,8 @@ int http_init(engine_t eng)
 	debug_html_parser = 0;
 	debug_html_mem = 0;
 	debug_html_detect = 1;
+
+	debug_engine_runtime = 1;
 
 	ey_add_file_finit(eng, http_finit);
 	ey_set_userdefine_event_preprocess(eng, request_body, http_request_body_preprocessor);

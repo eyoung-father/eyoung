@@ -341,7 +341,9 @@ static int do_bottom_half_detect(engine_work_event_t *work_event)
 		prefix = ey_prefix_array(eng)[rhs_item->rhs_id];
 		postfix = ey_postfix_array(eng)[rhs_item->rhs_id];
 		
-		if(rhs_item->clustered ^ ey_bitmap_isset(eng, pp_bitmap, rhs_item->rhs_id))
+		int is_cluster = rhs_item->clustered?1:0;
+		int is_set = ey_bitmap_isset(eng, pp_bitmap, rhs_item->rhs_id)?1:0;
+		if(is_cluster ^ is_set)
 		{
 			engine_runtime_debug("%lu:%lu:%lu not match preprocessor, skip it\n", 
 				rhs_item->signature_id, rhs_item->rhs_signature_position, rhs_item->rhs_item_position);
