@@ -39,26 +39,8 @@ int ey_preprocessor_register(ey_engine_t *engine, ey_preprocessor_t *preprocesso
 
 	memset(ret, 0, sizeof(*ret));
 	memcpy(ret, preprocessor, sizeof(ey_preprocessor_t));
-
-	if(preprocessor->preprocessor_init && preprocessor->preprocessor_init(engine, ret))
-	{
-		engine_init_error("preprocessor init failed\n");
-		engine_free(ret);
-		return -1;
-	}
-
 	TAILQ_INSERT_TAIL(&ey_preprocessor_list(engine), ret, link);
 	return 0;
-}
-
-static void ey_preprocessor_unregister(ey_engine_t *engine, ey_preprocessor_t *preprocessor)
-{
-	ey_assert(engine != NULL && preprocessor != NULL);
-
-	if(preprocessor->preprocessor_finit)
-		preprocessor->preprocessor_finit(engine, preprocessor);
-	
-	engine_free(preprocessor);
 }
 
 void ey_preprocessor_finit(ey_engine_t *engine)
@@ -70,7 +52,7 @@ void ey_preprocessor_finit(ey_engine_t *engine)
 	{
 		if(pp->preprocessor_finit)
 			pp->preprocessor_finit(engine, pp);
-		ey_preprocessor_unregister(engine, pp);
+		engine_free(pp);
 	}
 	
 	TAILQ_INIT(&ey_preprocessor_list(engine));
