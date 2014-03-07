@@ -108,12 +108,21 @@ engine_work_t* ey_runtime_create(ey_engine_t *eng)
 			goto userdefined_failed;
 		}
 	}
+	
+	if(ey_preprocessor_detect_init(eng, engine_work))
+	{
+		engine_runtime_error("preprocessor detector init failed\n");
+		goto preprocessor_init_failed;
+	}
 
 	/*insert into work list*/
 	ey_spinlock_lock(&ey_engine_lock(eng));
 	TAILQ_INSERT_TAIL(&ey_engine_work_list(eng), engine_work, link);
 	ey_spinlock_unlock(&ey_engine_lock(eng));
 	return engine_work;
+
+preprocessor_init_failed:
+	ey_preprocessor_detect_finit(eng, engine_work);
 
 userdefined_failed:
 	/*call userdefined engine work finit function*/
@@ -166,6 +175,9 @@ void ey_runtime_destroy(engine_work_t *work)
 
 	ey_work_t *priv_work = (ey_work_t*)(work->priv_data);
 	ey_assert(priv_work!=NULL);
+	
+	/*call preprocessor detect finit*/
+	ey_preprocessor_detect_finit(eng, work);
 
 	/*call userdefined engine work finit function*/
 	if(ey_work_finit_userdefined(eng))

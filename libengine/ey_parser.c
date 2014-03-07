@@ -1,4 +1,3 @@
-#include <assert.h>
 #include "ey_engine.h"
 #include "ey_signature.h"
 #include "gram_parser.h"

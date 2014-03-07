@@ -8,7 +8,7 @@
 
 static ey_preprocessor_t *preprocessor_find(ey_engine_t *engine, const char *name)
 {
-	assert(engine != NULL && name != NULL);
+	ey_assert(engine != NULL && name != NULL);
 	
 	ey_preprocessor_t *pp = NULL;
 	TAILQ_FOREACH(pp, &ey_preprocessor_list(engine), link)
@@ -22,7 +22,7 @@ static ey_preprocessor_t *preprocessor_find(ey_engine_t *engine, const char *nam
 int ey_preprocessor_register(ey_engine_t *engine, ey_preprocessor_t *preprocessor)
 {
 	ey_preprocessor_t *ret = NULL;
-	assert(engine != NULL && preprocessor != NULL);
+	ey_assert(engine != NULL && preprocessor != NULL);
 	
 	if(preprocessor_find(engine, preprocessor->name))
 	{
@@ -53,7 +53,7 @@ int ey_preprocessor_register(ey_engine_t *engine, ey_preprocessor_t *preprocesso
 
 static void ey_preprocessor_unregister(ey_engine_t *engine, ey_preprocessor_t *preprocessor)
 {
-	assert(engine != NULL && preprocessor != NULL);
+	ey_assert(engine != NULL && preprocessor != NULL);
 
 	if(preprocessor->preprocessor_finit)
 		preprocessor->preprocessor_finit(engine, preprocessor);
@@ -63,7 +63,7 @@ static void ey_preprocessor_unregister(ey_engine_t *engine, ey_preprocessor_t *p
 
 void ey_preprocessor_finit(ey_engine_t *engine)
 {
-	assert(engine != NULL);
+	ey_assert(engine != NULL);
 
 	ey_preprocessor_t *pp = NULL, *tmp = NULL;
 	TAILQ_FOREACH_SAFE(pp, &ey_preprocessor_list(engine), link, tmp)
@@ -78,7 +78,7 @@ void ey_preprocessor_finit(ey_engine_t *engine)
 
 int ey_preprocessor_init(ey_engine_t *engine)
 {
-	assert(engine != NULL);
+	ey_assert(engine != NULL);
 
 	TAILQ_INIT(&ey_preprocessor_list(engine));
 
@@ -104,7 +104,7 @@ int ey_preprocessor_init(ey_engine_t *engine)
 
 int ey_preprocessor_compile(ey_engine_t *engine)
 {
-	assert(engine != NULL);
+	ey_assert(engine != NULL);
 	ey_preprocessor_t *pp = NULL;
 	TAILQ_FOREACH(pp, &engine->preprocessor_list, link)
 	{
@@ -118,9 +118,9 @@ int ey_preprocessor_compile(ey_engine_t *engine)
 	return 0;
 }
 
-int ey_preprocessor_add_signature(ey_engine_t *engine, const char *pp_name, const char *signature, void *id)
+int ey_preprocessor_load(ey_engine_t *engine, const char *pp_name, const char *signature, void *id)
 {
-	assert(engine != NULL && pp_name != NULL && signature != NULL);
+	ey_assert(engine != NULL && pp_name != NULL && signature != NULL);
 
 	ey_preprocessor_t *pp = preprocessor_find(engine, pp_name);
 	if(!pp)
@@ -140,7 +140,7 @@ int ey_preprocessor_add_signature(ey_engine_t *engine, const char *pp_name, cons
 
 int ey_preprocessor_detect_init(ey_engine_t *engine, engine_work_t *work)
 {
-	assert(engine != NULL && work != NULL);
+	ey_assert(engine != NULL && work != NULL);
 	ey_preprocessor_t *pp = NULL;
 	TAILQ_FOREACH(pp, &engine->preprocessor_list, link)
 	{
@@ -157,7 +157,7 @@ int ey_preprocessor_detect_init(ey_engine_t *engine, engine_work_t *work)
 
 void ey_preprocessor_detect_finit(ey_engine_t *engine, engine_work_t *work)
 {
-	assert(engine != NULL && work != NULL);
+	ey_assert(engine != NULL && work != NULL);
 	ey_preprocessor_t *pp = NULL;
 	TAILQ_FOREACH(pp, &engine->preprocessor_list, link)
 	{
@@ -169,7 +169,7 @@ void ey_preprocessor_detect_finit(ey_engine_t *engine, engine_work_t *work)
 
 int ey_preprocessor_detect(ey_engine_t *engine, engine_work_t *work, const char *buf, size_t buf_len, int from_client)
 {
-	assert(engine != NULL && work != NULL);
+	ey_assert(engine != NULL && work != NULL);
 	
 	ey_preprocessor_t *pp = NULL;
 	TAILQ_FOREACH(pp, &engine->preprocessor_list, link)

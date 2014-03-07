@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
-#include <assert.h>
 
 #include "libengine.h"
 #include "libmatch.h"
@@ -12,7 +11,7 @@
 
 static int simple_init(ey_engine_t *engine, ey_preprocessor_t *preprocessor)
 {
-	assert(engine != NULL && preprocessor != NULL);
+	ey_assert(engine != NULL && preprocessor != NULL);
 
 	ey_acsm_t ac = ey_acsm_create();
 	if(!ac)
@@ -27,7 +26,7 @@ static int simple_init(ey_engine_t *engine, ey_preprocessor_t *preprocessor)
 
 static void simple_finit(ey_engine_t *engine, ey_preprocessor_t *preprocessor)
 {
-	assert(engine != NULL && preprocessor != NULL);
+	ey_assert(engine != NULL && preprocessor != NULL);
 	if(preprocessor->processor_data)
 	{
 		ey_acsm_t ac = (ey_acsm_t)preprocessor->processor_data;
@@ -37,7 +36,7 @@ static void simple_finit(ey_engine_t *engine, ey_preprocessor_t *preprocessor)
 
 static int simple_load_finish(ey_engine_t *engine, ey_preprocessor_t *preprocessor)
 {
-	assert(engine != NULL && preprocessor != NULL);
+	ey_assert(engine != NULL && preprocessor != NULL);
 	if(preprocessor->processor_data)
 	{
 		ey_acsm_t ac = (ey_acsm_t)preprocessor->processor_data;
@@ -52,7 +51,7 @@ static int simple_load_finish(ey_engine_t *engine, ey_preprocessor_t *preprocess
 
 static int simple_load(ey_engine_t *engine, ey_preprocessor_t *preprocessor, const char *signature, unsigned long id)
 {
-	assert(engine != NULL && preprocessor != NULL && signature != NULL);
+	ey_assert(engine != NULL && preprocessor != NULL && signature != NULL);
 	
 	if(preprocessor->processor_data)
 	{
@@ -75,7 +74,7 @@ static int simple_load(ey_engine_t *engine, ey_preprocessor_t *preprocessor, con
 
 static int simple_detect_init(ey_engine_t *engine, ey_preprocessor_t *preprocessor, engine_work_t *work)
 {
-	assert(engine != NULL && preprocessor != NULL && work != NULL && work->priv_data != NULL);
+	ey_assert(engine != NULL && preprocessor != NULL && work != NULL && work->priv_data != NULL);
 
 	ey_work_t *w = (ey_work_t*)work->priv_data;
 	ey_simple_private_t *data = NULL;
@@ -93,7 +92,7 @@ static int simple_detect_init(ey_engine_t *engine, ey_preprocessor_t *preprocess
 
 static void simple_detect_finit(ey_engine_t *engine, ey_preprocessor_t *preprocessor, engine_work_t *work)
 {
-	assert(engine != NULL && preprocessor != NULL && work != NULL && work->priv_data != NULL);
+	ey_assert(engine != NULL && preprocessor != NULL && work != NULL && work->priv_data != NULL);
 
 	ey_work_t *w = (ey_work_t*)work->priv_data;
 	ey_simple_private_t *data = w->simple_preprocessor;
@@ -105,13 +104,13 @@ static void simple_detect_finit(ey_engine_t *engine, ey_preprocessor_t *preproce
 
 static int acsm_match_cb(void *id, void *tree, int index, void *data, void *neg_list)
 {
-	assert(data != NULL);
+	ey_assert(data != NULL);
 	engine_work_t *engine_work = (engine_work_t*)data;
 	ey_work_t *work = (ey_work_t*)engine_work->priv_data;
 	ey_bitmap_t *pp_bitmap = work->preprocessor_bitmap;
 	ey_engine_t *engine = (ey_engine_t*)(engine_work->engine);
 	ey_rhs_item_t *rhs_item = (ey_rhs_item_t*)id;
-	assert(engine_work != NULL && work != NULL && pp_bitmap != NULL && engine != NULL && rhs_item != NULL);
+	ey_assert(engine_work != NULL && work != NULL && pp_bitmap != NULL && engine != NULL && rhs_item != NULL);
 
 	engine_runtime_debug("simple preprocessor find rhs item %lu:%lu:%lu\n",
 		rhs_item->signature_id, rhs_item->rhs_signature_position, rhs_item->rhs_item_position);
@@ -129,8 +128,8 @@ static int simple_detect(ey_engine_t *engine, ey_preprocessor_t *preprocessor, e
 		return 0;
 	}
 	
-	assert(preprocessor != NULL && preprocessor->processor_data != NULL);
-	assert(engine_work != NULL && engine_work->priv_data != NULL);
+	ey_assert(preprocessor != NULL && preprocessor->processor_data != NULL);
+	ey_assert(engine_work != NULL && engine_work->priv_data != NULL);
 	ey_work_t *work = (ey_work_t*)engine_work->priv_data;
 	ey_simple_private_t *states = (ey_simple_private_t*)work->simple_preprocessor;
 	ey_acsm_t ac = (ey_acsm_t)preprocessor->processor_data;
@@ -143,7 +142,7 @@ static int simple_detect(ey_engine_t *engine, ey_preprocessor_t *preprocessor, e
 
 int ey_preprocessor_simple_register(ey_engine_t *engine)
 {
-	assert(engine != NULL);
+	ey_assert(engine != NULL);
 
 	ey_preprocessor_t pp;
 	memset(&pp, 0, sizeof(pp));

@@ -217,5 +217,8 @@ int ey_load_post_action(ey_engine_t *eng)
 	if(do_prefix_postfix(eng))
 		return -1;
 	
+	if(ey_preprocessor_compile(eng))
+		return -1;
+
 	return 0;
 }
