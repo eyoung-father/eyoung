@@ -348,7 +348,7 @@ static int do_bottom_half_detect(engine_work_event_t *work_event)
 			continue;
 		}
 		
-		if(prefix && !ey_bitmap_isset(eng, bitmap, rhs_item->rhs_id))
+		if(prefix && !ey_bitmap_isset(eng, bitmap, prefix))
 		{
 			engine_runtime_debug("%lu:%lu:%lu prefix is not satisfied, skip it\n",
 				rhs_item->signature_id, rhs_item->rhs_signature_position, rhs_item->rhs_item_position);
