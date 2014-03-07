@@ -480,7 +480,7 @@ signature_rhs:
 			YYABORT;
 		}
 
-		if(ey_preprocessor_load(ENG, $3->preprocessor, $3->pattern, ret))
+		if($3 && ey_preprocessor_load(ENG, $3->preprocessor, $3->pattern, ret))
 		{
 			engine_parser_error("preprocessor load signature failed\n");
 			memset(ret, 0, sizeof(*ret));
