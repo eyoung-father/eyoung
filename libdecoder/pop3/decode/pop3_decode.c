@@ -56,10 +56,13 @@ void pop3_work_destroy(pop3_work_t work)
 int pop3_decode_data(pop3_work_t work, const char *data, size_t data_len, int from_client, int last_frag)
 {
 	assert(work != NULL);
+	pop3_data_t *pop3_data = (pop3_data_t*)work;
+	if(pop3_data->engine_work)
+		ey_engine_work_detect_data(pop3_data->engine_work, data, data_len, from_client);
 	if(from_client)
-		return parse_pop3_client_stream((pop3_data_t*)work, data, data_len, last_frag);
+		return parse_pop3_client_stream(pop3_data, data, data_len, last_frag);
 	else
-		return parse_pop3_server_stream((pop3_data_t*)work, data, data_len, last_frag);
+		return parse_pop3_server_stream(pop3_data, data, data_len, last_frag);
 }
 
 pop3_handler_t pop3_decoder_init(engine_t engine)
@@ -129,8 +132,7 @@ int pop3_element_detect(pop3_data_t *pop3_data, const char *event_name, int even
 		pop3_debug(debug_pop3_detect, "create event for %s failed\n", event_name);
 		return 0;
 	}
-	ey_engine_work_set_data(work_event, event, cluster_buffer, cluster_buffer_len);
-	ey_engine_work_detect_event(work_event);
+	ey_engine_work_detect_event(work_event, event);
 	ey_engine_work_destroy_event(work_event);
 	pop3_debug(debug_pop3_detect, "detect %s[%d], get actoin %s\n",
 		event_name, event_id, ey_engine_action_name(action.action));

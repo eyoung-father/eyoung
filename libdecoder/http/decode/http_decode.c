@@ -57,10 +57,13 @@ void http_work_destroy(http_work_t work)
 int http_decode_data(http_work_t work, const char *data, size_t data_len, int from_client, int last_frag)
 {
 	assert(work != NULL);
+	http_data_t *http_data = (http_data_t*)work;
+	if(http_data->engine_work)
+		ey_engine_work_detect_data(http_data->engine_work, data, data_len, from_client);
 	if(from_client)
-		return parse_http_client_stream((http_data_t*)work, data, data_len, last_frag);
+		return parse_http_client_stream(http_data, data, data_len, last_frag);
 	else
-		return parse_http_server_stream((http_data_t*)work, data, data_len, last_frag);
+		return parse_http_server_stream(http_data, data, data_len, last_frag);
 }
 
 http_handler_t http_decoder_init(engine_t engine, void *html_decoder)
@@ -140,8 +143,7 @@ int http_element_detect(http_data_t *http_data, const char *event_name, int even
 		http_debug(debug_http_detect, "create event for %s failed\n", event_name);
 		return 0;
 	}
-	ey_engine_work_set_data(work_event, event, cluster_buffer, cluster_buffer_len);
-	ey_engine_work_detect_event(work_event);
+	ey_engine_work_detect_event(work_event, event);
 	ey_engine_work_destroy_event(work_event);
 	http_debug(debug_http_detect, "detect %s[%d], get actoin %s\n",
 		event_name, event_id, ey_engine_action_name(action.action));

@@ -131,11 +131,10 @@ void ey_engine_work_destroy(engine_work_t *work)
 	ey_runtime_destroy(work);
 }
 
-void ey_engine_work_set_data(engine_work_event_t *event, void *predefined, char *data, size_t data_len)
+int ey_engine_work_detect_data(engine_work_t *work, const char *buf, size_t buf_len, int from_client)
 {
-	event->predefined = predefined;
-	event->data = data;
-	event->data_len = data_len;
+	ey_engine_t *eng = (ey_engine_t*)work->engine;
+	return ey_preprocessor_detect(eng, work, buf, buf_len, from_client);
 }
 
 engine_work_event_t *ey_engine_work_create_event(engine_work_t *work, unsigned long event_id, engine_action_t *action)
@@ -143,8 +142,9 @@ engine_work_event_t *ey_engine_work_create_event(engine_work_t *work, unsigned l
 	return ey_runtime_create_event(work, event_id, action);
 }
 
-int ey_engine_work_detect_event(engine_work_event_t *event)
+int ey_engine_work_detect_event(engine_work_event_t *event, void *predefined)
 {
+	event->predefined = predefined;
 	return ey_runtime_detect_event(event);
 }
 

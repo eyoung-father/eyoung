@@ -93,7 +93,10 @@ void html_work_destroy2(html_work_t work)
 int html_decode_data(html_work_t work, const char *data, size_t data_len, int last_frag)
 {
 	assert(work != NULL);
-	return parse_html_stream((html_data_t*)work, data, data_len, last_frag);
+	html_data_t *html_data = (html_data_t*)work;
+	if(html_data->engine_work)
+		ey_engine_work_detect_data(html_data->engine_work, data, data_len, 0);
+	return parse_html_stream(html_data, data, data_len, last_frag);
 }
 
 html_handler_t html_decoder_init(engine_t engine)
@@ -172,8 +175,7 @@ int html_element_detect(html_data_t *html_data, const char *event_name, int even
 		return 0;
 	}
 
-	ey_engine_work_set_data(work_event, event, cluster_buffer, cluster_buffer_len);
-	ey_engine_work_detect_event(work_event);
+	ey_engine_work_detect_event(work_event, event);
 	ey_engine_work_destroy_event(work_event);
 	ey_html_debug(debug_html_detect, "detect %s[%d], get actoin %s\n",
 		event_name, event_id, ey_engine_action_name(action.action));
