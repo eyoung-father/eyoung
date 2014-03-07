@@ -103,10 +103,42 @@ static void simple_detect_finit(ey_engine_t *engine, ey_preprocessor_t *preproce
 	w->simple_preprocessor = NULL;
 }
 
-static int simple_detect(ey_engine_t *engine, ey_preprocessor_t *preprocessor, engine_work_t *work, 
+static int acsm_match_cb(void *id, void *tree, int index, void *data, void *neg_list)
+{
+	assert(data != NULL);
+	engine_work_t *engine_work = (engine_work_t*)data;
+	ey_work_t *work = (ey_work_t*)engine_work->priv_data;
+	ey_bitmap_t *pp_bitmap = work->preprocessor_bitmap;
+	ey_engine_t *engine = (ey_engine_t*)(engine_work->engine);
+	ey_rhs_item_t *rhs_item = (ey_rhs_item_t*)id;
+	assert(engine_work != NULL && work != NULL && pp_bitmap != NULL && engine != NULL && rhs_item != NULL);
+
+	engine_runtime_debug("simple preprocessor find rhs item %lu:%lu:%lu\n",
+		rhs_item->signature_id, rhs_item->rhs_signature_position, rhs_item->rhs_item_position);
+	
+	ey_bitmap_set(engine, pp_bitmap, rhs_item->rhs_id);
+	return 0;
+}
+
+static int simple_detect(ey_engine_t *engine, ey_preprocessor_t *preprocessor, engine_work_t *engine_work, 
 	const char *buf, size_t buf_len, int from_client)
 {
-	return 0;
+	if(!buf || !buf_len)
+	{
+		engine_runtime_debug("no need do simple preprocessor for zero-length buffer\n");
+		return 0;
+	}
+	
+	assert(preprocessor != NULL && preprocessor->processor_data != NULL);
+	assert(engine_work != NULL && engine_work->priv_data != NULL);
+	ey_work_t *work = (ey_work_t*)engine_work->priv_data;
+	ey_simple_private_t *states = (ey_simple_private_t*)work->simple_preprocessor;
+	ey_acsm_t ac = (ey_acsm_t)preprocessor->processor_data;
+	int *last_state = &states->client_last_state;
+	if(!from_client)
+		last_state =  &states->server_last_state;
+	
+	return ey_acsm_search(ac, (char*)buf, buf_len, acsm_match_cb, engine_work, last_state);
 }
 
 int ey_preprocessor_simple_register(ey_engine_t *engine)
