@@ -6,7 +6,7 @@
 #include "ey_engine.h"
 #include "ey_preprocessor_simple.h"
 
-static ey_preprocessor_t *ey_preprocessor_find(ey_engine_t *engine, const char *name)
+static ey_preprocessor_t *preprocessor_find(ey_engine_t *engine, const char *name)
 {
 	assert(engine != NULL && name != NULL);
 	
@@ -24,7 +24,7 @@ int ey_preprocessor_register(ey_engine_t *engine, ey_preprocessor_t *preprocesso
 	ey_preprocessor_t *ret = NULL;
 	assert(engine != NULL && preprocessor != NULL);
 	
-	if(ey_preprocessor_find(engine, preprocessor->name))
+	if(preprocessor_find(engine, preprocessor->name))
 	{
 		engine_init_error("preprocessor %s is already registered\n");
 		return -1;
@@ -122,7 +122,7 @@ int ey_preprocessor_add_signature(ey_engine_t *engine, const char *pp_name, cons
 {
 	assert(engine != NULL && pp_name != NULL && signature != NULL);
 
-	ey_preprocessor_t *pp = ey_preprocessor_find(engine, pp_name);
+	ey_preprocessor_t *pp = preprocessor_find(engine, pp_name);
 	if(!pp)
 	{
 		engine_parser_error("preprocessor %s is not registered\n", pp_name);
