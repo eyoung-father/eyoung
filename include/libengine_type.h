@@ -41,9 +41,6 @@ static inline const char* ey_engine_action_name(int action)
 
 typedef struct engine_work_event
 {
-	char *data;
-	int data_len;
-
 	engine_work_t *work;
 	void *event;
 	void *predefined;	/*for protocol parser*/
