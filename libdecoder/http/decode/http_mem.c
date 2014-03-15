@@ -692,7 +692,7 @@ int http_add_transaction(http_decoder_t *decoder, http_data_t *priv_data)
 		STAILQ_REMOVE_HEAD(&priv_data->request_list, next);
 	STAILQ_INSERT_TAIL(&priv_data->transaction_list, transaction, next);
 
-	if(http_element_detect(priv_data, "transaction_pair", http_transaction_pair_id, &transaction, NULL, 0) < 0)
+	if(http_element_detect(priv_data, "transaction_pair", http_transaction_pair_id, &transaction) < 0)
 	{
 		http_debug(debug_http_detect, "find attack\n");
 		return -1;

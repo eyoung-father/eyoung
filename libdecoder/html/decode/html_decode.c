@@ -139,8 +139,7 @@ void html_decoder_finit(html_handler_t handler)
 	}
 }
 
-int html_element_detect(html_data_t *html_data, const char *event_name, int event_id, void *event, 
-	char *cluster_buffer, size_t cluster_buffer_len)
+int html_element_detect(html_data_t *html_data, const char *event_name, int event_id, void *event)
 {
 	if(!html_data->engine_work)
 	{

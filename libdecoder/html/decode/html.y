@@ -20,7 +20,7 @@
 			((html_data_t*)data)->reduced_count++;				\
 		}														\
 		else if(html_element_detect((html_data_t*)data,name,	\
-				id,val,cluster_buffer,cluster_buffer_len)<0)	\
+				id,val)<0)										\
 		{														\
 			ey_html_debug(debug_html_detect, "find attack!\n");	\
 			return -1;											\

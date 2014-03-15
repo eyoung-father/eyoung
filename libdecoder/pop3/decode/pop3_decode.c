@@ -103,8 +103,7 @@ void pop3_decoder_finit(pop3_handler_t handler)
 	}
 }
 
-int pop3_element_detect(pop3_data_t *pop3_data, const char *event_name, int event_id, void *event, 
-	char *cluster_buffer, size_t cluster_buffer_len)
+int pop3_element_detect(pop3_data_t *pop3_data, const char *event_name, int event_id, void *event)
 {
 	if(!event_name)
 	{

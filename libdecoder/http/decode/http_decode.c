@@ -108,8 +108,7 @@ void http_decoder_finit(http_handler_t handler)
 	}
 }
 
-int http_element_detect(http_data_t *http_data, const char *event_name, int event_id, void *event, 
-	char *cluster_buffer, size_t cluster_buffer_len)
+int http_element_detect(http_data_t *http_data, const char *event_name, int event_id, void *event)
 {
 	if(!http_data->engine_work)
 	{

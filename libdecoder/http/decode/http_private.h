@@ -45,8 +45,7 @@ typedef struct http_decoder
 
 extern void http_server_register(http_decoder_t *decoder);
 extern void http_client_register(http_decoder_t *decoder);
-extern int http_element_detect(http_data_t *http_data, const char *event_name, int event_id, void *event,
-	char *cluster_buffer, size_t cluster_buffer_len);
+extern int http_element_detect(http_data_t *http_data, const char *event_name, int event_id, void *event);
 
 /*memory mgt system init api for system initializing*/
 extern int http_mem_init(http_decoder_t *decoder);

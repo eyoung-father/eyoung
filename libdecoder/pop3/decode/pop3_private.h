@@ -26,6 +26,5 @@ typedef struct pop3_decoder
 
 extern void pop3_server_register(pop3_decoder_t *decoder);
 extern void pop3_client_register(pop3_decoder_t *decoder);
-extern int pop3_element_detect(struct pop3_data *pop3_data, const char *event_name, int event_id, void *event,
-	char *cluster_buffer, size_t cluster_buffer_len);
+extern int pop3_element_detect(struct pop3_data *pop3_data, const char *event_name, int event_id, void *event);
 #endif

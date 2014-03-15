@@ -22,8 +22,7 @@ typedef struct html_decoder
 }html_decoder_t;
 
 extern void html_register(html_decoder_t *decoder);
-extern int html_element_detect(html_data_t *html_data, const char *event_name, int event_id, void *event,
-	char *cluster_buffer, size_t cluster_buffer_len);
+extern int html_element_detect(html_data_t *html_data, const char *event_name, int event_id, void *event);
 
 extern int html_mem_init(html_decoder_t *decoder);
 extern void html_mem_finit(html_decoder_t *decoder);

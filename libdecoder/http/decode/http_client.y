@@ -13,8 +13,7 @@
 #define YY_REDUCTION_CALLBACK(data,name,id,val)					\
 	do															\
 	{															\
-		if(http_element_detect(data,name,id,val,				\
-			cluster_buffer,cluster_buffer_len)<0)				\
+		if(http_element_detect(data,name,id,val) < 0)			\
 		{														\
 			http_debug(debug_http_detect, "find attack!\n");	\
 			return -1;											\

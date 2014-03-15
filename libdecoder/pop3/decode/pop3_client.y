@@ -22,8 +22,7 @@
 #define YY_REDUCTION_CALLBACK(data,name,id,val)									\
 	do																			\
 	{																			\
-		if(pop3_element_detect(data,name,id,val,								\
-			cluster_buffer,cluster_buffer_len)<0)								\
+		if(pop3_element_detect(data,name,id,val) < 0)							\
 		{																		\
 			pop3_debug(debug_pop3_detect, "find attack!\n");					\
 			return -1;															\
