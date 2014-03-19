@@ -230,9 +230,9 @@ int http_init(engine_t eng)
 	ey_add_file_finit(eng, http_finit);
 	ey_set_userdefine_work_init(eng, http_work_init_user);
 	ey_set_userdefine_work_finit(eng, http_work_finit_user);
-	ey_set_userdefine_event_preprocess(eng, request, http_request_event_preprocessor);
-	ey_set_userdefine_event_preprocess(eng, request_line_uri, http_request_uri_preprocessor);
-	ey_set_userdefine_event_preprocess(eng, request_body, http_request_body_preprocessor);
+	ey_set_userdefine_event_preprocessor(eng, request, http_request_event_preprocessor);
+	ey_set_userdefine_event_preprocessor(eng, request_line_uri, http_request_uri_preprocessor);
+	ey_set_userdefine_event_preprocessor(eng, request_body, http_request_body_preprocessor);
 	ey_set_userdefine_event_init(eng, request_body, http_request_body_init);
 	ey_set_userdefine_event_finit(eng, request_body, http_request_body_finit);
 	EXIT_FUNC(0);

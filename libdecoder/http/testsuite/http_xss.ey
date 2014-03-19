@@ -322,10 +322,10 @@ int http_init(engine_t eng)
 	debug_html_mem = 0;
 	debug_html_detect = 1;
 
-	debug_engine_runtime = 1;
+	debug_engine_runtime = 0;
 
 	ey_add_file_finit(eng, http_finit);
-	ey_set_userdefine_event_preprocess(eng, request_body, http_request_body_preprocessor);
+	ey_set_userdefine_event_preprocessor(eng, request_body, http_request_body_preprocessor);
 	ey_set_userdefine_event_init(eng, request_body, http_request_body_init);
 	ey_set_userdefine_event_finit(eng, request_body, http_request_body_finit);
 
