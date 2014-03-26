@@ -1449,6 +1449,7 @@ request_header_value:
 			YYABORT;
 		}
 	}
+	;
 
 request_body:
 	request_empty
