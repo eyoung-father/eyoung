@@ -1,5 +1,18 @@
-%pure_parser                                    /* We have threads */
+%{
+#include <stdio.h>
+#include <stdlib.h>
+#include "ey_memory.h"
+%}
+
+%debug
+%verbose
+%defines "mysql_parser.h"
+%output "mysql_parser.c"
 %expect 161
+%define api.prefix mysql_ 
+%define api.pure full
+%parse-param {void *priv_data}
+%start query
 
 %token  ABORT_SYM                     /* INTERNAL (used in lex) */
 %token  ACCESSIBLE_SYM
